@@ -9,11 +9,13 @@ A Claude Code plugin marketplace containing enterprise-grade plugins developed b
 Base plugin providing essential development tools and MCP server integrations.
 
 **Features:**
+
 - Requirements management commands
 - Integrated MCP servers for enhanced functionality
 - Development workflow automation
 
 **Included MCP Servers:**
+
 - **npm-sentinel-mcp** - NPM package analysis and security scanning
 - **chrome-dev-tools** - Chrome DevTools automation and debugging
 - **sentry-spotlight** - Local error debugging with Spotlight
@@ -22,17 +24,21 @@ Base plugin providing essential development tools and MCP server integrations.
 
 ## Installation
 
-### Install the Marketplace
+### Add the Marketplace
 
 ```bash
-claude marketplace add git@github.com:blogic-cz/blogic-marketplace.git
+claude plugin marketplace add blogic-cz/blogic-marketplace
 ```
 
 ### Install a Plugin
 
+Once the marketplace is added, browse and install plugins using:
+
 ```bash
 claude plugin install agent-kit
 ```
+
+Or use the `/plugin` menu in Claude Code to browse available plugins.
 
 ## Plugin Structure
 
@@ -77,8 +83,8 @@ The agent-kit plugin includes a comprehensive requirements management system:
 ### Testing Locally
 
 ```bash
-# Link marketplace for local development
-claude marketplace add /path/to/blogic-marketplace
+# Add marketplace for local development
+claude plugin marketplace add /path/to/blogic-marketplace
 
 # Test plugin installation
 claude plugin install agent-kit
