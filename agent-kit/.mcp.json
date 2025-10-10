@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "npm-sentinel-mcp": {
+      "url": "https://server.smithery.ai/@Nekzus/npm-sentinel-mcp/mcp?api_key=eb16dd11-52ff-4062-ba85-667649ad2a74&profile=reduced-pony-UtBakc",
+      "transport": "http"
+    },
+    "chrome-dev-tools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "sentry-spotlight": {
+      "command": "npx",
+      "args": ["-y", "@spotlightjs/spotlight", "--stdio-mcp"]
+    },
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp",
+      "transport": "http"
+    },
+    "agentsfera": {
+      "url": "https://api.agentsfera.ai",
+      "transport": "http"
+    }
+  }
+}

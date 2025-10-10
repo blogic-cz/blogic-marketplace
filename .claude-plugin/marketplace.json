@@ -1,0 +1,13 @@
+{
+  "name": "blogic-marketplace",
+  "owner": {
+    "name": "blogic"
+  },
+  "plugins": [
+    {
+      "name": "agent-kit",
+      "source": "./agent-kit",
+      "description": "Base plugin by blogic"
+    }
+  ]
+}
