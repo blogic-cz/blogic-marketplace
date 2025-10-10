@@ -27,18 +27,22 @@ Base plugin providing essential development tools and MCP server integrations.
 ### Add the Marketplace
 
 ```bash
-claude plugin marketplace add blogic-cz/blogic-marketplace
+claude plugin marketplace add https://github.com/blogic-cz/blogic-marketplace
+```
+
+Or for local development:
+
+```bash
+claude plugin marketplace add /path/to/blogic-marketplace
 ```
 
 ### Install a Plugin
 
-Once the marketplace is added, browse and install plugins using:
+Once the marketplace is added, you can install plugins directly:
 
 ```bash
-claude plugin install agent-kit
+claude plugin install agent-kit@blogic-marketplace
 ```
-
-Or use the `/plugin` menu in Claude Code to browse available plugins.
 
 ## Plugin Structure
 
@@ -82,12 +86,23 @@ The agent-kit plugin includes a comprehensive requirements management system:
 
 ### Testing Locally
 
-```bash
-# Add marketplace for local development
-claude plugin marketplace add /path/to/blogic-marketplace
+Add your local marketplace:
 
-# Test plugin installation
-claude plugin install agent-kit
+```bash
+claude plugin marketplace add /path/to/blogic-marketplace
+```
+
+Then install and test your plugin:
+
+```bash
+claude plugin install agent-kit@blogic-marketplace
+```
+
+After making changes, uninstall and reinstall to test updates:
+
+```bash
+claude plugin uninstall agent-kit@blogic-marketplace
+claude plugin install agent-kit@blogic-marketplace
 ```
 
 ## License
