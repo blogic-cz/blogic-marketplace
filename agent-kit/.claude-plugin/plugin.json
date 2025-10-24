@@ -28,6 +28,16 @@
           }
         ]
       }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/notify-approval.sh"
+          }
+        ]
+      }
     ]
   }
 }
