@@ -30,12 +30,21 @@ if [ ! -f "$USER_SCRIPT" ]; then
 EOF
 
   chmod +x "$USER_SCRIPT"
-  echo ""
-  echo "⚠️  POST-EDIT HOOK NOT CONFIGURED!"
-  echo "Template created at: $USER_SCRIPT"
-  echo "Please uncomment or add commands to configure your post-edit workflow."
-  echo ""
-  exit 2
+
+  # Use JSON output to block with detailed feedback
+  REASON=$(printf "⚠️  POST-EDIT HOOK NOT CONFIGURED!\n\nTemplate created at: %s\nPlease uncomment or add commands to configure your post-edit workflow." "$USER_SCRIPT" | jq -Rs .)
+
+  cat <<EOF
+{
+  "decision": "block",
+  "reason": $REASON,
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "Template script created but needs configuration."
+  }
+}
+EOF
+  exit 0
 fi
 
 # Check if script has any active (non-commented) commands
@@ -43,12 +52,20 @@ fi
 ACTIVE_LINES=$(grep -v '^#' "$USER_SCRIPT" | grep -v '^[[:space:]]*$' | wc -l)
 
 if [ "$ACTIVE_LINES" -eq 0 ]; then
-  echo ""
-  echo "⚠️  POST-EDIT HOOK NOT CONFIGURED!"
-  echo "File exists but contains no active commands: $USER_SCRIPT"
-  echo "Please uncomment or add commands to configure your post-edit workflow."
-  echo ""
-  exit 2
+  # Use JSON output to block with detailed feedback
+  REASON=$(printf "⚠️  POST-EDIT HOOK NOT CONFIGURED!\n\nFile exists but contains no active commands: %s\nPlease uncomment or add commands to configure your post-edit workflow." "$USER_SCRIPT" | jq -Rs .)
+
+  cat <<EOF
+{
+  "decision": "block",
+  "reason": $REASON,
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "Script file exists but has no active commands."
+  }
+}
+EOF
+  exit 0
 fi
 
 # Execute user's script

@@ -29,12 +29,17 @@ if [ ! -f "$USER_SCRIPT" ]; then
 EOF
 
   chmod +x "$USER_SCRIPT"
-  echo ""
-  echo "⚠️  POST-STOP HOOK NOT CONFIGURED!"
-  echo "Template created at: $USER_SCRIPT"
-  echo "Please uncomment or add commands to configure your post-stop workflow."
-  echo ""
-  exit 2
+
+  # Use JSON output to block with detailed feedback
+  REASON=$(printf "⚠️  POST-STOP HOOK NOT CONFIGURED!\n\nTemplate created at: %s\nPlease uncomment or add commands to configure your post-stop workflow." "$USER_SCRIPT" | jq -Rs .)
+
+  cat <<EOF
+{
+  "decision": "block",
+  "reason": $REASON
+}
+EOF
+  exit 0
 fi
 
 # Check if script has any active (non-commented) commands
@@ -42,12 +47,16 @@ fi
 ACTIVE_LINES=$(grep -v '^#' "$USER_SCRIPT" | grep -v '^[[:space:]]*$' | wc -l)
 
 if [ "$ACTIVE_LINES" -eq 0 ]; then
-  echo ""
-  echo "⚠️  POST-STOP HOOK NOT CONFIGURED!"
-  echo "File exists but contains no active commands: $USER_SCRIPT"
-  echo "Please uncomment or add commands to configure your post-stop workflow."
-  echo ""
-  exit 2
+  # Use JSON output to block with detailed feedback
+  REASON=$(printf "⚠️  POST-STOP HOOK NOT CONFIGURED!\n\nFile exists but contains no active commands: %s\nPlease uncomment or add commands to configure your post-stop workflow." "$USER_SCRIPT" | jq -Rs .)
+
+  cat <<EOF
+{
+  "decision": "block",
+  "reason": $REASON
+}
+EOF
+  exit 0
 fi
 
 # Execute user's script
