@@ -17,10 +17,24 @@ if [ ! -f "$USER_SCRIPT" ]; then
   # Create template with examples
   cat > "$USER_SCRIPT" << 'EOF'
 #!/bin/bash
-# Runs on Stop - quality gate with exit 2 to block
+# Runs on Stop - quality gate with JSON output
 
 # === JS/TS (define "check" in package.json) ===
-# bun run check || exit 2
+# CHECK_OUTPUT=$(bun run check 2>&1)
+# CHECK_EXIT=$?
+#
+# if [ $CHECK_EXIT -ne 0 ]; then
+#   REASON=$(printf "Linting failed. Please fix the following issues:\n\n%s" "$CHECK_OUTPUT" | jq -Rs .)
+#   cat <<EOJSON
+# {
+#   "decision": "block",
+#   "reason": $REASON
+# }
+# EOJSON
+#   exit 0
+# else
+#   exit 0
+# fi
 
 # === .NET ===
 # dotnet build || exit 2
@@ -29,17 +43,12 @@ if [ ! -f "$USER_SCRIPT" ]; then
 EOF
 
   chmod +x "$USER_SCRIPT"
-
-  # Use JSON output to block with detailed feedback
-  REASON=$(printf "⚠️  POST-STOP HOOK NOT CONFIGURED!\n\nTemplate created at: %s\nPlease uncomment or add commands to configure your post-stop workflow." "$USER_SCRIPT" | jq -Rs .)
-
-  cat <<EOF
-{
-  "decision": "block",
-  "reason": $REASON
-}
-EOF
-  exit 0
+  echo ""
+  echo "⚠️  POST-STOP HOOK NOT CONFIGURED!"
+  echo "Template created at: $USER_SCRIPT"
+  echo "Please uncomment or add commands to configure your post-stop workflow."
+  echo ""
+  exit 2
 fi
 
 # Check if script has any active (non-commented) commands
@@ -47,16 +56,12 @@ fi
 ACTIVE_LINES=$(grep -v '^#' "$USER_SCRIPT" | grep -v '^[[:space:]]*$' | wc -l)
 
 if [ "$ACTIVE_LINES" -eq 0 ]; then
-  # Use JSON output to block with detailed feedback
-  REASON=$(printf "⚠️  POST-STOP HOOK NOT CONFIGURED!\n\nFile exists but contains no active commands: %s\nPlease uncomment or add commands to configure your post-stop workflow." "$USER_SCRIPT" | jq -Rs .)
-
-  cat <<EOF
-{
-  "decision": "block",
-  "reason": $REASON
-}
-EOF
-  exit 0
+  echo ""
+  echo "⚠️  POST-STOP HOOK NOT CONFIGURED!"
+  echo "File exists but contains no active commands: $USER_SCRIPT"
+  echo "Please uncomment or add commands to configure your post-stop workflow."
+  echo ""
+  exit 2
 fi
 
 # Execute user's script
