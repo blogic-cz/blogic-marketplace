@@ -66,7 +66,90 @@ EOF
 
 echo "✓ Agent-kit configured in .claude/settings.json"
 echo ""
+
+# Create hook templates
+echo "Initializing agent-kit hook templates..."
+
+AFTER_EDIT_SCRIPT=".claude/agent-after-edit.sh"
+AFTER_STOP_SCRIPT=".claude/agent-after-stop.sh"
+
+# Create after-edit template if it doesn't exist
+if [ ! -f "$AFTER_EDIT_SCRIPT" ]; then
+  cat > "$AFTER_EDIT_SCRIPT" << 'EOFTEMPLATE'
+#!/bin/bash
+# Runs after Edit/Write - auto-fix and show warnings with JSON output
+
+# === JS/TS (define "check" in package.json) ===
+# CHECK_OUTPUT=$(bun run check 2>&1)
+# CHECK_EXIT=$?
+#
+# if [ $CHECK_EXIT -ne 0 ]; then
+#   REASON=$(printf "Linting failed. Please fix the following issues:\n\n%s" "$CHECK_OUTPUT" | jq -Rs .)
+#   cat <<EOJSON
+# {
+#   "decision": "block",
+#   "reason": $REASON,
+#   "hookSpecificOutput": {
+#     "hookEventName": "PostToolUse",
+#     "additionalContext": "The file was written but linting failed."
+#   }
+# }
+# EOJSON
+#   exit 0
+# else
+#   exit 0
+# fi
+
+# === .NET ===
+# dotnet format
+
+# === Custom ===
+EOFTEMPLATE
+
+  chmod +x "$AFTER_EDIT_SCRIPT"
+  echo "✓ Created template: $AFTER_EDIT_SCRIPT"
+else
+  echo "⚠️  Template already exists: $AFTER_EDIT_SCRIPT (skipping)"
+fi
+
+# Create after-stop template if it doesn't exist
+if [ ! -f "$AFTER_STOP_SCRIPT" ]; then
+  cat > "$AFTER_STOP_SCRIPT" << 'EOFTEMPLATE'
+#!/bin/bash
+# Runs on Stop - quality gate with JSON output
+
+# === JS/TS (define "check" in package.json) ===
+# CHECK_OUTPUT=$(bun run check 2>&1)
+# CHECK_EXIT=$?
+#
+# if [ $CHECK_EXIT -ne 0 ]; then
+#   REASON=$(printf "Linting failed. Please fix the following issues:\n\n%s" "$CHECK_OUTPUT" | jq -Rs .)
+#   cat <<EOJSON
+# {
+#   "decision": "block",
+#   "reason": $REASON
+# }
+# EOJSON
+#   exit 0
+# else
+#   exit 0
+# fi
+
+# === .NET ===
+# dotnet build || exit 2
+
+# === Custom ===
+EOFTEMPLATE
+
+  chmod +x "$AFTER_STOP_SCRIPT"
+  echo "✓ Created template: $AFTER_STOP_SCRIPT"
+else
+  echo "⚠️  Template already exists: $AFTER_STOP_SCRIPT (skipping)"
+fi
+
+echo ""
 echo "Next steps:"
-echo "  git add .claude/settings.json"
-echo "  git commit -m 'Add agent-kit plugin'"
-echo "  git push"
+echo "  1. Configure hooks in $AFTER_EDIT_SCRIPT and $AFTER_STOP_SCRIPT"
+echo "  2. git add .claude/"
+echo "  3. git commit -m 'Add agent-kit plugin'"
+echo "  4. git push"
