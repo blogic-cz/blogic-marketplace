@@ -3,14 +3,16 @@
 # Wrapper script that checks for user's custom after-edit script
 # If it doesn't exist, creates a template with examples
 
-USER_SCRIPT=".claude/agent-after-edit.sh"
+# Use CLAUDE_PROJECT_DIR if available, fallback to current directory
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
+USER_SCRIPT="$PROJECT_DIR/.claude/agent-after-edit.sh"
 
 # Check if user script exists
 if [ ! -f "$USER_SCRIPT" ]; then
   echo "Creating template: $USER_SCRIPT"
 
   # Create .claude directory if it doesn't exist
-  mkdir -p .claude
+  mkdir -p "$PROJECT_DIR/.claude"
 
   # Create template with examples
   cat > "$USER_SCRIPT" << 'EOF'
