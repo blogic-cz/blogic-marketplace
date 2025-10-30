@@ -70,8 +70,8 @@ echo ""
 # Create hook templates
 echo "Initializing agent-kit hook templates..."
 
-AFTER_EDIT_SCRIPT=".claude/agent-after-edit.sh"
-AFTER_STOP_SCRIPT=".claude/agent-after-stop.sh"
+AFTER_EDIT_SCRIPT=".claude/check-after-edit.sh"
+AFTER_STOP_SCRIPT=".claude/check-after-stop.sh"
 
 # Create after-edit template if it doesn't exist
 if [ ! -f "$AFTER_EDIT_SCRIPT" ]; then

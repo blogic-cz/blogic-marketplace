@@ -5,7 +5,7 @@
 
 # Use CLAUDE_PROJECT_DIR if available, fallback to current directory
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
-USER_SCRIPT="$PROJECT_DIR/.claude/agent-after-stop.sh"
+USER_SCRIPT="$PROJECT_DIR/.claude/check-after-stop.sh"
 
 # Check if user script exists
 if [ ! -f "$USER_SCRIPT" ]; then
