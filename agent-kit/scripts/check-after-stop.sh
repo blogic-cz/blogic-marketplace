@@ -19,27 +19,17 @@ if [ ! -f "$USER_SCRIPT" ]; then
 #!/bin/bash
 # Runs on Stop - quality gate with JSON output
 
+# Source the helper script from plugin
+source "${CLAUDE_PLUGIN_ROOT}/scripts/check-runner.sh"
+
 # === JS/TS (define "check" in package.json) ===
-# CHECK_OUTPUT=$(bun run check 2>&1)
-# CHECK_EXIT=$?
-#
-# if [ $CHECK_EXIT -ne 0 ]; then
-#   REASON=$(printf "Linting failed. Please fix the following issues:\n\n%s" "$CHECK_OUTPUT" | jq -Rs .)
-#   cat <<EOJSON
-# {
-#   "decision": "block",
-#   "reason": $REASON
-# }
-# EOJSON
-#   exit 0
-# else
-#   exit 0
-# fi
+# run_check_hook "bun run check" "Stop" "Linting failed"
 
 # === .NET ===
-# dotnet build || exit 2
+# run_check_hook "dotnet build" "Stop" "Build failed"
 
 # === Custom ===
+# run_check_hook "your-command-here" "Stop" "Custom check failed"
 EOF
 
   chmod +x "$USER_SCRIPT"
