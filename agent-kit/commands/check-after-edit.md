@@ -18,16 +18,20 @@ This is useful for:
 
 ## Process
 
-1. Set required environment variables
-2. Execute the check-after-edit hook script
+1. Check if user script exists at `.claude/check-after-edit.sh`
+2. Execute the user's check script
 3. Report results and any failures
 
 Please execute:
 
 ```bash
-export CLAUDE_PROJECT_DIR="$(pwd)"
-export CLAUDE_PLUGIN_ROOT="$(pwd)/agent-kit"
-bash agent-kit/scripts/check-after-edit.sh
+if [ -f .claude/check-after-edit.sh ]; then
+  export CLAUDE_PROJECT_DIR="$(pwd)"
+  bash .claude/check-after-edit.sh
+else
+  echo "Error: .claude/check-after-edit.sh not found. Run agent-kit install script first."
+  exit 1
+fi
 ```
 
-If the script doesn't exist or isn't configured, I'll guide you through setup.
+**Note**: The `CLAUDE_PLUGIN_ROOT` environment variable is automatically set by Claude Code when the agent-kit plugin is active.
