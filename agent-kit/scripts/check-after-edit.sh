@@ -54,5 +54,9 @@ if [ "$ACTIVE_LINES" -eq 0 ]; then
   exit 2
 fi
 
+# Mark that an edit was made (for conditional stop hook execution)
+source "${CLAUDE_PLUGIN_ROOT}/scripts/edit-tracker.sh"
+mark_edit_made
+
 # Execute user's script
 bash "$USER_SCRIPT"

@@ -7,6 +7,13 @@
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 USER_SCRIPT="$PROJECT_DIR/.claude/check-after-stop.sh"
 
+# Check if any edits were made during the session
+source "${CLAUDE_PLUGIN_ROOT}/scripts/edit-tracker.sh"
+if ! has_edits; then
+  echo "No edits made in this session, skipping stop checks."
+  exit 0
+fi
+
 # Check if user script exists
 if [ ! -f "$USER_SCRIPT" ]; then
   echo "Creating template: $USER_SCRIPT"
@@ -18,6 +25,8 @@ if [ ! -f "$USER_SCRIPT" ]; then
   cat > "$USER_SCRIPT" << 'EOF'
 #!/bin/bash
 # Runs on Stop - quality gate with JSON output
+# NOTE: This hook only runs if edits were made during the conversation.
+#       Pure analysis sessions will skip this hook entirely.
 
 # Source the helper script from plugin
 source "${CLAUDE_PLUGIN_ROOT}/scripts/check-runner.sh"
@@ -56,3 +65,12 @@ fi
 
 # Execute user's script
 bash "$USER_SCRIPT"
+EXIT_CODE=$?
+
+# If user script succeeded, clear tracking and celebrate
+if [ $EXIT_CODE -eq 0 ]; then
+  clear_edit_tracking
+  bash "${CLAUDE_PLUGIN_ROOT}/scripts/celebrate.sh"
+fi
+
+exit $EXIT_CODE

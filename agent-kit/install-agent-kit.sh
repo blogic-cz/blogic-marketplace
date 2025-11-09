@@ -103,6 +103,8 @@ if [ ! -f "$AFTER_STOP_SCRIPT" ]; then
   cat > "$AFTER_STOP_SCRIPT" << 'EOFTEMPLATE'
 #!/bin/bash
 # Runs on Stop - quality gate with JSON output
+# NOTE: This hook only runs if edits were made during the conversation.
+#       Pure analysis sessions will skip this hook entirely.
 
 # Source the helper script from plugin
 source "${CLAUDE_PLUGIN_ROOT}/scripts/check-runner.sh"
@@ -121,6 +123,27 @@ EOFTEMPLATE
   echo "✓ Created template: $AFTER_STOP_SCRIPT"
 else
   echo "⚠️  Template already exists: $AFTER_STOP_SCRIPT (skipping)"
+fi
+
+# Add .edit-tracker to .gitignore
+GITIGNORE_FILE=".gitignore"
+TRACKER_ENTRY=".claude/.edit-tracker"
+
+if [ -f "$GITIGNORE_FILE" ]; then
+  if ! grep -q "$TRACKER_ENTRY" "$GITIGNORE_FILE"; then
+    echo "" >> "$GITIGNORE_FILE"
+    echo "# Claude Code agent-kit" >> "$GITIGNORE_FILE"
+    echo "$TRACKER_ENTRY" >> "$GITIGNORE_FILE"
+    echo "✓ Added $TRACKER_ENTRY to .gitignore"
+  else
+    echo "⚠️  $TRACKER_ENTRY already in .gitignore (skipping)"
+  fi
+else
+  cat > "$GITIGNORE_FILE" << 'GITIGNOREEOF'
+# Claude Code agent-kit
+.claude/.edit-tracker
+GITIGNOREEOF
+  echo "✓ Created .gitignore with $TRACKER_ENTRY"
 fi
 
 echo ""

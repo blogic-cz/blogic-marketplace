@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-after-stop.sh; bash ${CLAUDE_PLUGIN_ROOT}/scripts/celebrate.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-after-stop.sh"
           }
         ]
       }
