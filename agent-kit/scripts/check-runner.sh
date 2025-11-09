@@ -11,7 +11,36 @@ run_check_hook() {
   EXIT_CODE=$?
 
   if [ $EXIT_CODE -ne 0 ]; then
-    REASON=$(printf "%s:\n\n%s" "$failure_msg" "$OUTPUT" | jq -Rs .)
+    # Count lines and truncate if too long
+    LINE_COUNT=$(echo "$OUTPUT" | wc -l | tr -d ' ')
+    MAX_LINES=20
+
+    if [ "$LINE_COUNT" -gt "$MAX_LINES" ]; then
+      TRUNCATED_OUTPUT=$(echo "$OUTPUT" | tail -n "$MAX_LINES")
+      ERROR_MESSAGE=$(cat <<EOF
+$failure_msg
+
+Command: $cmd
+
+[Output truncated - showing last $MAX_LINES of $LINE_COUNT lines]
+
+$TRUNCATED_OUTPUT
+
+To see full output, run: $cmd
+EOF
+)
+    else
+      ERROR_MESSAGE=$(cat <<EOF
+$failure_msg
+
+Command: $cmd
+
+$OUTPUT
+EOF
+)
+    fi
+
+    REASON=$(echo "$ERROR_MESSAGE" | jq -Rs .)
 
     if [ "$hook_type" = "PostToolUse" ]; then
       cat <<EOJSON
