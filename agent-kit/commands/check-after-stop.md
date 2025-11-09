@@ -1,42 +1,32 @@
 ---
 description: Run post-stop checks manually
-allowed-tools: Bash(bash:*)
+allowed-tools: Read, Bash
 ---
 
 # Check After Stop
 
-Manually trigger the post-stop hook to run final quality checks.
+Run the checks configured in `.claude/check-after-stop.sh`.
 
 ## Task
 
-I'll execute the check-after-stop hook script that normally runs automatically when a conversation ends.
+I'll read your `.claude/check-after-stop.sh` configuration file, extract the actual check commands (ignoring comments and wrapper functions), and run them directly.
 
 This is useful for:
-- Testing your hook configuration
-- Running final checks before committing
-- Verifying builds and tests pass
-
-**Note**: This hook only runs if edits were made during the session. If no edits were detected, the hook will skip automatically.
+- Testing your final check configuration
+- Running builds/tests before committing
+- Verifying everything passes
 
 ## Process
 
-1. Check if user script exists at `.claude/check-after-stop.sh`
-2. Execute the user's check script
-3. Report results and any failures
-4. Clean up edit tracking if successful
+1. Read `.claude/check-after-stop.sh` to see what checks are configured
+2. Find the actual commands to run (e.g., `bun run check:ci`, `dotnet build`)
+3. Execute those commands directly
+4. Report results and any failures
 
-Please execute:
+Please:
+1. First, read `.claude/check-after-stop.sh`
+2. Look for uncommented commands (usually in `run_check_hook` calls)
+3. Extract the actual command (first parameter)
+4. Run that command directly
 
-```bash
-if [ -f .claude/check-after-stop.sh ]; then
-  export CLAUDE_PROJECT_DIR="$(pwd)"
-  bash .claude/check-after-stop.sh
-else
-  echo "Error: .claude/check-after-stop.sh not found. Run agent-kit install script first."
-  exit 1
-fi
-```
-
-If no edits were tracked, you'll see: "No edits made in this session, skipping stop checks."
-
-**Note**: The `CLAUDE_PLUGIN_ROOT` environment variable is automatically set by Claude Code when the agent-kit plugin is active.
+This approach bypasses wrapper scripts and runs your checks directly.
