@@ -1,12 +1,23 @@
 {
   "name": "agent-kit",
   "description": "Base plugin by blogic with integrated MCP servers",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "author": {
     "name": "blogic"
   },
   "mcpServers": "./.mcp.json",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-start-dynamic.sh"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
