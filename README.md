@@ -1,122 +1,47 @@
 # Blogic Marketplace
 
-A Claude Code plugin marketplace containing enterprise-grade plugins developed by Blogic.
+Dual-platform marketplace for Claude Code and Gemini CLI extensions.
 
-## Available Plugins
+## Quick Install
 
-### Agent Kit
-
-Base plugin providing essential development tools and MCP server integrations.
-
-**Features:**
-
-- Requirements management commands
-- Integrated MCP servers for enhanced functionality
-- Development workflow automation
-
-**Included MCP Servers:**
-
-- **npm-sentinel-mcp** - NPM package analysis and security scanning
-- **chrome-dev-tools** - Chrome DevTools automation and debugging
-- **sentry-spotlight** - Local error debugging with Spotlight
-- **sentry** - Sentry error tracking and monitoring integration
-- **agentsfera** - Agentsfera API integration for extended capabilities
-
-## Installation
-
-First, start Claude Code:
+### Claude Code
 
 ```bash
 claude
-```
-
-### Add the Marketplace
-
-Once Claude Code is running, add the marketplace:
-
-```bash
 /plugin marketplace add https://github.com/blogic-cz/blogic-marketplace
-```
-
-Or for local development:
-
-```bash
-/plugin marketplace add /path/to/blogic-marketplace
-```
-
-### Install a Plugin
-
-Once the marketplace is added, you can install plugins directly:
-
-```bash
 /plugin install agent-kit@blogic-marketplace
 ```
 
-## Plugin Structure
+**→ Full documentation:** [agent-kit/README.md](./agent-kit/)
+
+### Gemini CLI
+
+```bash
+npm install -g @google/gemini-cli@latest
+gemini extensions install https://github.com/blogic-cz/blogic-marketplace/agent-kit-gemini
+```
+
+**→ Full documentation:** [agent-kit-gemini/README.md](./agent-kit-gemini/README.md)
+
+## What's Included
+
+| Platform | Extension | Features |
+|----------|-----------|----------|
+| **Claude Code** | `agent-kit` | MCP servers + automated hooks + slash commands |
+| **Gemini CLI** | `agent-kit` | MCP servers only |
+
+Both versions include:
+- **Chrome DevTools** - Browser automation
+- **Sentry Spotlight** - Local error debugging
+- **Sentry Cloud** - Production error tracking
+- **Agentsfera** - Extended APIs
+
+## Repository Structure
 
 ```
 blogic-marketplace/
-├── .claude-plugin/
-│   └── marketplace.json     # Marketplace configuration
-├── agent-kit/
-│   ├── .claude-plugin/
-│   │   └── plugin.json      # Plugin manifest
-│   ├── .mcp.json            # MCP server configurations
-│   └── commands/            # Slash commands
-│       ├── requirements-start.md
-│       ├── requirements-end.md
-│       ├── requirements-list.md
-│       ├── requirements-status.md
-│       ├── requirements-current.md
-│       └── requirements-remind.md
-└── README.md
-```
-
-## Requirements Management
-
-The agent-kit plugin includes a comprehensive requirements management system:
-
-- `/requirements-start` - Start tracking a new requirement
-- `/requirements-end` - Mark a requirement as completed
-- `/requirements-list` - View all requirements
-- `/requirements-status` - Check status of specific requirements
-- `/requirements-current` - Show currently active requirements
-- `/requirements-remind` - Get reminders about pending requirements
-
-## Development
-
-### Adding New Plugins
-
-1. Create a new directory in the marketplace root
-2. Add `.claude-plugin/plugin.json` with plugin metadata
-3. Add your commands, agents, hooks, or MCP servers
-4. Update this README
-
-### Testing Locally
-
-First, start Claude Code:
-
-```bash
-claude
-```
-
-Then add your local marketplace:
-
-```bash
-/plugin marketplace add /path/to/blogic-marketplace
-```
-
-Install and test your plugin:
-
-```bash
-/plugin install agent-kit@blogic-marketplace
-```
-
-After making changes, uninstall and reinstall to test updates:
-
-```bash
-/plugin uninstall agent-kit@blogic-marketplace
-/plugin install agent-kit@blogic-marketplace
+├── agent-kit/           # Claude Code plugin (full features)
+└── agent-kit-gemini/    # Gemini CLI extension (MCP servers only)
 ```
 
 ## License
