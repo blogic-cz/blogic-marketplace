@@ -1,6 +1,6 @@
 # Blogic Marketplace
 
-Dual-platform marketplace for Claude Code and Gemini CLI extensions.
+Claude Code plugin marketplace with enterprise-grade plugins.
 
 ## Quick Install
 
@@ -16,32 +16,26 @@ claude
 
 ### Gemini CLI
 
-```bash
-npm install -g @google/gemini-cli@latest
-gemini extensions install https://github.com/blogic-cz/blogic-marketplace/agent-kit-gemini
-```
+The Gemini CLI version is available in a separate repository:
 
-**→ Full documentation:** [agent-kit-gemini/README.md](./agent-kit-gemini/README.md)
+**→ https://github.com/blogic-cz/agent-kit-gemini**
+
+```bash
+gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-update
+```
 
 ## What's Included
 
-| Platform | Extension | Features |
-|----------|-----------|----------|
-| **Claude Code** | `agent-kit` | MCP servers + automated hooks + slash commands |
-| **Gemini CLI** | `agent-kit` | MCP servers only |
-
-Both versions include:
-- **Chrome DevTools** - Browser automation
-- **Sentry Spotlight** - Local error debugging
-- **Sentry Cloud** - Production error tracking
-- **Agentsfera** - Extended APIs
+**agent-kit** plugin includes:
+- **MCP Servers**: Chrome DevTools, Sentry Spotlight, Sentry Cloud, Agentsfera
+- **Automated Hooks**: Post-edit checks, post-stop quality gates
+- **Slash Commands**: Code review, skill scanning, and more
 
 ## Repository Structure
 
 ```
 blogic-marketplace/
-├── agent-kit/           # Claude Code plugin (full features)
-└── agent-kit-gemini/    # Gemini CLI extension (MCP servers only)
+└── agent-kit/           # Claude Code plugin
 ```
 
 ## License
