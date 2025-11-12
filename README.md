@@ -1,8 +1,6 @@
 # Blogic Marketplace
 
-Claude Code plugin marketplace with enterprise-grade plugins.
-
-## Quick Install
+## Installation
 
 ### Claude Code
 
@@ -11,8 +9,6 @@ claude
 /plugin marketplace add https://github.com/blogic-cz/blogic-marketplace
 /plugin install agent-kit@blogic-marketplace
 ```
-
-**→ Full documentation:** [agent-kit/README.md](./agent-kit/)
 
 ### Gemini CLI
 
