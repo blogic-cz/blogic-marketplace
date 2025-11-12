@@ -27,13 +27,6 @@ gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-u
 - **Automated Hooks**: Post-edit checks, post-stop quality gates
 - **Slash Commands**: Code review, skill scanning, and more
 
-## Repository Structure
-
-```
-blogic-marketplace/
-└── agent-kit/           # Claude Code plugin
-```
-
 ## License
 
 MIT
