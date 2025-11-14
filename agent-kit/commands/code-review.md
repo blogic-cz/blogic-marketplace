@@ -1,6 +1,6 @@
 ---
-description: Perform systematic pre-PR code review covering quality, security, performance, testing, and documentation
-allowed-tools: [Read, Grep, Bash]
+description: Perform systematic pre-PR code review covering quality, security, performance, testing, and documentation with Exa search and Context7 verification
+allowed-tools: [Read, Grep, Bash, mcp__agentsfera__exa-get_code_context_exa, mcp__agentsfera__exa-web_search_exa, mcp__agentsfera__context7-resolve-library-id, mcp__agentsfera__context7-get-library-docs]
 ---
 
 # Code Review
@@ -16,6 +16,16 @@ Use this command to:
 - Get structured feedback with severity-based prioritization
 
 ## Process
+
+**Overview:**
+1. **Identify Scope** - Determine what code to review
+2. **Scan Changes** - Analyze code across 5 categories (Quality, Security, Performance, Testing, Documentation)
+3. **Verify with Exa & Context7** - Validate uncertain patterns using real-world examples and official docs
+4. **Categorize Findings** - Organize by severity (Critical, Major, Minor)
+5. **Generate Report** - Create structured report with actionable feedback
+6. **Run Automated Checks** - Verify builds and tests pass
+
+---
 
 ### Step 1: Identify Scope
 
@@ -259,6 +269,239 @@ git log --oneline | grep -i "break\|breaking"
 
 ---
 
+## Step 2.5: Verify with Exa & Context7 🔍
+
+**MANDATORY when unsure about:**
+- Whether a technology/library is being used correctly
+- If a pattern/approach follows current best practices
+- Security implications of a specific implementation
+- Performance characteristics of a library/framework feature
+- Correct API usage for unfamiliar dependencies
+
+### When to Use Verification
+
+#### Use Exa Search (`exa-get_code_context_exa`)
+
+**Best for finding real-world patterns and implementation examples:**
+
+```
+When you find:
+- Unfamiliar framework patterns (e.g., React hooks usage)
+- Security-sensitive code you're uncertain about
+- Performance patterns (e.g., caching strategies)
+- Error handling approaches
+- API integration patterns
+- Testing strategies for specific features
+```
+
+**Example queries:**
+```
+exa-get_code_context_exa(query: "React useEffect cleanup memory leaks best practices")
+exa-get_code_context_exa(query: "Express.js SQL injection prevention parameterized queries")
+exa-get_code_context_exa(query: "Next.js API routes rate limiting implementation")
+exa-get_code_context_exa(query: "TypeScript discriminated unions error handling patterns")
+```
+
+#### Use Context7 (`context7-resolve-library-id` + `context7-get-library-docs`)
+
+**Best for getting official documentation and API references:**
+
+```
+When you need:
+- Official API documentation for a library/framework
+- Correct usage of specific library methods
+- Verification of deprecated APIs
+- Type definitions and interfaces
+- Configuration options and parameters
+```
+
+**Example workflow:**
+```
+1. context7-resolve-library-id(libraryName: "next")
+   → Returns: /vercel/next.js
+
+2. context7-get-library-docs(
+     context7CompatibleLibraryID: "/vercel/next.js",
+     topic: "API routes middleware"
+   )
+   → Returns: Official Next.js docs on middleware
+```
+
+### Verification Decision Tree
+
+```
+Found uncertain code pattern?
+│
+├─ Is it about a SPECIFIC library/framework API?
+│  └─ YES → Use Context7
+│     1. Resolve library ID
+│     2. Get official docs for the specific topic
+│     3. Compare with code being reviewed
+│
+└─ Is it about GENERAL patterns or best practices?
+   └─ YES → Use Exa Search
+      1. Search for real-world implementations
+      2. Analyze patterns from multiple sources
+      3. Identify common pitfalls or anti-patterns
+```
+
+### Verification Process
+
+1. **Identify Uncertain Patterns**
+   ```
+   During review, flag code where you're unsure:
+   - "Is this the correct way to use React.memo?"
+   - "Is this SQL query properly parameterized?"
+   - "Does this Next.js pattern follow best practices?"
+   ```
+
+2. **Choose Verification Tool**
+   ```
+   Framework/library-specific → Context7
+   General patterns/practices → Exa Search
+   Both needed → Use both (Context7 first, then Exa for real-world examples)
+   ```
+
+3. **Execute Verification**
+   ```
+   Run the appropriate MCP tool with specific queries
+   ```
+
+4. **Compare & Validate**
+   ```
+   - Compare reviewed code against verified patterns
+   - Note discrepancies or anti-patterns
+   - Update severity if needed (e.g., "might be okay" → "MAJOR issue")
+   ```
+
+5. **Document Findings**
+   ```
+   Include verification sources in review comments:
+   "Based on Next.js official docs [Context7] and production examples [Exa],
+   this pattern violates best practices..."
+   ```
+
+### Example Verification Scenarios
+
+#### Scenario 1: React Hook Usage
+
+**Found in code:**
+```typescript
+useEffect(() => {
+  fetchData();
+}, []);
+```
+
+**Uncertainty:** "Should fetchData be in dependency array?"
+
+**Verification:**
+1. `exa-get_code_context_exa(query: "React useEffect missing dependency warning ESLint exhaustive-deps")`
+2. Analyze real-world patterns from Exa results
+3. **Conclusion:** If fetchData is defined in component body, it should be in deps array OR wrapped in useCallback
+
+**Review comment:**
+```
+⚠️ MAJOR: Missing dependency in useEffect
+File: src/components/DataFetcher.tsx:15
+
+Current code has fetchData outside dependency array, which can cause stale closures.
+[Verified via Exa search of React best practices]
+
+Fix:
+- Option 1: Add to deps array (may cause extra renders)
+- Option 2: Wrap fetchData in useCallback with proper deps
+```
+
+---
+
+#### Scenario 2: SQL Query Security
+
+**Found in code:**
+```typescript
+const query = `SELECT * FROM users WHERE email = '${email}'`;
+```
+
+**Uncertainty:** "Is this vulnerable to SQL injection?"
+
+**Verification:**
+1. `exa-get_code_context_exa(query: "SQL injection prevention parameterized queries node.js")`
+2. Analyze multiple sources confirming string interpolation is vulnerable
+3. **Conclusion:** CRITICAL security issue - always use parameterized queries
+
+**Review comment:**
+```
+🚨 CRITICAL: SQL Injection Vulnerability
+File: src/api/auth.ts:42
+
+String interpolation in SQL queries allows injection attacks.
+[Verified via Exa search - confirmed security anti-pattern]
+
+Fix:
+const query = 'SELECT * FROM users WHERE email = ?';
+const result = await db.execute(query, [email]);
+```
+
+---
+
+#### Scenario 3: Next.js API Route Middleware
+
+**Found in code:**
+```typescript
+export default function handler(req, res) {
+  // No rate limiting
+  const data = await processRequest(req.body);
+  res.json(data);
+}
+```
+
+**Uncertainty:** "Should API routes have rate limiting? What's the standard approach?"
+
+**Verification:**
+1. `context7-resolve-library-id(libraryName: "next")`
+2. `context7-get-library-docs(context7CompatibleLibraryID: "/vercel/next.js", topic: "API routes middleware")`
+3. `exa-get_code_context_exa(query: "Next.js API routes rate limiting production best practices")`
+4. **Conclusion:** Production APIs should have rate limiting; common pattern is using middleware
+
+**Review comment:**
+```
+⚠️ MAJOR: Missing Rate Limiting on Public API
+File: pages/api/process.ts:1
+
+Public API routes should implement rate limiting to prevent abuse.
+[Verified via Context7 (Next.js docs) + Exa (production patterns)]
+
+Suggested approach:
+1. Install: npm install express-rate-limit
+2. Implement middleware pattern from Next.js docs
+3. Consider per-user vs per-IP limits based on auth
+```
+
+---
+
+### Verification Guidelines
+
+**Always verify when you encounter:**
+- ❓ Unfamiliar library/framework usage
+- 🔐 Security-sensitive operations
+- ⚡ Performance-critical code paths
+- 🧪 Complex testing patterns
+- 🔌 Third-party API integrations
+- 📚 Deprecated API warnings
+
+**DON'T verify for:**
+- ✅ Well-known standard patterns (e.g., basic if/else, loops)
+- ✅ Project-specific conventions (check CLAUDE.md instead)
+- ✅ Simple utility functions
+- ✅ Code you're 100% confident about
+
+**Verification adds value when:**
+- 🎯 Prevents false positives (marking correct code as wrong)
+- 🎯 Catches subtle anti-patterns (code that "works" but is wrong)
+- 🎯 Provides authoritative sources for recommendations
+- 🎯 Improves reviewer confidence and accuracy
+
+---
+
 ## Step 3: Categorize Findings
 
 Organize all findings by severity:
@@ -469,7 +712,9 @@ If automated checks fail, document failures in the review report and recommend f
 5. **Be Actionable:** Every issue should have a clear fix
 6. **Consider Context:** Check CLAUDE.md and .claude/ for project standards
 7. **Stay Objective:** Focus on code quality, not personal preferences
-8. **Run Automated Checks:** After review, use `/check-after-stop` to verify builds and tests
+8. **Verify When Unsure:** Use Exa search and Context7 to validate patterns and best practices before flagging issues
+9. **Cite Sources:** Include verification sources ([Context7], [Exa]) in review comments for authority
+10. **Run Automated Checks:** After review, use `/check-after-stop` to verify builds and tests
 
 ---
 
@@ -509,19 +754,24 @@ If automated checks fail, document failures in the review report and recommend f
 1. Scans files in src/api/
 2. Uses git diff to see recent changes
 3. Analyzes each file against the 5 categories
-4. Finds:
-   - Critical: SQL injection in auth.ts
+4. **Verifies uncertain patterns:**
+   - Uses `exa-get_code_context_exa` to verify SQL query patterns
+   - Confirms string interpolation in queries is SQL injection vulnerability
+5. Finds:
+   - Critical: SQL injection in auth.ts (verified via Exa)
    - Major: Missing error handling in users.ts
    - Minor: Inconsistent naming in types.ts
-5. Generates structured report
-6. Recommends: NEEDS_WORK (fix critical issue)
+6. Generates structured report with verification sources
+7. Recommends: NEEDS_WORK (fix critical issue)
 
 ---
 
 ## Notes
 
 - This command is read-only (no edits made)
-- Uses git diff, Read, and Grep tools
+- Uses git diff, Read, Grep, Exa search, and Context7 for comprehensive analysis
 - Focuses on changed code, not entire codebase
 - Adapts to project-specific conventions in CLAUDE.md
 - Can be run multiple times during development
+- **Verification tools (Exa + Context7) prevent false positives and ensure accurate recommendations**
+- Review comments include verification sources for transparency and authority
