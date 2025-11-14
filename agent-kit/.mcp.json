@@ -9,12 +9,12 @@
       "args": ["-y", "@spotlightjs/spotlight", "--stdio-mcp"]
     },
     "sentry": {
-      "url": "https://mcp.sentry.dev/mcp",
-      "transport": "http"
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp"
     },
     "agentsfera": {
-      "url": "https://api.agentsfera.ai",
-      "transport": "http"
+      "type": "http",
+      "url": "https://api.agentsfera.ai"
     }
   }
 }
