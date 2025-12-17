@@ -10,9 +10,18 @@ case "$OS_TYPE" in
     # macOS: Play sound
     afplay /System/Library/Sounds/Glass.aiff 2>/dev/null &
 
-    # Try Raycast confetti first, fallback to AppleScript notification
-    if ! open 'raycast://extensions/raycast/raycast/confetti' 2>/dev/null; then
-      osascript -e 'display notification "Práce dokončena!" with title "🎉 Claude Code" sound name "Glass"'
+    # Try Raycast confetti first
+    if open 'raycast://extensions/raycast/raycast/confetti' 2>/dev/null; then
+      : # Raycast handled it
+    # Fallback to terminal-notifier (more reliable than osascript)
+    elif command -v terminal-notifier &> /dev/null; then
+      terminal-notifier -title "🎉 Claude Code" -message "Práce dokončena!" -sound Glass
+    # Last resort: osascript (may fail if terminal lacks notification permissions)
+    else
+      # Try osascript, but it often fails due to missing terminal notification permissions
+      if ! osascript -e 'display notification "Práce dokončena!" with title "🎉 Claude Code" sound name "Glass"' 2>/dev/null; then
+        echo "💡 Tip: Pro spolehlivé notifikace nainstaluj: brew install terminal-notifier"
+      fi
     fi
     ;;
 
