@@ -2,7 +2,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
+    types: [opened, synchronize]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
@@ -20,25 +20,76 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Load prompt from file
+        id: load-prompt
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Read prompt from separate file - can be edited without triggering workflow changes
+          # Substitute environment variables in the prompt template
+          PROMPT=$(envsubst < .github/prompts/code-review.md)
+          # Use delimiter to handle multiline content
+          echo "prompt<<EOF" >> $GITHUB_OUTPUT
+          echo "$PROMPT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          prompt: ${{ steps.load-prompt.outputs.prompt }}
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Read,Grep,Glob,Bash(bun:*),Bash(gh api:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh search:*)"
 
+      - name: Fail job if Claude found violations
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          OUTPUT_FILE="/__w/_temp/claude-execution-output.json"
+
+          if [ ! -f "$OUTPUT_FILE" ]; then
+            echo "Claude execution output not found, skipping check."
+            exit 0
+          fi
+
+          echo "Checking Claude review result..."
+          RESULT_LINE=$(grep -o 'RESULT: [A-Z]*' "$OUTPUT_FILE" | tail -n 1 || true)
+
+          if [ -z "$RESULT_LINE" ]; then
+            echo "No RESULT line found in Claude output, assuming PASSED."
+            exit 0
+          fi
+
+          echo "Found result: $RESULT_LINE"
+
+          if [ "$RESULT_LINE" = "RESULT: FAILED" ]; then
+            echo "Claude found violations – failing the job."
+            exit 1
+          else
+            echo "Claude reported PASSED – keeping job green."
+          fi

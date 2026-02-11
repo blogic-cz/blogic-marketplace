@@ -1,0 +1,44 @@
+version: 2
+updates:
+  # Bun dependencies
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      production-minor-patch:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      dev-minor-patch:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+
+  # Docker images
+  - package-ecosystem: "docker"
+    directory: "/apps/web-app"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker"
+    directory: "/jobs/post-deployment"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker"
+    directory: "/jobs/pre-deployment"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker"
+    directory: "/jobs/e2e-runner"
+    schedule:
+      interval: "daily"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      actions:
+        patterns: ["*"]

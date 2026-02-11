@@ -1,0 +1,58 @@
+name: opencode
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  opencode:
+    if: |
+      contains(github.event.comment.body, ' /oc') ||
+      startsWith(github.event.comment.body, '/oc') ||
+      contains(github.event.comment.body, ' /opencode') ||
+      startsWith(github.event.comment.body, '/opencode')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run OpenCode
+        uses: sst/opencode/github@latest
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          model: openai/gpt-5.2
+          prompt: |
+            You are running inside a GitHub Actions workflow triggered by a GitHub comment.
+
+            PRIMARY INSTRUCTION:
+            - Execute the user request contained in the triggering comment.
+
+            REQUIREMENTS:
+            - Be concise and deterministic.
+            - Prefer minimal, safe changes.
+            - If you find actionable issues, explain them clearly.
+
+            FINAL RESULT FORMAT (deterministic):
+            - At the very end of your run, output EXACTLY one of these lines as plain text (no markdown, no extra text):
+
+              RESULT: PASSED
+              (if you completed the request and found no actionable issues)
+
+              RESULT: FAILED
+              (if you could not complete the request OR you found at least one actionable issue)
