@@ -32,8 +32,8 @@
 * API endpoint, nebo DB struktura, ze které se získávají data
 
 | Název  | Zdroj | Popis |
-| ----- | ----- |
-|       |       |
+| ----- | ----- | ----- |
+|       |       |       |
 
 ### 2.2 Výstupní data
 

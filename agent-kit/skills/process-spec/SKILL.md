@@ -1,7 +1,9 @@
 ---
 name: process-spec
 description: |
-  This skill creates detailed process specifications for the Nexus system. Use when designing new processes, migrating Portal processes to Nexus, or documenting import/export processes. The skill produces structured markdown documents describing business processes, operations, data flows, validations, and integration points. Invoke with /process-spec.
+  This skill creates detailed process specifications for business processes. This skill should be used when designing new processes, documenting existing processes, or brainstorming about possible process improvements. The skill produces structured markdown documents describing business processes, operations, data flows, validations, and integration points.
+disable-model-invocation: false
+user-invocable: true
 ---
 
 # Process Specification Skill
@@ -42,7 +44,7 @@ Ask clarifying questions as below so you understand properly the need:
 
 ### Step 2: Analyze Existing Implementation
 
-If migrating from Portal, search codebase for relevant implementation:
+If describibg existing process within the applications, search codebase for relevant implementation:
 
 * Use `Grep` to find related classes and functions
 * Use `Read` to understand existing business logic
@@ -62,15 +64,6 @@ Produce the markdown document following the template structure in `references/pr
 ### Step 5: Save Document
 
 Save to `docs/` directory with naming convention: `{process-ID}-{process-name}.md`
-
-### Step 6: Save summary of requirements into basic-memory
-
-Save summary of the requirements and outcome of the analysis into basic-memory tool.
-
-* use mcp__basic-memory__write_note
-* Folder: {project_name}
-* Project: {project_name}
-* Create summary formatted as [Subject] [predicate] [Object]
 
 ## Output Document Structure
 
