@@ -1,7 +1,7 @@
 {
   "name": "agent-kit",
   "description": "Base plugin by blogic with integrated MCP servers",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "author": {
     "name": "blogic"
   },
@@ -13,7 +13,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-start-dynamic.sh"
+            "command": "node -e \"process.env._AGENT_KIT_SCRIPT='session-start-dynamic';require(require('path').join(process.env.CLAUDE_PLUGIN_ROOT,'scripts','runner.js'))\""
           }
         ]
       }
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-after-edit.sh"
+            "command": "node -e \"process.env._AGENT_KIT_SCRIPT='check-after-edit';require(require('path').join(process.env.CLAUDE_PLUGIN_ROOT,'scripts','runner.js'))\""
           }
         ]
       }
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/check-after-stop.sh"
+            "command": "node -e \"process.env._AGENT_KIT_SCRIPT='check-after-stop';require(require('path').join(process.env.CLAUDE_PLUGIN_ROOT,'scripts','runner.js'))\""
           }
         ]
       }
@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/notify-approval.sh"
+            "command": "node -e \"process.env._AGENT_KIT_SCRIPT='notify-approval';require(require('path').join(process.env.CLAUDE_PLUGIN_ROOT,'scripts','runner.js'))\""
           }
         ]
       }
