@@ -32,16 +32,16 @@ powershell -c "irm bun.sh/install.ps1 | iex"
 The user MUST have the andocs server running to preview documentation. **Start it in the background** so it doesn't block the terminal:
 
 ```bash
-bunx andocs@latest &
+bunx andocs &
 ```
 
 This starts a local server at **http://localhost:3030** (default). The browser opens automatically.
 
-**Full help:** `bunx andocs@latest -h`
+**Full help:** `bunx andocs -h`
 
 **Custom port/path:**
 ```bash
-bunx andocs@latest --port 8080 --path ./my-docs &
+bunx andocs --port 8080 --path ./my-docs &
 ```
 
 **If the server is already running, skip this step.** Inform the user: *"andocs server is running — open http://localhost:3030 to preview your docs."*
