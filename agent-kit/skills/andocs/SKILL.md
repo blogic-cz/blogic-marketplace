@@ -17,19 +17,12 @@ command -v bun
 
 ### 2. If Bun is NOT installed — install it
 
-Detect what's available and use the cheapest method:
-
-**Via npm (simplest, if npm is available):**
-```bash
-npm install -g bun
-```
-
-**Via official installer (macOS/Linux):**
+**macOS/Linux:**
 ```bash
 curl -fsSL https://bun.sh/install | bash
 ```
 
-**Via official installer (Windows PowerShell):**
+**Windows PowerShell:**
 ```powershell
 powershell -c "irm bun.sh/install.ps1 | iex"
 ```
