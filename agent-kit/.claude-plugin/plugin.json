@@ -1,7 +1,7 @@
 {
   "name": "agent-kit",
   "description": "Base plugin by blogic with integrated MCP servers",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "author": {
     "name": "blogic"
   },
