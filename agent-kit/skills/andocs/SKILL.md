@@ -191,7 +191,7 @@ Use `$schema` for editor validation:
 ### Directory structure convention
 
 ```text
-my-wireframes/
+prototypes/
   andocs-app.json          # Root marker (required)
   shared.css               # Optional shared styles (auto-discovered)
   shared.js                # Optional shared scripts (auto-discovered)
@@ -206,7 +206,7 @@ my-wireframes/
 Reference a micro-app page by repository-relative path. Optional `title=` and `height=` parameters:
 
 ````markdown
-```andocs-app path=my-wireframes/pages/dashboard.html
+```andocs-app path=prototypes/pages/dashboard.html
 
 ```
 ````
@@ -214,7 +214,7 @@ Reference a micro-app page by repository-relative path. Optional `title=` and `h
 With title and height:
 
 ````markdown
-```andocs-app path=my-wireframes/pages/dashboard.html title="Client Dashboard" height=800
+```andocs-app path=prototypes/pages/dashboard.html title="Client Dashboard" height=800
 
 ```
 ````
