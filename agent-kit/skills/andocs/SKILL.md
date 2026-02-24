@@ -48,7 +48,9 @@ Before starting the server, you MUST identify the correct folder containing the 
 
 ### 4. Start the local andocs server
 
-The user MUST have the andocs server running to preview documentation. **Start it in the background** so it doesn't block the terminal:
+The user MUST have the andocs server running to preview documentation. **Always start it** — do NOT try to detect if it's already running (e.g., via `pgrep`), because it may be running for a different project/directory.
+
+Andocs automatically finds an available port — if port 3030 is taken, it tries 3031, 3032, etc. (up to 10 attempts). So just start it; it will never fail due to a port conflict.
 
 ```bash
 bunx andocs@latest --path ./docs &
@@ -63,8 +65,6 @@ This starts a local server at **http://localhost:3030** (default). The browser o
 ```bash
 bunx andocs@latest --port 8080 --path ./my-docs &
 ```
-
-**If the server is already running, skip this step.** Inform the user: \_"andocs server is running — open http://localhost:3030 to preview your docs.""
 
 ## Code Blocks
 
