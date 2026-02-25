@@ -1,6 +1,6 @@
 ---
 name: andocs
-description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, math formulas, HTML prototypes, micro-apps, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'math', 'formula', 'HTML preview', 'micro-app', 'andocs-app', 'web component'. Covers all Andocs rendering features, micro-app parameters (title, height), Web Components patterns, and correct syntax."
+description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, and correct syntax."
 ---
 
 Write documentation using Andocs rendering capabilities. All features work out of the box.
@@ -168,22 +168,22 @@ new MutationObserver(postHeight).observe(document.body, {
 });
 ```
 
-## Andocs Micro-Apps (`andocs-app`)
+## Andocs Prototypes (`prototype`)
 
-Use `andocs-app.json` as the directory marker for external HTML micro-apps. Micro-apps are full HTML pages rendered in sandboxed iframes with auto-injected Alpine.js, Tailwind CSS v4, and design tokens.
+Use `prototype.json` as the directory marker for external HTML prototypes. Prototypes are full HTML pages rendered in sandboxed iframes with auto-injected Alpine.js, Tailwind CSS v4, and design tokens.
 
-### `andocs-app.json` convention
+### `prototype.json` convention
 
-Create `andocs-app.json` at the micro-app root. The JSON Schema is published at the production URL and also stored locally:
+Create `prototype.json` at the prototype root. The JSON Schema is published at the production URL and also stored locally:
 
-- **Published URL:** `https://andocs.blogic.cz/schemas/andocs-app-schema.json`
-- **Local source:** `packages/common/src/schemas/andocs-app-schema.json`
+- **Published URL:** `https://andocs.blogic.cz/schemas/prototype-schema.json`
+- **Local source:** `packages/common/src/schemas/prototype-schema.json`
 
 Use `$schema` for editor validation:
 
 ```json
 {
-  "$schema": "https://andocs.blogic.cz/schemas/andocs-app-schema.json",
+  "$schema": "https://andocs.blogic.cz/schemas/prototype-schema.json",
   "version": 1
 }
 ```
@@ -192,7 +192,7 @@ Use `$schema` for editor validation:
 
 ```text
 prototypes/
-  andocs-app.json          # Root marker (required)
+  prototype.json          # Root marker (required)
   shared.css               # Optional shared styles (auto-discovered)
   shared.js                # Optional shared scripts (auto-discovered)
   pages/
@@ -203,10 +203,10 @@ prototypes/
 
 ### Markdown syntax
 
-Reference a micro-app page by repository-relative path. Optional `title=` and `height=` parameters:
+Reference a prototype page by repository-relative path. Optional `title=` and `height=` parameters:
 
 ````markdown
-```andocs-app path=prototypes/pages/dashboard.html
+```prototype path=prototypes/pages/dashboard.html
 
 ```
 ````
@@ -214,7 +214,7 @@ Reference a micro-app page by repository-relative path. Optional `title=` and `h
 With title and height:
 
 ````markdown
-```andocs-app path=prototypes/pages/dashboard.html title="Client Dashboard" height=800
+```prototype path=prototypes/pages/dashboard.html title="Client Dashboard" height=800
 
 ```
 ````
@@ -233,11 +233,11 @@ With title and height:
 
 - Andocs auto-injects **Alpine.js** (v3 CDN) and **Tailwind CSS v4** (`@tailwindcss/browser` from jsdelivr) into the iframe
 - Andocs injects light-theme design tokens as CSS custom properties
-- `shared.css` is auto-discovered from the nearest parent `andocs-app.json` root and injected automatically
-- `shared.js` is auto-discovered from the nearest parent `andocs-app.json` root and injected as `<script data-andocs-shared-js>` in `<head>` — ideal for Web Component class definitions shared across pages
+- `shared.css` is auto-discovered from the nearest parent `prototype.json` root and injected automatically
+- `shared.js` is auto-discovered from the nearest parent `prototype.json` root and injected as `<script data-andocs-shared-js>` in `<head>` — ideal for Web Component class definitions shared across pages
 - Shared JS executes before the HTML body renders (injected in `<head>`, before Tailwind/Alpine CDN scripts)
 - Iframe runs in sandbox mode (`allow-scripts` only)
-- "Open in new tab" uses a resolvable server URL (`/api/micro-app-preview`) instead of fragile blob URLs (web-app only; CLI falls back to blob)
+- "Open in new tab" uses a resolvable server URL (`/api/prototype-preview`) instead of fragile blob URLs (web-app only; CLI falls back to blob)
 
 **IMPORTANT — Tailwind v4 CDN:** The injected CDN is `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4` (NOT `cdn.tailwindcss.com` which only supports v3). All Tailwind v4 utility classes work out of the box.
 
@@ -248,6 +248,15 @@ For current design tokens (CSS custom properties with exact values), CDN library
 ```
 GET https://andocs.blogic.cz/llms-andocs-skill
 ```
+
+### Reference implementation repository
+
+Use the public Andocs demo repository as the canonical reference implementation for prototype blocks and demo content structure:
+
+- Repository: `https://github.com/blogic-cz/andocs-demo`
+- Purpose: public reference implementation for real-world `prototype` usage (`prototype.json`, `shared.css`, `shared.js`, multi-page HTML examples)
+
+When users ask for a working example, point them to this repository first.
 
 ### Multi-page navigation pattern
 
@@ -262,7 +271,7 @@ Use Alpine.js `x-data` to manage page state. Use `<template x-if>` blocks for ea
   openDetail(item) { this.selectedItem = item; this.page = 'detail'; },
   goBack() { this.page = 'list'; this.selectedItem = null; }
 }"
-  class="micro-app-shell"
+  class="prototype-shell"
 >
   <!-- List page -->
   <template x-if="page === 'list'">
@@ -270,7 +279,7 @@ Use Alpine.js `x-data` to manage page state. Use `<template x-if>` blocks for ea
       <template x-for="item in items" :key="item.id">
         <button
           @click="openDetail(item)"
-          class="micro-app-btn-ghost w-full text-left"
+          class="prototype-btn-ghost w-full text-left"
         >
           <span x-text="item.name"></span>
         </button>
@@ -281,26 +290,26 @@ Use Alpine.js `x-data` to manage page state. Use `<template x-if>` blocks for ea
   <!-- Detail page -->
   <template x-if="page === 'detail'">
     <div>
-      <button @click="goBack()" class="micro-app-btn-ghost">← Back</button>
-      <h2 class="micro-app-title" x-text="selectedItem?.name"></h2>
+      <button @click="goBack()" class="prototype-btn-ghost">← Back</button>
+      <h2 class="prototype-title" x-text="selectedItem?.name"></h2>
     </div>
   </template>
 </div>
 ```
 
-### Minimal micro-app page example
+### Minimal prototype page example
 
 ```html
-<div x-data="{ count: 0 }" class="micro-app-shell">
+<div x-data="{ count: 0 }" class="prototype-shell">
   <div class="px-8 pt-8 pb-7">
-    <h2 class="micro-app-title">Counter</h2>
-    <p class="micro-app-subtitle mt-1">A simple interactive demo</p>
+    <h2 class="prototype-title">Counter</h2>
+    <p class="prototype-subtitle mt-1">A simple interactive demo</p>
     <div class="mt-6">
-      <span class="micro-app-label">Count</span>
-      <span class="micro-app-value" x-text="count"></span>
+      <span class="prototype-label">Count</span>
+      <span class="prototype-value" x-text="count"></span>
     </div>
     <button
-      class="micro-app-btn micro-app-btn-primary mt-6"
+      class="prototype-btn prototype-btn-primary mt-6"
       x-on:click="count++"
     >
       Increment
@@ -314,9 +323,9 @@ References:
 - Alpine.js: https://alpinejs.dev/start-here
 - Tailwind CSS v4 browser CDN: https://www.jsdelivr.com/package/npm/@tailwindcss/browser
 
-### Web Components in micro-apps
+### Web Components in prototypes
 
-Micro-apps can use native **Custom Elements** with Shadow DOM — no build step required. Define components in a plain `<script>` block (NOT `type="module"` — see gotchas).
+Prototypes can use native **Custom Elements** with Shadow DOM — no build step required. Define components in a plain `<script>` block (NOT `type="module"` — see gotchas).
 
 ```html
 <title>Web Components</title>
@@ -387,9 +396,9 @@ For components with state changes (toggles, tabs, accordions), build the DOM **o
 </script>
 ```
 
-### Micro-app gotchas
+### Prototype gotchas
 
-**CRITICAL — these will silently break your micro-app:**
+**CRITICAL — these will silently break your prototype:**
 
 1. **Use `<script>`, NOT `<script type="module">`** — The iframe sandbox (`allow-scripts` without `allow-same-origin`) creates an opaque origin. `type="module"` may not execute under opaque origins. Plain `<script>` works fine since no imports are needed.
 
