@@ -35,19 +35,19 @@ Shared skills for all apps built on [blogic-template-ts](https://github.com/blog
 ### Install all skills
 
 ```bash
-npx skills add blogic-cz/blogic-marketplace --all
+npx skills add blogic-cz/blogic-marketplace/template-ts --all
 ```
 
 ### Install specific skills
 
 ```bash
-npx skills add blogic-cz/blogic-marketplace --skill drizzle-database --skill trpc-patterns --skill tanstack-frontend
+npx skills add blogic-cz/blogic-marketplace/template-ts --skill drizzle-database --skill trpc-patterns --skill tanstack-frontend
 ```
 
 ### Interactive selection
 
 ```bash
-npx skills add blogic-cz/blogic-marketplace
+npx skills add blogic-cz/blogic-marketplace/template-ts
 ```
 
 ### Update
