@@ -2,6 +2,32 @@
 
 Agent skills and plugins for Blogic TypeScript fullstack projects.
 
+## agent-kit Plugin
+
+Plugin with MCP servers, hooks, and commands for Claude Code.
+
+### Claude Code
+
+```bash
+claude
+/plugin marketplace add https://github.com/blogic-cz/blogic-marketplace
+/plugin install agent-kit@blogic-marketplace
+```
+
+### Gemini CLI
+
+Available in a separate repository:
+
+```bash
+gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-update
+```
+
+### What's included
+
+- **MCP Servers**: Chrome DevTools, Sentry Spotlight, Sentry Cloud, Agentsfera
+- **Automated Hooks**: Post-edit checks, post-stop quality gates
+- **Skills**: andocs rendering, skill-creator
+
 ## template-ts Skills
 
 Shared skills for all apps built on [blogic-template-ts](https://github.com/blogic-cz/blogic-template-ts). Works with Claude Code, OpenCode, Cursor, Cline, Copilot, Windsurf, and other agents.
@@ -55,32 +81,6 @@ npx skills update
 | `testing-patterns` | Unit tests, TRPC integration tests, and E2E tests |
 | `trpc-patterns` | TRPC routers, procedures, and middleware |
 | `update-packages` | npm package updates with breaking change handling |
-
-## agent-kit Plugin
-
-Plugin with MCP servers, hooks, and commands for Claude Code.
-
-### Install
-
-```bash
-claude
-/plugin marketplace add https://github.com/blogic-cz/blogic-marketplace
-/plugin install agent-kit@blogic-marketplace
-```
-
-### Gemini CLI
-
-Available in a separate repository:
-
-```bash
-gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-update
-```
-
-### What's included
-
-- **MCP Servers**: Chrome DevTools, Sentry Spotlight, Sentry Cloud, Agentsfera
-- **Automated Hooks**: Post-edit checks, post-stop quality gates
-- **Skills**: andocs rendering, skill-creator
 
 ## License
 
