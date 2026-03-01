@@ -88,3 +88,69 @@ const result = await Effect.runPromise(
 
 - Keep domain errors typed inside Effect
 - Convert to TRPC/HTTP errors only at adapter boundary
+
+## Server Configuration (Effect DI)
+
+Environment variables are managed via **Effect ServerConfig** — a `Context.Tag` + `Layer` dependency injection pattern.
+
+**Key files:**
+
+| File                                                | Purpose                                                                     |
+| --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `apps/web-app/src/env/server.ts`                    | `ServerConfig` Context.Tag + `ServerConfigLayer` (Effect Schema validation) |
+| `apps/web-app/src/env/client.ts`                    | Client-side env (Effect Schema, `import.meta.env`)                          |
+| `apps/web-app/src/infrastructure/effect-runtime.ts` | `AppLayer` includes `ServerConfigLayer`, re-exports `ServerConfig`          |
+
+**Usage in TRPC routers** (preferred — via Effect DI):
+
+```ts
+import { Effect } from "effect";
+import { runtime, ServerConfig } from "@/infrastructure/effect-runtime";
+
+// Inside TRPC mutation/query handler:
+return runtime.runPromise(
+  Effect.gen(function* () {
+    const config = yield* ServerConfig;
+    // Use config.BASE_URL, config.ENCRYPTION_KEY, etc.
+  }),
+);
+```
+
+**Usage in Effect services** (Layer dependency):
+
+```ts
+import { ServerConfig } from "@/env/server"; // NOT from effect-runtime (avoid circular deps)
+
+export const MyServiceLive = Layer.effect(
+  MyService,
+  Effect.gen(function* () {
+    const config = yield* ServerConfig;
+    // Build service using config values
+  }),
+);
+// Then add Layer.provide(ServerConfigLayer) in effect-runtime.ts
+```
+
+**Usage in utility functions** (config as parameter):
+
+```ts
+import type { ServerEnv } from "@/env/server";
+
+export function myUtil(param: string, config: ServerEnv) {
+  // Use config.FIELD directly
+}
+// Caller passes config from ServerConfig yield
+```
+
+**Bootstrap exceptions** (these 4 files may import `env` directly):
+
+- `apps/web-app/src/auth/auth.ts` — Better Auth needs sync env access at init
+- `apps/web-app/src/infrastructure/db.ts` — DB pool created before Effect runtime
+- `apps/web-app/src/infrastructure/effect-runtime.ts` — integrates ServerConfigLayer into AppLayer
+- `apps/web-app/server.ts` — server entry point
+
+**Rules:**
+
+- ❌ NEVER import `env` directly in TRPC routers or services — use `ServerConfig` DI
+- ❌ NEVER import `ServerConfig` from `@/env/server` in TRPC routers — use `@/infrastructure/effect-runtime` re-export
+- ✅ DO import `ServerConfig` from `@/env/server` inside Effect Layer definitions (to avoid circular deps)
