@@ -64,7 +64,7 @@ npx skills update
 | `code-review` | Pre-PR code review checklist |
 | `debugging-with-opensrc` | Debug libraries by reading their source code |
 | `drizzle-database` | Database schemas, queries, and migrations with Drizzle ORM |
-| `effect-expert` | Effect TypeScript services, layers, and error handling |
+| `effect-ts` | Effect TypeScript services, layers, and error handling |
 | `frontend-design` | UI components, styling, and layouts |
 | `git-workflow` | PR lifecycle, branch management, and CI monitoring |
 | `kubernetes-helm` | Kubernetes deployments with Helm charts |

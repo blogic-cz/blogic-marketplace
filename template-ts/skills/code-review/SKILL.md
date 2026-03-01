@@ -230,7 +230,7 @@ await queryClient.invalidateQueries({
 
 ### 8. Effect Patterns (if changes include Effect code)
 
-**Check against skill:** `effect-expert`
+**Check against skill:** `effect-ts`
 
 **Applies to:** `packages/services/`, `effect-runtime.ts`, files with `Effect.gen`, `Context.Tag`
 
@@ -389,6 +389,6 @@ Query: "TRPC v11 queryOptions pattern"
 
 - `trpc-patterns` — TRPC router patterns, procedures, error handling
 - `tanstack-frontend` — Router, Query, Form patterns
-- `effect-expert` — Effect services, layers, ManagedRuntime, error handling
+- `effect-ts` — Effect services, layers, ManagedRuntime, error handling
 - `scan-effect-solutions` — Deep Effect compliance scan
 - `production-troubleshooting` — Performance investigation

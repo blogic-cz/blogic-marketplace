@@ -326,4 +326,4 @@ export function calculate(
 ### Related Skills
 
 - `testing-patterns` - Test syntax, TRPC integration tests, E2E patterns
-- `effect-expert` - Effect service design, layers, error handling
+- `effect-ts` - Effect service design, layers, error handling

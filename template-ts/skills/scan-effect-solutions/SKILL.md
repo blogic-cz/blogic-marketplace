@@ -23,10 +23,10 @@ references/error-handling.md
 references/testing-layers.md
 ```
 
-Load the effect-expert skill for best practices context:
+Load the effect-ts skill for best practices context:
 
 ```
-skill({ name: "effect-expert" })
+skill({ name: "effect-ts" })
 ```
 
 ---
@@ -167,6 +167,6 @@ Provide a structured report with:
 
 ## Related Skills
 
-- `effect-expert` — Effect services, layers, error handling, config patterns
+- `effect-ts` — Effect services, layers, error handling, config patterns
 - `testing-patterns` — Vitest and @effect/vitest test patterns
 - `code-review` — General code review methodology (includes Effect section)

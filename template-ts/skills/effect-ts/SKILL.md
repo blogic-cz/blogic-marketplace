@@ -1,5 +1,5 @@
 ---
-name: effect-expert
+name: effect-ts
 description: Review and guide Effect TypeScript best practices based on effect.solutions standards. Use when implementing Effect patterns, services, layers, error handling, data modeling, config, testing, or CLI development.
 compatibility: opencode
 metadata:
