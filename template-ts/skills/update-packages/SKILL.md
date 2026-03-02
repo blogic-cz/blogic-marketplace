@@ -120,6 +120,43 @@ These packages must always be updated as a group — mismatched versions cause t
 3. Run `bun install` to apply
 4. Run `bun run check`
 
+## Release Notes Analysis (MANDATORY)
+
+For every **minor** or **major** version bump, check GitHub release notes for changes relevant to the project. Skip patch-only updates.
+
+### How
+
+1. After `bun upgrade`, identify all minor/major bumps
+2. Get repo URL via `npm view <package> repository.url`
+3. Read releases with `gh release view <tag> --repo <owner/repo>` (fallback: `CHANGELOG.md`)
+4. For **major**: look for breaking changes, migration guides, removed APIs
+5. For **minor**: look for new APIs, opt-in perf improvements, deprecations
+6. Map each finding against actual project codebase — search for usages, identify affected files, and provide concrete fix/adoption suggestions
+
+### Report
+
+Output a summary table after all updates:
+
+```
+| Package | Type | Old → New | Changes | Impact & Suggestions |
+|---------|------|-----------|---------|----------------------|
+| effect | MAJOR | 3.x → 4.0 | `Layer` API redesigned | ⚠️ 12 files use `Layer.succeed` → must change to `Layer.sync`. Files: src/services/Auth.ts:14, src/services/Db.ts:8, ... See migration: https://... |
+| drizzle-orm | MINOR | 0.38 → 0.39 | `.having()` support | ❌ No aggregate queries in project |
+| @tanstack/react-router | MINOR | 1.90 → 1.91 | `beforeLoad` abort signal | ✅ src/routes/dashboard.tsx:23 has slow loader — add `abortSignal` to cancel stale fetches. Suggested diff: `beforeLoad: ({ abortController }) => ...` |
+```
+
+### Parallelization
+
+Parallelize via background subagents. Packages from the same ecosystem (per Package Groups table above) share one subagent. Standalone packages get one subagent each. Each subagent reads release notes AND searches the project codebase for affected usages. Merge results into a single report.
+
+### Rules
+
+- Each subagent MUST search the codebase for usages of changed/deprecated/new APIs
+- For breaking changes: list all affected files with line numbers and provide migration snippets
+- For new features: identify where in the project they could be adopted and show suggested code changes
+- Do NOT apply changes — provide diffs/suggestions only, user decides
+- Do NOT block updates on this analysis — update first, analyze after
+- Packages with no releases/changelog → "no release notes available", move on
 ## Testing Requirements
 
 | Update Type | Required Tests |
