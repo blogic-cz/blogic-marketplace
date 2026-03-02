@@ -46,10 +46,10 @@ Start with Sentry to identify slow queries and external API latency patterns.
 
 Examine kubectl logs for timing information and error patterns.
 
-**Using kubectl directly:**
+**Using agent-tools-k8s:**
 
 ```bash
-bun run k8s-tool logs <pod-name> -n <namespace> --tail=200
+agent-tools-k8s logs --pod <pod-name> --env <env> --tail 200
 ```
 
 **Key log patterns to search for:**
@@ -70,18 +70,10 @@ bun run k8s-tool logs <pod-name> -n <namespace> --tail=200
 
 Verify CPU and memory usage to detect throttling.
 
-**Using kubectl:**
+**Using agent-tools-k8s:**
 
 ```bash
-kubectl top pod -n <namespace>
-kubectl top node
-```
-
-**Using kubectl directly:**
-
-```bash
-bun run k8s-tool top pod -n <namespace>
-bun run k8s-tool top node
+agent-tools-k8s top --env <env>
 ```
 
 **Warning signs:**
@@ -139,11 +131,12 @@ Reference `references/helm-values-locations.md` for detailed Helm configuration 
 
 ### kubectl commands
 
-Common kubectl operations (use via `bun run k8s-tool`):
+Common kubectl operations (use via `agent-tools-k8s`):
 
-- `k8s-tool logs <pod> -n <ns>` - Extract and filter pod logs with timing information
-- `k8s-tool top pod -n <ns>` - Show CPU/memory usage for all pods in namespace
-- `k8s-tool get pod -o yaml -n <ns>` - Check resource limits and pod configuration
+- `agent-tools-k8s logs --pod <pod> --env <env> --tail 200` - Extract and filter pod logs
+- `agent-tools-k8s top --env <env>` - Show CPU/memory usage for pods
+- `agent-tools-k8s describe --resource pod --name <pod> --env <env>` - Check resource limits and pod configuration
+- `agent-tools-k8s kubectl --env <env> --cmd "get pods"` - Raw kubectl for anything else
 
 ### references/
 

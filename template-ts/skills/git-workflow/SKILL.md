@@ -16,12 +16,12 @@ Create branch (if needed), commit, push, and create/update PR in one command.
 Run everything as ONE chained command so user approves only once:
 
 ```bash
-git checkout -b <branch> && git add -A && git commit -m "<msg>" && git push -u origin HEAD && bun run gh-tool pr create --base <base> --title "<title>" --body "<body>"
+git checkout -b <branch> && git add -A && git commit -m "<msg>" && git push -u origin HEAD && agent-tools-gh pr create --base <base> --title "<title>" --body "<body>"
 ```
 
 - If already on a feature branch, skip `git checkout -b`
-- Check if PR exists: `bun run gh-tool pr view --json number -q .number 2>/dev/null`
-- If PR exists, use `bun run gh-tool pr edit <pr_number> --title "<title>" --body "<body>"` instead of `bun run gh-tool pr create`
+- Check if PR exists: `agent-tools-gh pr view --json number -q .number 2>/dev/null`
+- If PR exists, use `agent-tools-gh pr edit <pr_number> --title "<title>" --body "<body>"` instead of `agent-tools-gh pr create`
 - Base branch: argument provided by user (default: `test`)
 - Branch naming: `feat/`, `fix/`, `chore/` based on changes
 
@@ -36,13 +36,13 @@ Inform the user: "PR created. Monitoring CI checks... (say 'stop' to exit the lo
 Poll check status every 30 seconds:
 
 ```bash
-bun run gh-tool pr checks --pr <pr_number> --watch
+agent-tools-gh pr checks --pr <pr_number> --watch
 ```
 
 Or manually poll:
 
 ```bash
-bun run gh-tool pr checks --pr <pr_number>
+agent-tools-gh pr checks --pr <pr_number>
 ```
 
 States: `PENDING`, `QUEUED` → still running. `COMPLETED` → check conclusion.
@@ -54,7 +54,7 @@ States: `PENDING`, `QUEUED` → still running. `COMPLETED` → check conclusion.
 1. Get the failed check details:
 
    ```bash
-   bun run gh-tool pr checks-failed --pr <pr_number>
+   agent-tools-gh pr checks-failed --pr <pr_number>
    ```
 
 2. For build/lint/test failures, fetch logs if available or analyze the error
@@ -135,6 +135,8 @@ git checkout <base> && git pull origin <base> && git checkout -b <branch-name>
 
 Fetch PR review comments from AI code review assistants, analyze them, apply valid fixes, respond to comments explaining how they were addressed, then commit and push.
 
+> **Shortcut:** Use `agent-tools-gh pr review-triage --pr <pr_number>` to get a combined overview (PR info, unresolved threads, checks, discussion summary) in one command before diving into individual comments.
+
 ### Step 1: Get PR
 
 If a PR number is provided as an argument, use that PR number. Otherwise, use the current branch's PR.
@@ -153,7 +155,7 @@ There are two sources of review feedback:
 Fetch unresolved inline review threads:
 
 ```bash
-bun run gh-tool pr threads --pr <pr_number> --unresolved-only
+agent-tools-gh pr threads --pr <pr_number> --unresolved-only
 ```
 
 Each thread includes `threadId`, `commentId`, `path`, `line`, and `body`.
@@ -167,9 +169,9 @@ If the result is empty but you need to verify, re-run the command above to confi
 **Even if inline threads are empty**, check for AI reviewer comments that contain actionable findings:
 
 ```bash
-bun run gh-tool pr discussion-summary --pr <pr_number>
-bun run gh-tool pr issue-comments-latest --pr <pr_number> --author claude --body-contains "Claude Code Review"
-bun run gh-tool pr issue-comments-latest --pr <pr_number> --author sentry-io --body-contains "Sentry"
+agent-tools-gh pr discussion-summary --pr <pr_number>
+agent-tools-gh pr issue-comments-latest --pr <pr_number> --author claude --body-contains "Claude Code Review"
+agent-tools-gh pr issue-comments-latest --pr <pr_number> --author sentry-io --body-contains "Sentry"
 ```
 
 AI reviewers (Claude bot, Sentry Seer) post code review findings as general PR comments, not inline threads. These comments typically contain:
@@ -217,13 +219,13 @@ For each valid suggestion:
 First, fetch review threads to get thread IDs and resolution status:
 
 ```bash
-bun run gh-tool pr threads --pr <pr_number>
+agent-tools-gh pr threads --pr <pr_number>
 ```
 
 Then check which threads have replies:
 
 ```bash
-bun run gh-tool pr comments --pr <pr_number>
+agent-tools-gh pr comments --pr <pr_number>
 ```
 
 **Identify threads missing replies** — threads with only 1 comment (the original) need a reply added.
@@ -233,13 +235,18 @@ bun run gh-tool pr comments --pr <pr_number>
 For inline review comment replies:
 
 ```bash
-bun run gh-tool pr reply --pr <pr_number> --comment-id <comment_id> --body "<response>"
+agent-tools-gh pr reply --pr <pr_number> --comment-id <comment_id> --body "<response>"
 ```
+
+> **Shortcut:** To reply and resolve a thread in one step:
+> ```bash
+> agent-tools-gh pr reply-and-resolve --pr <pr_number> --comment-id <comment_id> --thread-id <thread_id> --body "<response>"
+> ```
 
 For general PR comments:
 
 ```bash
-bun run gh-tool pr comment --pr <pr_number> --body "<response>"
+agent-tools-gh pr comment --pr <pr_number> --body "<response>"
 ```
 
 Response format:
@@ -254,7 +261,7 @@ Response format:
 **Only after replying**, resolve the thread:
 
 ```bash
-bun run gh-tool pr resolve --thread-id <thread_id>
+agent-tools-gh pr resolve --thread-id <thread_id>
 ```
 
 **Do NOT resolve** threads where you asked a question or need discussion.
@@ -286,7 +293,7 @@ Inform the user: "Fixes pushed. Monitoring CI checks... (say 'stop' to exit the 
 Use the built-in `--watch` flag to wait for checks (suppress verbose output):
 
 ```bash
-bun run gh-tool pr checks --pr <pr_number> --watch --fail-fast > /dev/null 2>&1; echo $?
+agent-tools-gh pr checks --pr <pr_number> --watch --fail-fast > /dev/null 2>&1; echo $?
 ```
 
 **Exit codes:**
@@ -303,7 +310,7 @@ The `--fail-fast` flag exits immediately when any check fails, allowing faster i
 1. Get failed check details:
 
    ```bash
-   bun run gh-tool pr checks-failed --pr <pr_number>
+   agent-tools-gh pr checks-failed --pr <pr_number>
    ```
 
 2. For build/lint/test failures, fetch logs if available or analyze the error from the link
@@ -320,8 +327,8 @@ The `--fail-fast` flag exits immediately when any check fails, allowing faster i
 1. Check for new review comments since last check:
 
    ```bash
-   bun run gh-tool pr comments --pr <pr_number> --since "<last_check_timestamp>"
-   bun run gh-tool pr issue-comments --pr <pr_number> --since "<last_check_timestamp>"
+   agent-tools-gh pr comments --pr <pr_number> --since "<last_check_timestamp>"
+   agent-tools-gh pr issue-comments --pr <pr_number> --since "<last_check_timestamp>"
    ```
 
 2. **If new comments exist:**
