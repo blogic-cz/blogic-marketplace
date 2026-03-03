@@ -108,34 +108,42 @@ These packages must always be updated as a group — mismatched versions cause t
 
 ## Update Strategy
 
-**For regular packages:**
-1. Run `bun upgrade` to update all packages interactively
-2. Select packages to update (prefer updating all unless a known breaking change exists)
-3. Run `bun run check` after each group update
-4. Fix any breaking changes before proceeding to the next group
+### Core Principle: Update + Analyze in Parallel
 
-**For catalog packages:**
-1. Manually check latest version with `npm view <package> version`
-2. Update the version in the catalog configuration
-3. Run `bun install` to apply
-4. Run `bun run check`
+Release notes analysis happens **simultaneously** with each package group update — not after. When `bun run check` fails, you already have migration guides and know exactly what changed.
 
-## Release Notes Analysis (MANDATORY)
+### Per Package Group Flow
 
-For every **minor** or **major** version bump, check GitHub release notes for changes relevant to the project. Skip patch-only updates.
+For each package group (see Package Groups table above), execute steps 1-4 before moving to the next group:
 
-### How
+**Step 1 — Identify versions (old → new)**
+- Run `bun upgrade` interactively, note which packages have minor/major bumps
+- For catalog packages: `npm view <package> version` to find latest
 
-1. After `bun upgrade`, identify all minor/major bumps
-2. Get repo URL via `npm view <package> repository.url`
-3. Read releases with `gh release view <tag> --repo <owner/repo>` (fallback: `CHANGELOG.md`)
-4. For **major**: look for breaking changes, migration guides, removed APIs
-5. For **minor**: look for new APIs, opt-in perf improvements, deprecations
-6. Map each finding against actual project codebase — search for usages, identify affected files, and provide concrete fix/adoption suggestions
+**Step 2 — Update + Analyze release notes IN PARALLEL**
 
-### Report
+Do both at the same time:
 
-Output a summary table after all updates:
+| Track A: Apply Update | Track B: Analyze Release Notes (background subagents) |
+|---|---|
+| Apply version bumps (`bun upgrade` selection or catalog edit) | For each minor/major bump: `npm view <package> repository.url` → `gh release view <tag> --repo <owner/repo>` (fallback: `CHANGELOG.md`) |
+| `bun install` if catalog | **Major**: breaking changes, migration guides, removed APIs |
+| | **Minor**: new APIs, deprecations, opt-in improvements |
+| | Search project codebase for usages of changed/deprecated/new APIs |
+
+Parallelization: packages from the same ecosystem (per Package Groups table) share one background subagent. Standalone packages get one subagent each. Each subagent reads release notes AND searches the codebase for affected usages.
+
+**Step 3 — Check + Fix with context**
+- Run `bun run check`
+- If check fails: consult the release notes analysis from Step 2 — you know what changed, have migration guides, and can fix with full context instead of blind trial-and-error
+- Fix any breaking changes using the migration info
+
+**Step 4 — Commit the group**
+- Commit the update with appropriate message before moving to next group
+
+### Release Notes Report
+
+After all groups are updated, output a unified summary table:
 
 ```
 | Package | Type | Old → New | Changes | Impact & Suggestions |
@@ -145,17 +153,14 @@ Output a summary table after all updates:
 | @tanstack/react-router | MINOR | 1.90 → 1.91 | `beforeLoad` abort signal | ✅ src/routes/dashboard.tsx:23 has slow loader — add `abortSignal` to cancel stale fetches. Suggested diff: `beforeLoad: ({ abortController }) => ...` |
 ```
 
-### Parallelization
+Skip patch-only updates in this report.
 
-Parallelize via background subagents. Packages from the same ecosystem (per Package Groups table above) share one subagent. Standalone packages get one subagent each. Each subagent reads release notes AND searches the project codebase for affected usages. Merge results into a single report.
-
-### Rules
+### Release Notes Rules
 
 - Each subagent MUST search the codebase for usages of changed/deprecated/new APIs
 - For breaking changes: list all affected files with line numbers and provide migration snippets
 - For new features: identify where in the project they could be adopted and show suggested code changes
-- Do NOT apply changes — provide diffs/suggestions only, user decides
-- Do NOT block updates on this analysis — update first, analyze after
+- Do NOT apply adoption suggestions — provide diffs/suggestions only, user decides
 - Packages with no releases/changelog → "no release notes available", move on
 ## Testing Requirements
 
