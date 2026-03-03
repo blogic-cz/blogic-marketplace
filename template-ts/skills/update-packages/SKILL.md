@@ -7,10 +7,15 @@ description: "LOAD THIS SKILL when: updating npm packages, user mentions 'update
 
 ## First Step: Update Skills + Create Branch (MANDATORY)
 
-Before touching any packages, update the skills themselves and create a dedicated branch:
+Before touching any packages, update the skills themselves and create a dedicated branch.
+
+Update skills from all sources **in parallel** (one command per source repo):
 
 ```bash
-bunx skills update
+npx skills add blogic-cz/blogic-marketplace/template-ts --all -g -y &
+npx skills add blogic-cz/agent-tools --all -g -y &
+npx skills add gaboe/opencode-gitbutler --all -g -y &
+wait
 ```
 
 Then create a dedicated branch:
@@ -20,7 +25,8 @@ but branch new chore/update-packages-$(date +%y%m%d-%H%M)
 ```
 
 **Rules:**
-- Always run `bunx skills update` first — skills may contain updated instructions for this very workflow
+- Always update skills first — skills may contain updated instructions for this very workflow
+- Run source repos in parallel (`&` + `wait`) — each clones once for all its skills
 - Never reuse an existing update-packages branch
 - Always create a fresh branch with the current timestamp
 - All package update commits go to this branch
