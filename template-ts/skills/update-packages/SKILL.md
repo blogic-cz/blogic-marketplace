@@ -207,5 +207,3 @@ This clears the local package cache and performs a fresh install.
 - **DO NOT** update packages with `workspace:*` version specifiers — these are internal monorepo packages managed separately
 - **DO NOT** skip `@typescript/native-preview` updates — this package affects TypeScript LSP performance and should stay current
 - **DO NOT** use `bun outdated` to check for updates — it misses packages that are in the catalog or have non-standard version specifiers; use `bun upgrade` interactively instead
-
-<!-- test: skills update detection -->
