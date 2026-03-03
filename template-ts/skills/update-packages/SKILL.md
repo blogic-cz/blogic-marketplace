@@ -9,14 +9,11 @@ description: "LOAD THIS SKILL when: updating npm packages, user mentions 'update
 
 Before touching any packages, update the skills themselves and create a dedicated branch.
 
-Update skills from all sources **in parallel** (one command per source repo):
-
-```bash
-npx skills add blogic-cz/blogic-marketplace/template-ts --all -g -y &
-npx skills add blogic-cz/agent-tools --all -g -y &
-npx skills add gaboe/opencode-gitbutler --all -g -y &
-wait
-```
+**How to update skills:**
+1. Read `skills-lock.json` in the project root
+2. Group skills by unique `source` field (e.g. `blogic-cz/blogic-marketplace`, `blogic-cz/agent-tools`, etc.)
+3. Run `npx skills add <source> --all -g -y` **in parallel** — one command per unique source repo, all running simultaneously with `&` + `wait`
+4. Do NOT use `npx skills update` — it clones the repo separately for each skill and is extremely slow
 
 Then create a dedicated branch:
 
@@ -26,7 +23,7 @@ but branch new chore/update-packages-$(date +%y%m%d-%H%M)
 
 **Rules:**
 - Always update skills first — skills may contain updated instructions for this very workflow
-- Run source repos in parallel (`&` + `wait`) — each clones once for all its skills
+- Group by source and run in parallel — each clone installs all skills from that source at once
 - Never reuse an existing update-packages branch
 - Always create a fresh branch with the current timestamp
 - All package update commits go to this branch
