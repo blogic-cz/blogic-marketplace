@@ -5,15 +5,22 @@ description: "LOAD THIS SKILL when: updating npm packages, user mentions 'update
 
 # Update Packages
 
-## First Step: Create Branch (MANDATORY)
+## First Step: Update Skills + Create Branch (MANDATORY)
 
-Before touching any packages, create a dedicated branch:
+Before touching any packages, update the skills themselves and create a dedicated branch:
+
+```bash
+bunx skills update
+```
+
+Then create a dedicated branch:
 
 ```bash
 but branch new chore/update-packages-$(date +%y%m%d-%H%M)
 ```
 
 **Rules:**
+- Always run `bunx skills update` first — skills may contain updated instructions for this very workflow
 - Never reuse an existing update-packages branch
 - Always create a fresh branch with the current timestamp
 - All package update commits go to this branch
