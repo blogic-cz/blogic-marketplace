@@ -15,6 +15,18 @@ Before touching any packages, update the skills themselves and create a dedicate
 3. Run `npx skills add <source> --all -g -y` **in parallel** — one command per unique source repo, all running simultaneously with `&` + `wait`
 4. Do NOT use `npx skills update` — it clones the repo separately for each skill and is extremely slow
 
+**Global lock health check (Bun, mandatory before package work):**
+
+```bash
+bun -e 'import { readFileSync } from "node:fs"; import { homedir } from "node:os"; import { join } from "node:path"; const p = join(homedir(), ".agents", ".skill-lock.json"); const d = JSON.parse(readFileSync(p, "utf8")); const m = Object.entries(d.skills ?? {}).filter(([, v]) => !(v && v.skillFolderHash)).map(([k]) => k); console.log(m.length, m); if (m.length > 0) process.exit(1);'
+```
+
+If the command returns non-zero, fix missing hashes first (otherwise `skills check/update` can incorrectly report "up to date" because entries with empty `skillFolderHash` are skipped):
+
+```bash
+bun -e 'import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"; import { join } from "node:path"; import { tmpdir, homedir } from "node:os"; const lockPath = join(homedir(), ".agents", ".skill-lock.json"); const lock = JSON.parse(readFileSync(lockPath, "utf8")); const missing = Object.entries(lock.skills ?? {}).filter(([, v]) => !(v && v.skillFolderHash) && v?.sourceType === "github" && typeof v?.skillPath === "string"); if (missing.length === 0) { console.log("no missing hashes"); process.exit(0); } const repoTmp = mkdtempSync(join(tmpdir(), "skills-hash-")); const repoDir = join(repoTmp, "repo"); await Bun.$`git clone --depth 1 https://github.com/blogic-cz/blogic-marketplace.git ${repoDir}`.quiet(); for (const [name, meta] of missing) { const skillDir = String(meta.skillPath).replace(/\/SKILL\.md$/, ""); const out = (await Bun.$`git -C ${repoDir} ls-tree HEAD ${skillDir}`.quiet().text()).trim(); const hash = out.split(/\s+/)[2]; if (!hash) throw new Error(`Cannot resolve hash for ${name}`); lock.skills[name].skillFolderHash = hash; } writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`, "utf8"); rmSync(repoTmp, { recursive: true, force: true }); console.log(`updated ${missing.length} entries`);'
+```
+
 Then create a dedicated branch:
 
 ```bash
