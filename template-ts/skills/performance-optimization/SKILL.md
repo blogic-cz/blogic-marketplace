@@ -18,6 +18,31 @@ Use this skill when analyzing and implementing performance optimizations for API
 - Parallelizing independent operations
 - Adding database indexes
 
+## Project Scope Rules (andocs)
+
+- Always discover the active Sentry organization and project for the current repository before investigating runtime performance.
+- Always scope runtime performance investigation to the discovered project first.
+- Always scope code search to the current repository first.
+- Expand to other projects or repos only when explicitly requested by the user.
+
+## Real Data Sources (Required Before Deep Refactor)
+
+Before proposing major optimization work, verify real hotspots from observability data.
+
+### Sentry MCP (Primary Runtime Source)
+
+Use Sentry MCP to inspect real slow transactions, slow spans, and high-percentile latency after project discovery. Prefer evidence from recent windows and aggregate views before proposing code changes.
+
+### agent-tools Skill (Optional, for Operational Ground Truth)
+
+Load `agent-tools` when you need infra/log/database context to validate bottlenecks with real data:
+
+- `bun run logs-tool ...` for application log timing patterns
+- `bun run db-tool ...` for SQL checks and row/cardinality checks
+- `bun run k8s-tool ...` for pod CPU/memory throttling and runtime pressure
+
+Use these tools to confirm whether the bottleneck is application logic, database behavior, or infrastructure limits.
+
 ## Analysis Workflow
 
 ### 1. Identify Bottlenecks
@@ -27,10 +52,7 @@ Search for these patterns:
 ```typescript
 // N+1 Pattern - Loop with API/DB calls
 for (const item of items) {
-  const data = await db
-    .select()
-    .from(table)
-    .where(eq(table.id, item.id));
+  const data = await db.select().from(table).where(eq(table.id, item.id));
 }
 
 // Sequential Independent Calls
@@ -50,17 +72,11 @@ for (const item of items) {
 ```typescript
 // Before: N queries
 for (const id of ids) {
-  const item = await db
-    .select()
-    .from(table)
-    .where(eq(table.id, id));
+  const item = await db.select().from(table).where(eq(table.id, id));
 }
 
 // After: 1 query
-const items = await db
-  .select()
-  .from(table)
-  .where(inArray(table.id, ids));
+const items = await db.select().from(table).where(inArray(table.id, ids));
 const itemMap = new Map(items.map((i) => [i.id, i]));
 ```
 
@@ -79,7 +95,7 @@ const results =
   yield *
   Effect.all(
     items.map((item) => processItem(item)),
-    { concurrency: 10 }
+    { concurrency: 10 },
   );
 ```
 
@@ -102,17 +118,11 @@ await Promise.all([
 ```typescript
 // Before: N updates
 for (const id of ids) {
-  await db
-    .update(table)
-    .set({ status: "closed" })
-    .where(eq(table.id, id));
+  await db.update(table).set({ status: "closed" }).where(eq(table.id, id));
 }
 
 // After: 1 update
-await db
-  .update(table)
-  .set({ status: "closed" })
-  .where(inArray(table.id, ids));
+await db.update(table).set({ status: "closed" }).where(inArray(table.id, ids));
 ```
 
 #### Query Consolidation with JOINs
@@ -142,13 +152,11 @@ const [result] = await db
 yield * Effect.all(items.map(processItem));
 
 // Parallel with bounded concurrency (for many items)
-yield *
-  Effect.all(items.map(processItem), { concurrency: 10 });
+yield * Effect.all(items.map(processItem), { concurrency: 10 });
 
 // Parallel independent fetches
 const [data1, data2] =
-  yield *
-  Effect.all([fetchData1(params), fetchData2(params)]);
+  yield * Effect.all([fetchData1(params), fetchData2(params)]);
 ```
 
 ### Pre-fetching with Lookup Maps
@@ -156,14 +164,8 @@ const [data1, data2] =
 ```typescript
 // Fetch all needed data upfront
 const [users, members, invitations] = await Promise.all([
-  db
-    .select()
-    .from(usersTable)
-    .where(inArray(usersTable.email, emails)),
-  db
-    .select()
-    .from(membersTable)
-    .where(inArray(membersTable.userId, userIds)),
+  db.select().from(usersTable).where(inArray(usersTable.email, emails)),
+  db.select().from(membersTable).where(inArray(membersTable.userId, userIds)),
   db
     .select()
     .from(invitationsTable)
@@ -172,9 +174,7 @@ const [users, members, invitations] = await Promise.all([
 
 // Build lookup maps
 const userByEmail = new Map(users.map((u) => [u.email, u]));
-const memberByUserId = new Map(
-  members.map((m) => [m.userId, m])
-);
+const memberByUserId = new Map(members.map((m) => [m.userId, m]));
 
 // Use in loop without DB calls
 for (const email of emails) {
@@ -231,9 +231,9 @@ export const myTable = pgTable(
     index("idx_my_table_user_status_created").on(
       table.userId,
       table.status,
-      table.createdAt
+      table.createdAt,
     ),
-  ]
+  ],
 );
 ```
 
@@ -255,9 +255,7 @@ Before optimizing, measure:
 ```typescript
 const start = performance.now();
 // ... operation
-console.log(
-  `Operation took ${performance.now() - start}ms`
-);
+console.log(`Operation took ${performance.now() - start}ms`);
 ```
 
 Or use Effect tracing:
