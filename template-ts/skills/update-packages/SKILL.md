@@ -31,8 +31,8 @@ For repeatable local updates with an agent allowlist, use the reusable Bun helpe
 
 - Typical usage from a project root with `skills-lock.json`:
   ```bash
-  bun run scripts/skills-update-local.ts --dry-run
-  bun run scripts/skills-update-local.ts --source blogic-cz/blogic-marketplace --agent codex,opencode --concurrency 2
+  bun run .agents/skills/update-packages/references/skills-update-local.ts --dry-run
+  bun run .agents/skills/update-packages/references/skills-update-local.ts --source blogic-cz/blogic-marketplace --agent codex,opencode --concurrency 2
   ```
 
 Then create a dedicated branch:
