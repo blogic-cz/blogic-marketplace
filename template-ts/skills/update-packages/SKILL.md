@@ -123,5 +123,3 @@ Packages in Bun's catalog need manual version checks: `npm view <package> versio
 - `bun upgrade` shows all packages at latest versions
 - All checks pass (`bun run check`)
 - All relevant tests pass
-
-<!-- KISS v2 — 2026-03-04 -->
