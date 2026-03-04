@@ -39,6 +39,7 @@ for (const [source, skills] of groups) {
   if (dryRun) continue;
 
   const proc = Bun.spawn(["bunx", ...args], { stdout: "inherit", stderr: "inherit" });
+  // eslint-disable-next-line no-await-in-loop -- sequential execution required: each skill update must complete before the next
   const code = await proc.exited;
   if (code !== 0) {
     console.error(`✗ Failed (exit ${code}): ${source}`);
