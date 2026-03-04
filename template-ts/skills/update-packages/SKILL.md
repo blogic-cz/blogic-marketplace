@@ -124,5 +124,3 @@ Packages in Bun's catalog need manual version checks: `npm view <package> versio
 - `bun upgrade` shows all packages at latest versions
 - All checks pass (`bun run check`)
 - All relevant tests pass
-
-<!-- sync-test-2 -->

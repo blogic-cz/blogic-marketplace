@@ -32,7 +32,7 @@ console.log(`Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}
 
 let failed = 0;
 for (const [source, skills] of groups) {
-  const args = ["-y", "skills@latest", "add", source, ...skills.flatMap((s) => ["--skill", s]), "-y"];
+  const args = ["-y", "skills@latest", "add", source, "--full-depth", ...skills.flatMap((s) => ["--skill", s]), "-y"];
   const display = `bunx ${args.join(" ")}`;
   console.log(`\n→ ${display}`);
 
