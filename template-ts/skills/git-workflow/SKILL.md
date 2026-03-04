@@ -1,17 +1,19 @@
 ---
 name: git-workflow
-description: "LOAD THIS SKILL when: creating PRs, pushing changes, creating branches, fixing PR review comments, syncing branches, user mentions 'pr', 'push', 'branch', 'pr-fix-comments', 'sync-branches'. Covers git workflow automation with CI monitoring, PR lifecycle, and branch management."
+description: "LOAD THIS SKILL when: user mentions 'pr'. Covers the full PR lifecycle — create PR, then aggressively watch CI + reviews in a continuous loop, fixing failures and addressing comments immediately until the PR is fully green."
 ---
 
 # Git Workflow
 
-Git workflow automation covering PR lifecycle, branch management, CI monitoring, and review comment handling.
+PR lifecycle automation. Create PR → watch → fix → address → push → repeat until green.
 
 ## PR Workflow
 
-Create branch (if needed), commit, push, and create/update PR in one command.
+**Trigger**: user says "pr"
 
-### Instructions
+The entire PR lifecycle runs as one continuous aggressive loop. There is no separate "fix comments" step — it's all one workflow.
+
+### Phase 1: Create or Update PR
 
 Run everything as ONE chained command so user approves only once:
 
@@ -20,63 +22,12 @@ git checkout -b <branch> && git add -A && git commit -m "<msg>" && git push -u o
 ```
 
 - If already on a feature branch, skip `git checkout -b`
-- Check if PR exists: `agent-tools-gh pr view --json number -q .number 2>/dev/null`
-- If PR exists, use `agent-tools-gh pr edit <pr_number> --title "<title>" --body "<body>"` instead of `agent-tools-gh pr create`
+- Check if PR exists: `agent-tools-gh pr status` (auto-detects PR for current branch or GitButler workspace)
+- If PR exists, use `agent-tools-gh pr edit --pr <pr_number> --title "<title>" --body "<body>"` instead of `agent-tools-gh pr create`
 - Base branch: argument provided by user (default: `test`)
 - Branch naming: `feat/`, `fix/`, `chore/` based on changes
 
-### Monitor Checks and Iterate
-
-After pushing, **automatically enter the monitoring loop**.
-
-Inform the user: "PR created. Monitoring CI checks... (say 'stop' to exit the loop)"
-
-#### Wait for CI checks to complete
-
-Poll check status every 30 seconds:
-
-```bash
-agent-tools-gh pr checks --pr <pr_number> --watch
-```
-
-Or manually poll:
-
-```bash
-agent-tools-gh pr checks --pr <pr_number>
-```
-
-States: `PENDING`, `QUEUED` → still running. `COMPLETED` → check conclusion.
-
-#### Handle check results
-
-**If any check fails:**
-
-1. Get the failed check details:
-
-   ```bash
-   agent-tools-gh pr checks-failed --pr <pr_number>
-   ```
-
-2. For build/lint/test failures, fetch logs if available or analyze the error
-3. Fix the issues locally
-4. Run validation command (e.g., `bun run check`)
-5. Commit and push the fix
-6. **Go back to monitoring** to check again
-
-**If all checks pass:**
-
-- Inform user: "All checks passed. PR is ready for review! 🎉"
-- Exit the loop
-
-#### Loop exit conditions
-
-Exit the monitoring loop when:
-
-- All checks pass
-- User says "stop" or requests to exit
-- Maximum 5 iterations reached (then ask user to continue)
-
-### PR Body Format
+#### PR Body Format
 
 ```
 ## Summary
@@ -85,6 +36,213 @@ Exit the monitoring loop when:
 ## Changes
 - <bullet list>
 ```
+
+### Commit Message Standard
+
+**Every commit MUST use proper conventional commits describing the actual change, not meta-descriptions like "address review feedback" or "fix CI".**
+
+Format: `<type>(<scope>): <what actually changed>`
+
+- `type`: `fix`, `feat`, `refactor`, `perf`, `style`, `chore`, etc.
+- `scope`: the module/area affected (e.g., `auth`, `db`, `ui`, `api`)
+- `message`: describe the concrete change, not why you're committing
+
+**Good examples:**
+- `fix(auth): add null check for session token before redirect`
+- `refactor(api): extract validation logic into shared middleware`
+- `fix(db): correct JOIN condition in user query`
+- `perf(search): add index on created_at for faster lookups`
+- `style(ui): align spacing in sidebar navigation`
+
+**Bad examples (NEVER use these):**
+- ~~`fix: address review feedback`~~
+- ~~`fix: resolve CI check failures`~~
+- ~~`fix: address Claude PR feedback`~~
+- ~~`chore: fix issues`~~
+
+If a single commit addresses multiple review comments across different scopes, make **separate commits per scope** rather than one catch-all.
+
+### Phase 2: Active Watch Loop
+
+**Immediately after PR creation/update, enter the active watch loop. No pause, no waiting for user input.**
+
+Inform user: "PR created/updated. Entering active watch loop — monitoring CI and reviews. (say 'stop' to exit)"
+
+---
+
+#### LOOP START
+
+##### Step 1: Watch CI checks
+
+Wait for all CI checks to complete:
+
+```bash
+agent-tools-gh pr checks --pr <pr_number> --watch --fail-fast > /dev/null 2>&1; echo $?
+```
+
+**Exit codes:** `0` = all passed, `1` = failure detected.
+
+The `--fail-fast` flag exits immediately on first failure for faster iteration.
+
+##### Step 2: Handle CI results
+
+**If checks failed (exit code 1):**
+
+1. Get failed check details immediately:
+
+   ```bash
+   agent-tools-gh pr checks-failed --pr <pr_number>
+   ```
+
+2. For deeper CI log analysis, fetch clean parsed logs for the failed job:
+
+   ```bash
+   agent-tools-gh workflow job-logs --run <run_id> --job "<job_name>" --failed-steps-only
+   ```
+
+3. Analyze the error from the logs
+4. **Fix the issues locally** — do not ask, just fix
+5. Run validation:
+   ```bash
+   bun run check
+   ```
+6. Commit and push:
+   ```bash
+   git add -A && git commit -m "<conventional commit message>" && git push origin HEAD
+   ```
+7. If the failure seems flaky (e.g., timeout, network issue), consider rerunning instead of fixing:
+   ```bash
+   agent-tools-gh pr rerun-checks --pr <pr_number> --failed-only
+   ```
+8. **→ Go back to LOOP START**
+
+**If checks passed (exit code 0):** proceed to Step 3.
+
+##### Step 3: Check for reviews and comments
+
+Run a full triage immediately:
+
+```bash
+agent-tools-gh pr review-triage --pr <pr_number>
+```
+
+Then check each source of feedback:
+
+**3.1 Inline review threads:**
+
+```bash
+agent-tools-gh pr threads --pr <pr_number> --unresolved-only
+```
+
+Each thread includes `threadId`, `commentId`, `path`, `line`, and `body`.
+
+**3.2 AI reviewer issue comments** (Claude bot, Sentry Seer, etc.):
+
+```bash
+agent-tools-gh pr discussion-summary --pr <pr_number>
+agent-tools-gh pr issue-comments-latest --pr <pr_number> --author claude --body-contains "Claude Code Review"
+agent-tools-gh pr issue-comments-latest --pr <pr_number> --author sentry-io --body-contains "Sentry"
+```
+
+AI reviewers post findings as general PR comments with severity-tagged items (Critical, Major, Minor), specific file paths and line numbers, and code suggestions.
+
+Parse the comment body to extract actionable items.
+
+**3.3 Decision:**
+
+- **If NO unresolved threads AND NO actionable AI comments →** PR is clean. **→ Go to LOOP EXIT**
+- **If ANY feedback found →** proceed to Step 4
+
+##### Step 4: Address every comment immediately
+
+For each comment/finding:
+
+1. **Read the file** at the specific line mentioned
+2. **Understand the suggestion** — what change is being requested?
+3. **Evaluate and act:**
+   - **Auto-apply** (no confirmation): typos, style fixes, missing types, import cleanup, obvious bugs, performance improvements, security fixes matching CLAUDE.md conventions
+   - **Apply with judgment**: refactoring suggestions that improve clarity, error handling, naming improvements
+   - **Ask user first**: removing functionality, changing public API signatures, contradicting existing patterns, unclear suggestions
+
+4. **Make the fix immediately** — track what was changed and why
+
+##### Step 5: Reply to comments and resolve threads
+
+**CRITICAL: Every thread MUST have a reply before being resolved.**
+
+First, identify all threads needing replies:
+
+```bash
+agent-tools-gh pr threads --pr <pr_number>
+agent-tools-gh pr comments --pr <pr_number>
+```
+
+Threads with only 1 comment (the original) need a reply added.
+
+**Reply to EVERY thread** (including already resolved ones missing replies):
+
+For inline threads — use the shortcut to reply and resolve in one step:
+
+```bash
+agent-tools-gh pr reply-and-resolve --pr <pr_number> --comment-id <comment_id> --thread-id <thread_id> --body "<response>"
+```
+
+Or reply separately then resolve:
+
+```bash
+agent-tools-gh pr reply --pr <pr_number> --comment-id <comment_id> --body "<response>"
+agent-tools-gh pr resolve --thread-id <thread_id>
+```
+
+For general PR comments:
+
+```bash
+agent-tools-gh pr comment --pr <pr_number> --body "<response>"
+```
+
+**Response format:**
+
+- **If fixed**: "Addressed - [brief description of what was changed]"
+- **If not applicable**: "Not applicable - [brief explanation why]"
+- **If positive feedback**: "Thanks for the feedback!" or similar acknowledgment
+- **If needs discussion**: "Question: [ask for clarification]"
+
+**If reply fails with "pending review" error:** Submit the pending review first, then retry:
+
+```bash
+agent-tools-gh pr submit-review --pr <pr_number>
+```
+**Do NOT resolve** threads where you asked a question.
+
+##### Step 6: Validate and push
+
+```bash
+bun run check
+```
+
+Fix any new issues. Then commit and push:
+
+```bash
+git add -A && git commit -m "<conventional commit message>" && git push origin HEAD
+```
+
+**→ Go back to LOOP START**
+
+---
+
+#### LOOP EXIT
+
+When reaching here (all checks pass + no unresolved comments):
+
+Inform user: "All CI checks passed. All review comments addressed. PR is ready for review! 🎉"
+
+#### Loop exit conditions
+
+Exit the watch loop when:
+
+- **All checks pass AND no unresolved feedback** — natural exit
+- **User says "stop"** or requests to exit
+- **Maximum 10 iterations reached** — ask user if they want to continue
 
 ---
 
@@ -128,248 +286,6 @@ Note: `but oplog snapshot/restore` is the GitButler-safe alternative to `git sta
 ```bash
 git checkout <base> && git pull origin <base> && git checkout -b <branch-name>
 ```
-
----
-
-## PR Fix Comments Workflow
-
-Fetch PR review comments from AI code review assistants, analyze them, apply valid fixes, respond to comments explaining how they were addressed, then commit and push.
-
-> **Shortcut:** Use `agent-tools-gh pr review-triage --pr <pr_number>` to get a combined overview (PR info, unresolved threads, checks, discussion summary) in one command before diving into individual comments.
-
-### Step 1: Get PR
-
-If a PR number is provided as an argument, use that PR number. Otherwise, use the current branch's PR.
-
-If no PR found, inform the user and exit.
-
-### Step 2: Fetch Review Comments
-
-There are two sources of review feedback:
-
-1. **Inline review threads** — code-specific comments attached to file lines
-2. **AI reviewer issue comments** — general PR comments from bots like `claude` or `sentry-io[bot]` (posted as `issuecomment-*`, not as inline threads)
-
-#### 2.1 Check inline review threads
-
-Fetch unresolved inline review threads:
-
-```bash
-agent-tools-gh pr threads --pr <pr_number> --unresolved-only
-```
-
-Each thread includes `threadId`, `commentId`, `path`, `line`, and `body`.
-
-If unresolved comments exist, proceed directly to Step 3.
-
-If the result is empty but you need to verify, re-run the command above to confirm.
-
-#### 2.2 Check AI reviewer issue comments
-
-**Even if inline threads are empty**, check for AI reviewer comments that contain actionable findings:
-
-```bash
-agent-tools-gh pr discussion-summary --pr <pr_number>
-agent-tools-gh pr issue-comments-latest --pr <pr_number> --author claude --body-contains "Claude Code Review"
-agent-tools-gh pr issue-comments-latest --pr <pr_number> --author sentry-io --body-contains "Sentry"
-```
-
-AI reviewers (Claude bot, Sentry Seer) post code review findings as general PR comments, not inline threads. These comments typically contain:
-
-- Severity-tagged findings (Critical, Major, Minor)
-- Specific file paths and line numbers
-- Code suggestions and explanations
-
-Parse the comment body to extract actionable items with file paths and line numbers.
-
-#### 2.3 Determine if there is work to do
-
-If **both** inline threads AND AI reviewer comments are empty or have no actionable findings, inform the user and exit.
-
-If either source has actionable items, proceed to Step 3 with the combined list.
-
-### Step 3: Analyze Each Comment
-
-For each comment:
-
-1. **Read the file** mentioned in the comment at the specific line
-2. **Understand the suggestion** — what change is being requested?
-3. **Evaluate validity**:
-   - **Apply automatically**: Clear improvements (typos, style, obvious bugs, performance)
-   - **Apply with judgment**: Suggestions that align with CLAUDE.md conventions
-   - **Ask user**: Major architectural changes, unclear suggestions, or potentially breaking changes
-
-### Step 4: Apply Fixes
-
-For each valid suggestion:
-
-1. Make the code change
-2. Track what was changed and why
-
-### Step 5: Respond to Comments and Resolve
-
-**CRITICAL: Every thread MUST have a reply before being resolved.** This includes:
-
-- Threads you're about to resolve
-- Threads that are already resolved but missing replies
-- Positive feedback comments (reply with acknowledgment like "Thanks for the feedback!")
-
-#### 5.1 Get thread IDs and check for missing replies
-
-First, fetch review threads to get thread IDs and resolution status:
-
-```bash
-agent-tools-gh pr threads --pr <pr_number>
-```
-
-Then check which threads have replies:
-
-```bash
-agent-tools-gh pr comments --pr <pr_number>
-```
-
-**Identify threads missing replies** — threads with only 1 comment (the original) need a reply added.
-
-#### 5.2 Reply to EVERY thread (including already resolved ones)
-
-For inline review comment replies:
-
-```bash
-agent-tools-gh pr reply --pr <pr_number> --comment-id <comment_id> --body "<response>"
-```
-
-> **Shortcut:** To reply and resolve a thread in one step:
-> ```bash
-> agent-tools-gh pr reply-and-resolve --pr <pr_number> --comment-id <comment_id> --thread-id <thread_id> --body "<response>"
-> ```
-
-For general PR comments:
-
-```bash
-agent-tools-gh pr comment --pr <pr_number> --body "<response>"
-```
-
-Response format:
-
-- **If fixed**: "Addressed - [brief description of what was changed]"
-- **If not applicable**: "Not applicable - [brief explanation why]"
-- **If positive feedback**: "Thanks for the feedback!" or similar acknowledgment
-- **If needs discussion**: "Question: [ask for clarification]"
-
-#### 5.3 Resolve the thread
-
-**Only after replying**, resolve the thread:
-
-```bash
-agent-tools-gh pr resolve --thread-id <thread_id>
-```
-
-**Do NOT resolve** threads where you asked a question or need discussion.
-
-### Step 6: Run Validation
-
-```bash
-bun run check
-```
-
-Fix any new issues introduced by the changes.
-
-### Step 7: Commit and Push
-
-```bash
-git add -A && git commit -m "fix(<scope>): <description of changes>" && git push origin HEAD
-```
-
-Generate a descriptive commit message based on what was actually changed (e.g., "fix(auth): correct token validation" or "fix(ui): improve error message display").
-
-### Step 8: Monitor Checks and Iterate
-
-After pushing, **automatically enter the monitoring loop**.
-
-Inform the user: "Fixes pushed. Monitoring CI checks... (say 'stop' to exit the loop)"
-
-#### 8.1 Wait for CI checks to complete
-
-Use the built-in `--watch` flag to wait for checks (suppress verbose output):
-
-```bash
-agent-tools-gh pr checks --pr <pr_number> --watch --fail-fast > /dev/null 2>&1; echo $?
-```
-
-**Exit codes:**
-
-- `0` — All checks passed
-- `1` — One or more checks failed
-
-The `--fail-fast` flag exits immediately when any check fails, allowing faster iteration.
-
-#### 8.2 Handle check results
-
-**If exit code is 1 (checks failed):**
-
-1. Get failed check details:
-
-   ```bash
-   agent-tools-gh pr checks-failed --pr <pr_number>
-   ```
-
-2. For build/lint/test failures, fetch logs if available or analyze the error from the link
-3. Fix the issues locally
-4. Run `bun run check` to validate
-5. Commit and push the fix:
-   ```bash
-   git add -A && git commit -m "fix: resolve CI check failures" && git push origin HEAD
-   ```
-6. **Go back to Step 8.1** to monitor again
-
-**If exit code is 0 (all checks passed):**
-
-1. Check for new review comments since last check:
-
-   ```bash
-   agent-tools-gh pr comments --pr <pr_number> --since "<last_check_timestamp>"
-   agent-tools-gh pr issue-comments --pr <pr_number> --since "<last_check_timestamp>"
-   ```
-
-2. **If new comments exist:**
-   - Inform user: "CI passed but X new review comments found. Processing..."
-   - **Go back to Step 2** to process new comments
-
-3. **If no new comments:**
-   - Inform user: "All checks passed and no new comments. PR is ready for review! 🎉"
-   - Exit the loop
-
-#### 8.3 Loop exit conditions
-
-Exit the monitoring loop when:
-
-- All checks pass AND no new comments
-- User says "stop" or requests to exit
-- Maximum 5 iterations reached (then ask user to continue)
-
-### Decision Guidelines
-
-**Auto-apply (no user confirmation needed):**
-
-- Typo fixes in comments or strings
-- Import organization/cleanup
-- Adding missing types
-- Style fixes matching CLAUDE.md (kebab-case files, absolute imports, etc.)
-- Performance improvements (Promise.all, prefetch patterns)
-- Security fixes (removing hardcoded values, adding validation)
-
-**Apply with judgment:**
-
-- Refactoring suggestions that improve code clarity
-- Adding error handling
-- Improving variable/function names
-
-**Ask user first:**
-
-- Removing functionality
-- Changing public API signatures
-- Suggestions that contradict existing patterns
-- Comments you don't understand or disagree with
 
 ---
 
