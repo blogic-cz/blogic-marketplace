@@ -27,6 +27,14 @@ If the command returns non-zero, fix missing hashes first (otherwise `skills che
 bun -e 'import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"; import { join } from "node:path"; import { tmpdir, homedir } from "node:os"; const lockPath = join(homedir(), ".agents", ".skill-lock.json"); const lock = JSON.parse(readFileSync(lockPath, "utf8")); const missing = Object.entries(lock.skills ?? {}).filter(([, v]) => !(v && v.skillFolderHash) && v?.sourceType === "github" && typeof v?.skillPath === "string"); if (missing.length === 0) { console.log("no missing hashes"); process.exit(0); } const repoTmp = mkdtempSync(join(tmpdir(), "skills-hash-")); const repoDir = join(repoTmp, "repo"); await Bun.$`git clone --depth 1 https://github.com/blogic-cz/blogic-marketplace.git ${repoDir}`.quiet(); for (const [name, meta] of missing) { const skillDir = String(meta.skillPath).replace(/\/SKILL\.md$/, ""); const out = (await Bun.$`git -C ${repoDir} ls-tree HEAD ${skillDir}`.quiet().text()).trim(); const hash = out.split(/\s+/)[2]; if (!hash) throw new Error(`Cannot resolve hash for ${name}`); lock.skills[name].skillFolderHash = hash; } writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`, "utf8"); rmSync(repoTmp, { recursive: true, force: true }); console.log(`updated ${missing.length} entries`);'
 ```
 
+For repeatable local updates with an agent allowlist, use the reusable Bun helper in `references/skills-update-local.ts`.
+
+- Typical usage from a project root with `skills-lock.json`:
+  ```bash
+  bun run scripts/skills-update-local.ts --dry-run
+  bun run scripts/skills-update-local.ts --source blogic-cz/blogic-marketplace --agent codex,opencode --concurrency 2
+  ```
+
 Then create a dedicated branch:
 
 ```bash
