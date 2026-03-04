@@ -10,14 +10,15 @@ description: "LOAD THIS SKILL when: updating npm packages, user mentions 'update
 Before touching any packages, update skills and create a dedicated branch.
 
 ```bash
-# Restore/update all skills from skills-lock.json
-bunx skills@latest experimental_install -y
+# Update all skills from skills-lock.json (reads sources + skill names from lock)
+bun run .agents/skills/update-packages/references/skills-update-local.ts
+
+# Dry run to see what would be executed
+bun run .agents/skills/update-packages/references/skills-update-local.ts --dry-run
 
 # Create a fresh branch
 git checkout -b chore/update-packages-$(date +%y%m%d-%H%M)
 ```
-
-If `experimental_install` is unavailable, fall back to `bunx skills@latest update -y`.
 
 **Rules:**
 - Always update skills first — they may contain updated instructions for this workflow
