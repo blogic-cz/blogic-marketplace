@@ -1,5 +1,6 @@
 /**
  * Reads skills-lock.json, groups skills by source, and runs `skills add` per source.
+ * Auto-detects target agents from project structure (.claude/, .opencode/, .codex/).
  * Workaround for skills CLI limitations (experimental_install strips subpaths, --all ignores lock).
  * Lives in the skill until the CLI stabilizes.
  *
@@ -8,8 +9,20 @@
  *   bun run .agents/skills/update-packages/references/skills-update-local.ts --dry-run
  */
 
+import { existsSync } from "node:fs";
+
 type SkillEntry = { source: string; sourceType: string };
 type SkillsLock = { version: number; skills: Record<string, SkillEntry> };
+
+const agentMapping: Array<{ dir: string; agent: string }> = [
+  { dir: ".claude", agent: "claude-code" },
+  { dir: ".opencode", agent: "opencode" },
+  { dir: ".codex", agent: "codex" },
+];
+
+const cwd = process.cwd();
+const detected = agentMapping.filter(({ dir }) => existsSync(`${cwd}/${dir}`)).map(({ agent }) => agent);
+const agents = detected.length > 0 ? detected : ["claude-code", "opencode"];
 
 const dryRun = process.argv.includes("--dry-run");
 
@@ -28,11 +41,11 @@ if (groups.size === 0) {
   process.exit(0);
 }
 
-console.log(`Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}`);
+console.log(`Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}, Agents: ${agents.join(", ")}`);
 
 let failed = 0;
 for (const [source, skills] of groups) {
-  const args = ["-y", "skills@latest", "add", source, "--full-depth", ...skills.flatMap((s) => ["--skill", s]), "-y"];
+  const args = ["-y", "skills@latest", "add", source, "--full-depth", "--agent", ...agents, ...skills.flatMap((s) => ["--skill", s]), "-y"];
   const display = `bunx ${args.join(" ")}`;
   console.log(`\n→ ${display}`);
 
