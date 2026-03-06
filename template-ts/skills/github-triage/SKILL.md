@@ -9,35 +9,65 @@ Goal: **resolve** every item — fix bugs, answer questions, fix infra, merge go
 
 Never close issues automatically — monitoring systems recreate them if unresolved.
 
-## Fetch
+Each issue fix gets its own branch and PR. Never bundle multiple issues into one branch.
+
+## Workflow
+
+### 1. Fetch
 
 ```bash
 agent-tools-gh issue triage-summary --state open --limit 100
 ```
 
-Returns `{ issues: [...], prs: [...], summary: {...} }`. Each item has `classification` (BUG, QUESTION, BUGFIX, FEATURE, OTHER) and `confidence` (HIGH, MEDIUM, LOW).
-
 Full `agent-tools-gh` command reference → load skill `agent-tools`.
 
-## Decision Rules
+### 2. Analyze and present plan
 
-Every item gets a subagent. Match category and skills to complexity:
+For each item, read existing comments to understand current state. Then present a **triage plan table** to the user:
 
-### Issues
-- **BUG** → find root cause in code, implement fix, create PR. Category: `deep`, skills: `["agent-tools", "testing-patterns"]`
-- **QUESTION** → search codebase, post thorough answer. Category: `quick`, skills: `["agent-tools"]`
-- **INFRA/MONITORING** (labels: `k8s-monitoring`, `critical`, `sentry`, `new-error`) → diagnose root cause, fix config/code/deployment. Category: `deep`, skills: `["agent-tools", "kubernetes-helm", "production-troubleshooting", "sentry-integration"]`
-- **FEATURE** → acknowledge, summarize scope, comment. Category: `quick`, skills: `["agent-tools"]`
-- **OTHER** → assess, investigate if needed, comment. Category: `quick`, skills: `["agent-tools"]`
+| # | Item | Type | Current State | Proposed Action | Category |
+|---|------|------|--------------|-----------------|----------|
+| 1 | #481 | INFRA | ErrImagePull, no comments | Investigate ACR image, fix deployment | deep |
+| 2 | #471 | SENTRY | New error, 1 comment | Find root cause in code, propose fix | deep |
+| 3 | #476 | PR/BUGFIX | CI pass, mergeable | Review diff, merge if clean | quick |
+| 4 | #488 | PR/WIP | Conflicting | Comment: needs rebase | quick |
 
-### PRs
-- **BUGFIX** + CI pass + mergeable → review diff, merge if clean. Category: `quick`, skills: `["agent-tools"]`
-- **WIP / draft / conflicting** → comment what's blocking. Category: `quick`, skills: `["agent-tools"]`
-- **OTHER** → review diff, post feedback. Category: `quick`, skills: `["agent-tools"]`
+**STOP HERE. Wait for user approval before dispatching any subagents.**
 
-### Only skip if
-- Already assigned AND has recent activity (someone is handling it)
-- Explicitly told by user to skip a category
+User may:
+- Approve all: "go" / "ok" / "pokračuj"
+- Skip items: "skip #488"
+- Change action: "for #471 just comment, don't fix"
+- Ask questions: "what's the current state of #309?"
+
+### 3. Execute approved items
+
+Only after user confirms, dispatch subagents. Match category and skills to complexity:
+
+#### Issue categories
+- **BUG** → Category: `deep`, skills: `["agent-tools", "testing-patterns"]`
+- **QUESTION** → Category: `quick`, skills: `["agent-tools"]`
+- **INFRA/MONITORING** (labels: `k8s-monitoring`, `critical`, `sentry`, `new-error`) → Category: `deep`, skills: `["agent-tools", "kubernetes-helm", "production-troubleshooting", "sentry-integration"]`
+- **FEATURE** → Category: `quick`, skills: `["agent-tools"]`
+- **OTHER** → Category: `quick`, skills: `["agent-tools"]`
+
+#### PR categories
+- **BUGFIX** + CI pass + mergeable → Category: `quick`, skills: `["agent-tools"]`
+- **WIP / draft / conflicting** → Category: `quick`, skills: `["agent-tools"]`
+- **OTHER** → Category: `quick`, skills: `["agent-tools"]`
+
+#### Skip rules
+- Already assigned AND has recent activity (someone is handling it) → propose skip in plan, let user decide
+- User explicitly said to skip
+
+### 4. Report
+
+After all subagents complete, produce summary table:
+
+| Item | Type | Action | Result |
+|------|------|--------|--------|
+| #481 | INFRA | Fixed | Updated helm image tag |
+| #476 | PR/BUGFIX | Reviewed | Merged |
 
 ## Subagent Templates
 
@@ -47,7 +77,7 @@ Issue #{number}: "{title}" | {author} | {labels}
 {body}
 URL: {url}
 
-Find the root cause in the codebase. Implement a fix and create a PR. If you can't fix it, post a detailed analysis of the root cause and what's needed: `agent-tools-gh issue comment --issue {number} --body "..."`.
+Find the root cause in the codebase. Create a dedicated branch (e.g. `fix/issue-{number}-short-desc`), implement the fix, and create a PR. If you can't fix it, post a detailed analysis of the root cause and what's needed: `agent-tools-gh issue comment --issue {number} --body "..."`.
 ```
 
 ### QUESTION issue
@@ -65,7 +95,7 @@ Issue #{number}: "{title}" | {author} | {labels}
 {body}
 URL: {url}
 
-Diagnose the infrastructure problem. Check logs, pods, deployments, error tracking. Fix the root cause if possible (config, helm values, code). Post your findings and what you fixed: `agent-tools-gh issue comment --issue {number} --body "..."`. Do NOT close — monitoring manages lifecycle.
+Diagnose the infrastructure problem. Check logs, pods, deployments, error tracking. Fix the root cause if possible (config, helm values, code) on a dedicated branch (e.g. `fix/issue-{number}-short-desc`). Post your findings and what you fixed: `agent-tools-gh issue comment --issue {number} --body "..."`. Do NOT close — monitoring manages lifecycle.
 ```
 
 ### OTHER issue
@@ -107,14 +137,3 @@ Review: `agent-tools-gh pr review-triage --pr {number} --format json`
 Diff: `git diff origin/{baseRefName}...origin/{headRefName}`
 Check logic, style, regressions. Post feedback: `agent-tools-gh pr comment --pr {number} --body "..."`.
 ```
-
-## Reporting
-
-After all subagents complete, produce summary table:
-
-| Item | Type | Action | Result |
-|------|------|--------|--------|
-| #481 | INFRA | Fixed | Updated helm image tag |
-| #471 | SENTRY | Investigated | Root cause found, PR created |
-| #476 | PR/BUGFIX | Reviewed | Merged |
-| #488 | PR/WIP | Commented | Needs rebase |
