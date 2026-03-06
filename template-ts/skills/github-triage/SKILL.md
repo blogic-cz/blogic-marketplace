@@ -58,14 +58,17 @@ URL: {url}
 Analyze the reported bug against the current codebase. If valid, propose a fix or ask for missing reproduction steps using `agent-tools-gh issue comment --issue {number} --body "..."`.
 ```
 
-### PR: BUGFIX (Green + Approved)
+### PR: BUGFIX (Green CI)
 ```
 PR #{number}: "{title}"
 Author: {author} | Base: {baseRefName}
 CI: {ciStatus} | Review: {reviewDecision}
 URL: {url}
 
-Perform a final safety review of the diff. If the code is clean and matches project standards, merge it using `agent-tools-gh pr merge --pr {number} --strategy squash --delete-branch --confirm`.
+First review the PR context: `agent-tools-gh pr review-triage --pr {number} --format json`.
+Read the code diff: `git diff origin/{baseRefName}...origin/{headRefName}`.
+If code is clean and matches project standards, merge: `agent-tools-gh pr merge --pr {number} --strategy squash --delete-branch --confirm`.
+If you have concerns, post feedback: `agent-tools-gh pr comment --pr {number} --body "..."`. Do NOT merge.
 ```
 
 ### PR: OTHER
@@ -74,7 +77,10 @@ PR #{number}: "{title}"
 Author: {author} | Labels: {labels}
 URL: {url}
 
-Review the changes. Check for logic errors, style consistency, and potential regressions. Leave feedback or approval using `agent-tools-gh pr review --pr {number} --body "..."`.
+Review context: `agent-tools-gh pr review-triage --pr {number} --format json`.
+Read the code diff: `git diff origin/{baseRefName}...origin/{headRefName}`.
+Check for logic errors, style consistency, and potential regressions.
+Post feedback: `agent-tools-gh pr comment --pr {number} --body "..."`.
 ```
 
 ## Collection and Reporting
