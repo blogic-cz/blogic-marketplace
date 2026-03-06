@@ -1,6 +1,6 @@
 ---
 name: github-triage
-description: GitHub triage — resolve issues and review PRs. Goal is to FIX problems, not just label them. Issues get investigated and resolved (code fixes, infra fixes, answers). PRs get reviewed and merged. 1 item = 1 background subagent. Triggers: 'triage', 'triage issues', 'triage PRs', 'github triage'.
+description: "GitHub triage - resolve issues and review PRs. Goal is to FIX problems, not just label them. Issues get investigated and resolved (code fixes, infra fixes, answers). PRs get reviewed and merged. 1 item = 1 background subagent. Triggers: 'triage', 'triage issues', 'triage PRs', 'github triage'."
 ---
 
 # GitHub Triage
