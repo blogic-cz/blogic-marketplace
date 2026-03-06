@@ -5,7 +5,7 @@ description: Unified GitHub triage for issues AND PRs. 1 item = 1 background tas
 
 # GitHub Triage
 
-Triage = classify every item and take an action. Nothing gets silently skipped.
+Triage = classify every item and take an action. Nothing gets silently skipped. Never close issues automatically — monitoring systems recreate them if unresolved.
 
 ## Fetch
 
@@ -67,7 +67,7 @@ Issue #{number}: "{title}" | {author} | {labels}
 {body}
 URL: {url}
 
-This is an infrastructure alert. Investigate: is this still active or already resolved? Check relevant logs, pods, or error tracking. Post a status update: `agent-tools-gh issue comment --issue {number} --body "..."`. If resolved, close: `agent-tools-gh issue close --issue {number} --comment "..."`.
+This is an infrastructure alert. Investigate: is this still active or already resolved? Check relevant logs, pods, or error tracking. Post a status update with your findings: `agent-tools-gh issue comment --issue {number} --body "..."`. Do NOT close — monitoring systems manage issue lifecycle.
 ```
 
 ### OTHER issue
@@ -76,7 +76,7 @@ Issue #{number}: "{title}" | {author} | {labels}
 {body}
 URL: {url}
 
-Assess relevance. Post recommendation (investigate further / close as stale / add label): `agent-tools-gh issue comment --issue {number} --body "..."`.
+Assess relevance. Post recommendation (investigate further / add label): `agent-tools-gh issue comment --issue {number} --body "..."`. Do NOT close — leave lifecycle to humans or monitoring.
 ```
 
 ### BUGFIX PR (CI pass, mergeable)
