@@ -10,7 +10,7 @@ Triage = classify every item and take an action. Nothing gets silently skipped.
 ## Fetch
 
 ```bash
-agent-tools-gh issue triage-summary --format json --state open --limit 100
+agent-tools-gh issue triage-summary --state open --limit 100
 ```
 
 Returns `{ issues: [...], prs: [...], summary: {...} }`. Each item has `classification` (BUG, QUESTION, BUGFIX, FEATURE, OTHER) and `confidence` (HIGH, MEDIUM, LOW).
