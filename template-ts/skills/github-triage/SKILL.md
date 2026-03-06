@@ -21,24 +21,32 @@ agent-tools-gh issue triage-summary --state open --limit 100
 
 Full `agent-tools-gh` command reference → load skill `agent-tools`.
 
-### 2. Analyze and present plan
+### 2. Investigate and present plan with solutions
 
-For each item, read existing comments to understand current state. Then present a **triage plan table** to the user:
+For each item:
+1. Read existing comments to understand history
+2. **Investigate the root cause yourself** — read code, check logs, search codebase, check Sentry, check k8s state
+3. Identify the concrete fix (which file, what change, what config)
 
-| # | Item | Type | Current State | Proposed Action | Category |
-|---|------|------|--------------|-----------------|----------|
-| 1 | #481 | INFRA | ErrImagePull, no comments | Investigate ACR image, fix deployment | deep |
-| 2 | #471 | SENTRY | New error, 1 comment | Find root cause in code, propose fix | deep |
-| 3 | #476 | PR/BUGFIX | CI pass, mergeable | Review diff, merge if clean | quick |
-| 4 | #488 | PR/WIP | Conflicting | Comment: needs rebase | quick |
+Then present a **triage plan table with solutions** to the user:
+
+| # | Item | Type | Root Cause | Proposed Fix | Category |
+|---|------|------|-----------|--------------|----------|
+| 1 | #481 | INFRA | Image tag :288 doesn't exist in ACR | Update helm values to use latest valid tag :287 | deep |
+| 2 | #471 | SENTRY | isOctokitNotFound doesn't traverse error cause chain | Add recursive cause check in github-sync.ts:142 | deep |
+| 3 | #476 | PR/BUGFIX | CI pass, approved, clean diff | Merge via squash | quick |
+| 4 | #488 | PR/WIP | Merge conflicts with test | No action — WIP, owner needs to rebase | skip |
+
+The plan must include **specific root cause and concrete fix** — not "investigate" or "needs analysis".
+If you genuinely cannot determine root cause after investigation, explain what you checked and what's still unknown.
 
 **STOP HERE. Wait for user approval before dispatching any subagents.**
 
 User may:
-- Approve all: "go" / "ok" / "pokračuj"
+- Approve all: "go" / "ok"
 - Skip items: "skip #488"
 - Change action: "for #471 just comment, don't fix"
-- Ask questions: "what's the current state of #309?"
+- Ask questions: "what did you find in the logs for #309?"
 
 ### 3. Execute approved items
 
