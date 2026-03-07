@@ -7,17 +7,31 @@ description: "LOAD THIS SKILL when: syncing project with blogic-template-ts upst
 
 Synchronize a downstream project (generated from `blogic-template-ts`) with the latest template version.
 
-**Source of truth**: The template repository at `blogic-cz/blogic-template-ts` (local clone or GitHub).
+**Source of truth**: `blogic-cz/blogic-template-ts` cloned via opensrc into `opensrc/repos/github.com/blogic-cz/blogic-template-ts/`.
 
 ## Prerequisites
 
 - `gh` CLI authenticated
 - `agent-tools` installed (for `gh-tool release list/view`)
-- Template repo accessible (local path or GitHub)
+- `debugging-with-opensrc` skill loaded (for opensrc commands)
 
 ## Phase 0: Discovery — What Changed in the Template
 
-Determine the template version the project was last synced to, then enumerate all changes since.
+### Step 0: Clone the template repo via opensrc
+
+The template repo MUST be available locally for diffing. Use opensrc to clone it:
+
+```bash
+# Clone blogic-template-ts into opensrc/repos/
+bun run opensrc:use blogic-cz/blogic-template-ts
+
+# Verify it's there
+ls opensrc/repos/github.com/blogic-cz/blogic-template-ts/
+```
+
+All subsequent references use the path: `opensrc/repos/github.com/blogic-cz/blogic-template-ts/`
+
+Abbreviated as `$TPL` in this document for readability. The actual commands MUST use the full relative path.
 
 ### Step 1: Find the project's current template version
 
@@ -41,7 +55,7 @@ If no marker found, ask the user: "What template version was this project genera
 
 ### Step 2: Enumerate template changes since last sync
 
-Use the template repo (local or remote) to find everything that changed:
+Use the opensrc clone and GitHub API to find everything that changed:
 
 ```bash
 # List all template releases after the project's version
@@ -50,11 +64,11 @@ agent-tools-gh release list --repo blogic-cz/blogic-template-ts
 # View specific release notes for each version
 agent-tools-gh release view <tag> --repo blogic-cz/blogic-template-ts
 
-# Get commit log between versions
-git -C <template-repo-path> log --oneline <old-tag>..<new-tag>
+# Get commit log between versions (using the opensrc clone)
+git -C opensrc/repos/github.com/blogic-cz/blogic-template-ts log --oneline <old-tag>..<new-tag>
 
 # Get full diff between versions
-git -C <template-repo-path> diff <old-tag>..<new-tag> --stat
+git -C opensrc/repos/github.com/blogic-cz/blogic-template-ts diff <old-tag>..<new-tag> --stat
 
 # List PRs merged between versions
 gh pr list --repo blogic-cz/blogic-template-ts --state merged --search "merged:>YYYY-MM-DD" --limit 50
@@ -90,10 +104,10 @@ Before applying any template changes, bring packages up to date. Outdated packag
 Compare the project's dependencies against the template's current versions:
 
 ```bash
-# Read template's package.json(s)
-cat <template-repo-path>/package.json
-cat <template-repo-path>/apps/web-app/package.json
-cat <template-repo-path>/packages/*/package.json
+# Read template's package.json(s) from opensrc clone
+cat opensrc/repos/github.com/blogic-cz/blogic-template-ts/package.json
+cat opensrc/repos/github.com/blogic-cz/blogic-template-ts/apps/web-app/package.json
+cat opensrc/repos/github.com/blogic-cz/blogic-template-ts/packages/*/package.json
 
 # Read project's package.json(s)
 cat package.json
@@ -139,11 +153,11 @@ For each infrastructure file in the template:
 3. If it doesn't exist, flag it as "missing from project"
 
 ```bash
-# Diff a specific file between template and project
-diff <template-repo-path>/<file> <project-path>/<file>
+# Diff a specific file between template (opensrc) and project
+diff opensrc/repos/github.com/blogic-cz/blogic-template-ts/<file> <file>
 
 # Or use git diff for better output
-git diff --no-index <template-repo-path>/<file> <project-path>/<file>
+git diff --no-index opensrc/repos/github.com/blogic-cz/blogic-template-ts/<file> <file>
 ```
 
 ### Step 2: Build the name substitution matrix
@@ -208,7 +222,7 @@ Follow the andocs-backport plan format. Include:
    - Must NOT do (guardrails)
    - Recommended agent profile (category + skills)
    - Parallelization (can run in parallel, blocks, blocked by)
-   - References (template files to copy from, project files to update)
+   - References (template files from opensrc clone, project files to update)
    - Acceptance criteria (verifiable conditions)
    - QA scenarios (bash commands with assertions)
    - Commit grouping
@@ -282,14 +296,15 @@ EXPECTED OUTCOME: [from acceptance criteria]
 REQUIRED TOOLS: [from plan]
 MUST DO:
 - Apply name substitution matrix: [matrix from plan]
+- Reference template files from: opensrc/repos/github.com/blogic-cz/blogic-template-ts/
 - [task-specific requirements]
 MUST NOT DO:
 - Overwrite project-specific business logic
 - Leave template names (blogic-template) in project files
 - [task-specific guardrails]
 CONTEXT:
-- Template source: <template-repo-path>/<file>
-- Project target: <project-path>/<file>
+- Template source: opensrc/repos/github.com/blogic-cz/blogic-template-ts/<file>
+- Project target: <file>
 - [additional context]
 ```
 
@@ -316,8 +331,8 @@ bun run check && bun run test
 
 ```bash
 # Search for template-specific strings that should have been substituted
-grep -r '@blogic-template/' . --include='*.ts' --include='*.json' --include='*.yml' --include='*.yaml' | grep -v node_modules | grep -v .git | grep -v .sisyphus
-grep -r 'blogic-template-ts' . --include='*.ts' --include='*.json' --include='*.yml' --include='*.yaml' | grep -v node_modules | grep -v .git | grep -v .sisyphus | grep -v CHANGELOG | grep -v skills-lock
+grep -r '@blogic-template/' . --include='*.ts' --include='*.json' --include='*.yml' --include='*.yaml' | grep -v node_modules | grep -v .git | grep -v .sisyphus | grep -v opensrc
+grep -r 'blogic-template-ts' . --include='*.ts' --include='*.json' --include='*.yml' --include='*.yaml' | grep -v node_modules | grep -v .git | grep -v .sisyphus | grep -v CHANGELOG | grep -v skills-lock | grep -v opensrc
 ```
 
 ### Step 3: Update the template version marker
@@ -341,19 +356,21 @@ git commit -m "chore: sync with blogic-template-ts <new-version>"
 ## Guardrails
 
 - **NEVER** overwrite project-specific business logic (routes, services, schema beyond defaults)
-- **NEVER** leave `@blogic-template/` or `blogic-template-ts` strings in project files
+- **NEVER** leave `@blogic-template/` or `blogic-template-ts` strings in project files (except opensrc clone)
+- **ALWAYS** clone the template via `bun run opensrc:use blogic-cz/blogic-template-ts` first
 - **ALWAYS** apply the name substitution matrix to every file copied from the template
 - **ALWAYS** update packages FIRST before applying infrastructure changes
 - **ALWAYS** run `bun run check && bun run test` after each wave
 - **ALWAYS** preserve project-specific configurations (Sentry project, Helm namespaces, CI secrets)
 - **DO NOT** add template-only dependencies the project doesn't need
 - **DO NOT** apply template features the project hasn't opted into
+- **DO NOT** use hardcoded absolute paths — always use relative `opensrc/repos/github.com/blogic-cz/blogic-template-ts/`
 
 ## Definition of Done
 
 - `bun run check` passes (0 errors)
 - `bun run test` passes
-- No `@blogic-template/` or `blogic-template-ts` strings in project files (except .template-version and CHANGELOG)
+- No `@blogic-template/` or `blogic-template-ts` strings in project files (except .template-version, CHANGELOG, opensrc/)
 - `.template-version` file updated to new version
 - All plan tasks marked completed
 - Plan file exists in `.sisyphus/plans/`

@@ -28,14 +28,14 @@ For each item:
 2. **Investigate the root cause yourself** — read code, check logs, search codebase, check Sentry, check k8s state
 3. Identify the concrete fix (which file, what change, what config)
 
-Then present a **triage plan table with solutions** to the user:
+Then present a **triage plan** to the user:
 
-| # | Item | Type | Root Cause | Proposed Fix | Category |
-|---|------|------|-----------|--------------|----------|
-| 1 | #481 | INFRA | Image tag :288 doesn't exist in ACR | Update helm values to use latest valid tag :287 | deep |
-| 2 | #471 | SENTRY | isOctokitNotFound doesn't traverse error cause chain | Add recursive cause check in github-sync.ts:142 | deep |
-| 3 | #476 | PR/BUGFIX | CI pass, approved, clean diff | Merge via squash | quick |
-| 4 | #488 | PR/WIP | Merge conflicts with test | No action — WIP, owner needs to rebase | skip |
+| Item | Root Cause | Fix |
+||---|------|------|
+| #481 | Image tag :288 doesn't exist in ACR | Update helm values to latest valid tag :287 |
+| #471 | `isOctokitNotFound` doesn't traverse cause chain | Add recursive cause check in github-sync.ts:142 |
+| #476 (PR) | CI pass, approved, clean diff | Merge via squash |
+| #488 (PR) | Merge conflicts, WIP | Skip — owner needs to rebase |
 
 The plan must include **specific root cause and concrete fix** — not "investigate" or "needs analysis".
 If you genuinely cannot determine root cause after investigation, explain what you checked and what's still unknown.
