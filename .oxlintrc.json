@@ -1,0 +1,18 @@
+{
+  "ignorePatterns": [".git/**", "bun.lock", "node_modules/**"],
+  "plugins": ["import", "node", "oxc", "promise", "typescript", "unicorn"],
+  "categories": {
+    "correctness": "error",
+    "perf": "error",
+    "suspicious": "error"
+  },
+  "rules": {
+    "eslint/no-empty": "error",
+    "eslint/no-var": "error",
+    "import/no-duplicates": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-explicit-any": "error",
+    "unicorn/error-message": "error",
+    "unicorn/throw-new-error": "error"
+  }
+}
