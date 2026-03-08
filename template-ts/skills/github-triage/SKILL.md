@@ -31,7 +31,7 @@ For each item:
 Then present a **triage plan** to the user:
 
 | Item | Root Cause | Fix |
-||---|------|------|
+|------|-----------|-----|
 | #481 | Image tag :288 doesn't exist in ACR | Update helm values to latest valid tag :287 |
 | #471 | `isOctokitNotFound` doesn't traverse cause chain | Add recursive cause check in github-sync.ts:142 |
 | #476 (PR) | CI pass, approved, clean diff | Merge via squash |
