@@ -21,24 +21,24 @@ Use this skill to analyze database observability reports and create prioritized 
 
 ### Critical Issues (Immediate Action)
 
-| Issue | Detection Rule | Action |
-|-------|---------------|--------|
-| Bloated Tables | Dead rows >10% in Table Statistics | VACUUM via /app/admin/observability UI |
-| Missing Indexes | Index usage <50% with high sequential scans | Add composite index in `packages/db/src/schema.ts` |
-| Foreign Keys Without Indexes | FK columns without corresponding indexes | Add index in schema.ts |
+| Issue                        | Detection Rule                              | Action                                             |
+| ---------------------------- | ------------------------------------------- | -------------------------------------------------- |
+| Bloated Tables               | Dead rows >10% in Table Statistics          | VACUUM via /app/admin/observability UI             |
+| Missing Indexes              | Index usage <50% with high sequential scans | Add composite index in `packages/db/src/schema.ts` |
+| Foreign Keys Without Indexes | FK columns without corresponding indexes    | Add index in schema.ts                             |
 
 ### Medium Priority (Next Sprint)
 
-| Issue | Detection Rule | Action |
-|-------|---------------|--------|
-| Unused Indexes | Non-unique indexes with <10 uses | Remove from schema.ts (verify not PK/UNIQUE first) |
-| Duplicate Indexes | Multiple indexes covering same columns | Remove redundant index |
+| Issue             | Detection Rule                         | Action                                             |
+| ----------------- | -------------------------------------- | -------------------------------------------------- |
+| Unused Indexes    | Non-unique indexes with <10 uses       | Remove from schema.ts (verify not PK/UNIQUE first) |
+| Duplicate Indexes | Multiple indexes covering same columns | Remove redundant index                             |
 
 ### Low Priority (Monitor)
 
-| Issue | Detection Rule | Action |
-|-------|---------------|--------|
-| Cache Hit Ratio | Below 99% | Consider increasing `shared_buffers` |
+| Issue           | Detection Rule | Action                               |
+| --------------- | -------------- | ------------------------------------ |
+| Cache Hit Ratio | Below 99%      | Consider increasing `shared_buffers` |
 
 ---
 
@@ -117,10 +117,10 @@ index("oauth_consents_client_id_idx"); // SAFE TO REMOVE
     ```typescript
     export const tableName = pgTable(
       "table_name",
-      { /* fields */ },
-      (table) => [
-        index("idx_table_lookup").on(table.column1, table.column2),
-      ]
+      {
+        /* fields */
+      },
+      (table) => [index("idx_table_lookup").on(table.column1, table.column2)],
     );
     ```
 

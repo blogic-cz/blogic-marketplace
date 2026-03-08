@@ -110,18 +110,14 @@ import { Effect, Layer } from "effect";
 import { HealthCheckService } from "../health-check";
 
 describe("HealthCheckService", () => {
-  it.effect(
-    "returns success when endpoint is healthy",
-    () =>
-      Effect.gen(function* () {
-        const service = yield* HealthCheckService;
-        const result = yield* service.checkEndpoint(
-          "http://api.example.com"
-        );
+  it.effect("returns success when endpoint is healthy", () =>
+    Effect.gen(function* () {
+      const service = yield* HealthCheckService;
+      const result = yield* service.checkEndpoint("http://api.example.com");
 
-        expect(result.healthy).toBe(true);
-        expect(result.latencyMs).toBeGreaterThan(0);
-      }).pipe(Effect.provide(testLayer))
+      expect(result.healthy).toBe(true);
+      expect(result.latencyMs).toBeGreaterThan(0);
+    }).pipe(Effect.provide(testLayer)),
   );
 });
 
@@ -135,9 +131,7 @@ const mockHttpLayer = Layer.succeed(HttpClient, {
     }),
 });
 
-const testLayer = HealthCheckService.layer.pipe(
-  Layer.provide(mockHttpLayer)
-);
+const testLayer = HealthCheckService.layer.pipe(Layer.provide(mockHttpLayer));
 ```
 
 **Run test:** FAIL - HealthCheckService doesn't exist
@@ -153,14 +147,10 @@ type HealthResult = {
   latencyMs: number;
 };
 
-export class HealthCheckService extends Context.Tag(
-  "@blogic-template/HealthCheckService"
-)<
+export class HealthCheckService extends Context.Tag("@blogic-template/HealthCheckService")<
   HealthCheckService,
   {
-    readonly checkEndpoint: (
-      url: string
-    ) => Effect.Effect<HealthResult>;
+    readonly checkEndpoint: (url: string) => Effect.Effect<HealthResult>;
   }
 >() {
   static readonly layer = Layer.effect(
@@ -168,25 +158,22 @@ export class HealthCheckService extends Context.Tag(
     Effect.gen(function* () {
       const http = yield* HttpClient;
 
-      const checkEndpoint = Effect.fn(
-        "HealthCheck.checkEndpoint"
-      )((url: string) =>
+      const checkEndpoint = Effect.fn("HealthCheck.checkEndpoint")((url: string) =>
         Effect.gen(function* () {
           const response = yield* http.get(url);
           return {
             healthy: response.status === 200,
             latencyMs: response.latencyMs,
           };
-        })
+        }),
       );
 
       return { checkEndpoint };
-    })
+    }),
   );
 }
 
-export const HealthCheckServiceLayer =
-  HealthCheckService.layer;
+export const HealthCheckServiceLayer = HealthCheckService.layer;
 ```
 
 **Run test:** PASS
@@ -197,12 +184,10 @@ export const HealthCheckServiceLayer =
 it.effect("returns unhealthy when endpoint fails", () =>
   Effect.gen(function* () {
     const service = yield* HealthCheckService;
-    const result = yield* service.checkEndpoint(
-      "http://down.example.com"
-    );
+    const result = yield* service.checkEndpoint("http://down.example.com");
 
     expect(result.healthy).toBe(false);
-  }).pipe(Effect.provide(failingTestLayer))
+  }).pipe(Effect.provide(failingTestLayer)),
 );
 
 // Mock that returns 500
@@ -215,9 +200,7 @@ const failingHttpLayer = Layer.succeed(HttpClient, {
     }),
 });
 
-const failingTestLayer = HealthCheckService.layer.pipe(
-  Layer.provide(failingHttpLayer)
-);
+const failingTestLayer = HealthCheckService.layer.pipe(Layer.provide(failingHttpLayer));
 ```
 
 **Run test:** PASS (already handles this case!)
@@ -230,9 +213,7 @@ import { Either } from "effect";
 it.effect("handles network timeout", () =>
   Effect.gen(function* () {
     const service = yield* HealthCheckService;
-    const result = yield* service
-      .checkEndpoint("http://timeout.example.com")
-      .pipe(Effect.either);
+    const result = yield* service.checkEndpoint("http://timeout.example.com").pipe(Effect.either);
 
     Either.match(result, {
       onLeft: (error) => {
@@ -243,18 +224,15 @@ it.effect("handles network timeout", () =>
         expect.fail("Expected error");
       },
     });
-  }).pipe(Effect.provide(timeoutTestLayer))
+  }).pipe(Effect.provide(timeoutTestLayer)),
 );
 
 // Mock that fails with timeout
 const timeoutHttpLayer = Layer.succeed(HttpClient, {
-  get: (url) =>
-    Effect.fail(new NetworkError({ reason: "timeout" })),
+  get: (url) => Effect.fail(new NetworkError({ reason: "timeout" })),
 });
 
-const timeoutTestLayer = HealthCheckService.layer.pipe(
-  Layer.provide(timeoutHttpLayer)
-);
+const timeoutTestLayer = HealthCheckService.layer.pipe(Layer.provide(timeoutHttpLayer));
 ```
 
 **Run test:** FAIL - Need to handle errors
@@ -264,22 +242,15 @@ const timeoutTestLayer = HealthCheckService.layer.pipe(
 ```typescript
 import { Schema } from "effect";
 
-class HealthCheckError extends Schema.TaggedError<HealthCheckError>()(
-  "HealthCheckError",
-  {
-    url: Schema.String,
-    reason: Schema.String,
-  }
-) {}
+class HealthCheckError extends Schema.TaggedError<HealthCheckError>()("HealthCheckError", {
+  url: Schema.String,
+  reason: Schema.String,
+}) {}
 
-export class HealthCheckService extends Context.Tag(
-  "@blogic-template/HealthCheckService"
-)<
+export class HealthCheckService extends Context.Tag("@blogic-template/HealthCheckService")<
   HealthCheckService,
   {
-    readonly checkEndpoint: (
-      url: string
-    ) => Effect.Effect<HealthResult, HealthCheckError>;
+    readonly checkEndpoint: (url: string) => Effect.Effect<HealthResult, HealthCheckError>;
   }
 >() {
   static readonly layer = Layer.effect(
@@ -287,9 +258,7 @@ export class HealthCheckService extends Context.Tag(
     Effect.gen(function* () {
       const http = yield* HttpClient;
 
-      const checkEndpoint = Effect.fn(
-        "HealthCheck.checkEndpoint"
-      )((url: string) =>
+      const checkEndpoint = Effect.fn("HealthCheck.checkEndpoint")((url: string) =>
         Effect.gen(function* () {
           const response = yield* http.get(url).pipe(
             Effect.catchAll((error) =>
@@ -297,19 +266,19 @@ export class HealthCheckService extends Context.Tag(
                 new HealthCheckError({
                   url,
                   reason: error.reason ?? "unknown",
-                })
-              )
-            )
+                }),
+              ),
+            ),
           );
           return {
             healthy: response.status === 200,
             latencyMs: response.latencyMs,
           };
-        })
+        }),
       );
 
       return { checkEndpoint };
-    })
+    }),
   );
 }
 ```
@@ -330,13 +299,7 @@ export class HealthCheckService extends Context.Tag(
 
 ```typescript
 // apps/web-app/src/__tests__/project-stats.test.ts
-import {
-  describe,
-  expect,
-  it,
-  beforeEach,
-  afterEach,
-} from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import type { PGlite } from "@electric-sql/pglite";
 import {
   createTestDb,
@@ -396,11 +359,7 @@ describe("project.getStats", () => {
 // apps/web-app/src/infrastructure/trpc/routers/project.ts
 export const router = {
   getStats: protectedProjectMemberProcedure
-    .input(
-      Schema.standardSchemaV1(
-        Schema.Struct({ projectId: ProjectId })
-      )
-    )
+    .input(Schema.standardSchemaV1(Schema.Struct({ projectId: ProjectId })))
     .query(async ({ ctx, input }) => {
       const [stats] = await ctx.db
         .select({
@@ -408,13 +367,7 @@ export const router = {
           createdAt: projectsTable.createdAt,
         })
         .from(projectsTable)
-        .leftJoin(
-          projectMembersTable,
-          eq(
-            projectMembersTable.projectId,
-            projectsTable.id
-          )
-        )
+        .leftJoin(projectMembersTable, eq(projectMembersTable.projectId, projectsTable.id))
         .where(eq(projectsTable.id, input.projectId))
         .groupBy(projectsTable.id);
 

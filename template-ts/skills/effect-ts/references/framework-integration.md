@@ -12,11 +12,7 @@ Typical boundaries:
 
 ```ts
 const result = await runtime.runPromise(
-  program.pipe(
-    Effect.catchTag("DomainError", (e) =>
-      Effect.fail(mapToHttpError(e))
-    )
-  )
+  program.pipe(Effect.catchTag("DomainError", (e) => Effect.fail(mapToHttpError(e)))),
 );
 ```
 
@@ -25,11 +21,9 @@ const result = await runtime.runPromise(
 Preferred style in services:
 
 ```ts
-const generate = Effect.fn("SlugService.generate")(
-  function* (name: string) {
-    // implementation
-  }
-);
+const generate = Effect.fn("SlugService.generate")(function* (name: string) {
+  // implementation
+});
 ```
 
 Use concise `function*` style unless explicit wrapping is needed.
@@ -48,19 +42,13 @@ Use concise `function*` style unless explicit wrapping is needed.
 
 ```ts
 // ❌ BAD — spans invisible, no tracing, no layers
-const result = await Effect.runPromise(
-  program.pipe(Effect.provide(someLocalLayer))
-);
+const result = await Effect.runPromise(program.pipe(Effect.provide(someLocalLayer)));
 
 // ✅ GOOD — full observability via AppLayer (SentryTracingLive, etc.)
 import { runtime } from "@/infrastructure/effect-runtime";
 
 const result = await runtime.runPromise(
-  program.pipe(
-    Effect.catchTag("DomainError", (e) =>
-      Effect.fail(mapToHttpError(e))
-    )
-  )
+  program.pipe(Effect.catchTag("DomainError", (e) => Effect.fail(mapToHttpError(e)))),
 );
 ```
 
@@ -72,8 +60,8 @@ import { SentryTracingLive } from "@/infrastructure/effect-sentry-tracing";
 const result = await Effect.runPromise(
   program.pipe(
     Effect.provide(localServiceLayer),
-    Effect.provide(SentryTracingLive) // Ensures Effect spans appear in Sentry
-  )
+    Effect.provide(SentryTracingLive), // Ensures Effect spans appear in Sentry
+  ),
 );
 ```
 

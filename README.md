@@ -58,29 +58,29 @@ npx skills update
 
 ### Available skills
 
-| Skill | Description |
-|---|---|
-| `better-auth` | Authentication and authorization with Better Auth |
-| `code-review` | Pre-PR code review checklist |
-| `debugging-with-opensrc` | Debug libraries by reading their source code |
-| `drizzle-database` | Database schemas, queries, and migrations with Drizzle ORM |
-| `effect-ts` | Effect TypeScript services, layers, and error handling |
-| `frontend-design` | UI components, styling, and layouts |
-| `git-workflow` | PR lifecycle, branch management, and CI monitoring |
-| `kubernetes-helm` | Kubernetes deployments with Helm charts |
-| `marketing-expert` | Marketing copy and landing pages |
-| `performance-optimization` | N+1 fixes, batch operations, and query optimization |
-| `process-db-report` | PostgreSQL performance report analysis |
-| `production-troubleshooting` | Debug production/test performance issues |
-| `react-doctor` | React codebase health diagnostics |
-| `requirements` | Structured 5-phase requirements gathering |
-| `scan-effect-solutions` | Effect TypeScript compliance audit |
-| `sentry-integration` | Error tracking and tracing with Sentry |
-| `tanstack-frontend` | TanStack Router routes, TRPC prefetching, and forms |
-| `tdd` | Test-driven development with Red-Green-Refactor |
-| `testing-patterns` | Unit tests, TRPC integration tests, and E2E tests |
-| `trpc-patterns` | TRPC routers, procedures, and middleware |
-| `update-packages` | npm package updates with breaking change handling |
+| Skill                        | Description                                                |
+| ---------------------------- | ---------------------------------------------------------- |
+| `better-auth`                | Authentication and authorization with Better Auth          |
+| `code-review`                | Pre-PR code review checklist                               |
+| `debugging-with-opensrc`     | Debug libraries by reading their source code               |
+| `drizzle-database`           | Database schemas, queries, and migrations with Drizzle ORM |
+| `effect-ts`                  | Effect TypeScript services, layers, and error handling     |
+| `frontend-design`            | UI components, styling, and layouts                        |
+| `git-workflow`               | PR lifecycle, branch management, and CI monitoring         |
+| `kubernetes-helm`            | Kubernetes deployments with Helm charts                    |
+| `marketing-expert`           | Marketing copy and landing pages                           |
+| `performance-optimization`   | N+1 fixes, batch operations, and query optimization        |
+| `process-db-report`          | PostgreSQL performance report analysis                     |
+| `production-troubleshooting` | Debug production/test performance issues                   |
+| `react-doctor`               | React codebase health diagnostics                          |
+| `requirements`               | Structured 5-phase requirements gathering                  |
+| `scan-effect-solutions`      | Effect TypeScript compliance audit                         |
+| `sentry-integration`         | Error tracking and tracing with Sentry                     |
+| `tanstack-frontend`          | TanStack Router routes, TRPC prefetching, and forms        |
+| `tdd`                        | Test-driven development with Red-Green-Refactor            |
+| `testing-patterns`           | Unit tests, TRPC integration tests, and E2E tests          |
+| `trpc-patterns`              | TRPC routers, procedures, and middleware                   |
+| `update-packages`            | npm package updates with breaking change handling          |
 
 ## License
 

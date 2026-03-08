@@ -36,18 +36,11 @@ Sentry.init({
   tracesSampleRate: isDev ? 1.0 : 0.001,
   profilesSampleRate: isDev ? 1.0 : 0.001,
   profileLifecycle: "trace",
-  integrations: [
-    Sentry.postgresIntegration(),
-    Sentry.redisIntegration(),
-    Sentry.httpIntegration(),
-  ],
+  integrations: [Sentry.postgresIntegration(), Sentry.redisIntegration(), Sentry.httpIntegration()],
   ignoreTransactions: ["/api/alive", "/api/health"],
   beforeSend(event, hint) {
     // Filter AbortError completely
-    if (
-      error instanceof DOMException &&
-      error.name === "AbortError"
-    ) {
+    if (error instanceof DOMException && error.name === "AbortError") {
       return null;
     }
     // Mark expected TRPC errors as handled
@@ -74,18 +67,13 @@ Sentry.init({
       colorScheme: "system",
       autoInject: false,
     }),
-    ...(isDev
-      ? [Sentry.spotlightBrowserIntegration()]
-      : []),
+    ...(isDev ? [Sentry.spotlightBrowserIntegration()] : []),
   ],
   tracesSampleRate: isDev ? 1.0 : 0.001,
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   beforeSend(event, hint) {
-    return markExpectedTRPCErrorInEvent(
-      event,
-      hint.originalException
-    );
+    return markExpectedTRPCErrorInEvent(event, hint.originalException);
   },
 });
 ```
@@ -97,13 +85,11 @@ Sentry.init({
 export const sentryMiddleware = t.middleware(
   Sentry.trpcMiddleware({
     attachRpcInput: true,
-  })
+  }),
 );
 
 // Used in procedure chain
-export const publicProcedure = t.procedure
-  .use(debugMiddleware)
-  .use(sentryMiddleware);
+export const publicProcedure = t.procedure.use(debugMiddleware).use(sentryMiddleware);
 ```
 
 ## Server Function Middleware
@@ -136,7 +122,7 @@ export const sentryFunctionMiddleware = createMiddleware({
           span.setStatus({ code: 2 }); // ERROR
           throw error;
         }
-      }
+      },
     );
   });
 ```
@@ -147,22 +133,14 @@ export const sentryFunctionMiddleware = createMiddleware({
 
 ```typescript
 // From apps/web-app/src/infrastructure/errors.ts
-const EXPECTED_TRPC_CODES = [
-  "NOT_FOUND",
-  "FORBIDDEN",
-  "UNAUTHORIZED",
-  "BAD_REQUEST",
-];
+const EXPECTED_TRPC_CODES = ["NOT_FOUND", "FORBIDDEN", "UNAUTHORIZED", "BAD_REQUEST"];
 ```
 
 ### Custom Capture Helper
 
 ```typescript
 // apps/web-app/src/infrastructure/sentry-utils.ts
-export function captureException(
-  error: unknown,
-  captureContext?: Sentry.CaptureContext
-) {
+export function captureException(error: unknown, captureContext?: Sentry.CaptureContext) {
   if (isExpectedTRPCError(error)) {
     Sentry.withScope((scope) => {
       scope.setLevel("warning");
@@ -180,10 +158,7 @@ export function captureException(
 ### beforeSend Helper
 
 ```typescript
-export function markExpectedTRPCErrorInEvent(
-  event: Sentry.ErrorEvent,
-  error: unknown
-) {
+export function markExpectedTRPCErrorInEvent(event: Sentry.ErrorEvent, error: unknown) {
   if (!isExpectedTRPCError(error)) return event;
 
   event.exception?.values?.forEach((exception) => {
@@ -204,27 +179,19 @@ export function markExpectedTRPCErrorInEvent(
 
 ```typescript
 // apps/web-app/src/infrastructure/db/tracing.ts
-export async function traced<T>(
-  query: DrizzleQuery,
-  operationName?: string
-): Promise<T> {
+export async function traced<T>(query: DrizzleQuery, operationName?: string): Promise<T> {
   return Sentry.startSpan(
     {
       op: "db.query",
       name: sqlString,
       attributes: { "db.system": "postgresql" },
     },
-    () => query as Promise<T>
+    () => query as Promise<T>,
   );
 }
 
 // Usage:
-const users = await traced(
-  db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, userId))
-);
+const users = await traced(db.select().from(usersTable).where(eq(usersTable.id, userId)));
 ```
 
 ### Automatic Proxy Tracing
@@ -234,20 +201,10 @@ const users = await traced(
 export function createTracedDb(db: Db): Db {
   return new Proxy(db, {
     get(target, prop) {
-      if (
-        ["select", "insert", "update", "delete"].includes(
-          String(prop)
-        )
-      ) {
+      if (["select", "insert", "update", "delete"].includes(String(prop))) {
         return function (...args) {
-          const queryBuilder = originalMethod.call(
-            target,
-            ...args
-          );
-          return createTracedQueryBuilder(
-            queryBuilder,
-            String(prop)
-          );
+          const queryBuilder = originalMethod.call(target, ...args);
+          return createTracedQueryBuilder(queryBuilder, String(prop));
         };
       }
       return originalMethod;
@@ -283,21 +240,18 @@ export function useSetSentryContext() {
 
 ```typescript
 // packages/services/src/sentry/errors.ts
-export class SentryApiError extends Schema.TaggedError<SentryApiError>()(
-  "SentryApiError",
-  {
-    statusCode: Schema.Number,
-    body: Schema.String,
-    url: Schema.String,
-  }
-) {}
+export class SentryApiError extends Schema.TaggedError<SentryApiError>()("SentryApiError", {
+  statusCode: Schema.Number,
+  body: Schema.String,
+  url: Schema.String,
+}) {}
 
 export class SentryRateLimitError extends Schema.TaggedError<SentryRateLimitError>()(
   "SentryRateLimitError",
   {
     retryAfter: Schema.Number,
     message: Schema.String,
-  }
+  },
 ) {}
 ```
 
@@ -305,23 +259,13 @@ export class SentryRateLimitError extends Schema.TaggedError<SentryRateLimitErro
 
 ```typescript
 // packages/services/src/sentry/sentry-issues.ts
-export class SentryIssuesService extends Context.Tag(
-  "@project/SentryIssuesService"
-)<
+export class SentryIssuesService extends Context.Tag("@project/SentryIssuesService")<
   SentryIssuesService,
   {
-    readonly getNewErrors: (
-      params
-    ) => Effect.Effect<SentryIssuesResponse, SentryError>;
-    readonly getRegressions: (
-      params
-    ) => Effect.Effect<SentryIssuesResponse, SentryError>;
-    readonly verifyToken: (
-      params
-    ) => Effect.Effect<SentryOrganization[], SentryError>;
-    readonly listProjects: (
-      params
-    ) => Effect.Effect<SentryProject[], SentryError>;
+    readonly getNewErrors: (params) => Effect.Effect<SentryIssuesResponse, SentryError>;
+    readonly getRegressions: (params) => Effect.Effect<SentryIssuesResponse, SentryError>;
+    readonly verifyToken: (params) => Effect.Effect<SentryOrganization[], SentryError>;
+    readonly listProjects: (params) => Effect.Effect<SentryProject[], SentryError>;
   }
 >() {
   static readonly layer = Layer.effect(
@@ -329,32 +273,26 @@ export class SentryIssuesService extends Context.Tag(
     Effect.gen(function* () {
       const httpClient = yield* HttpClient.HttpClient;
       // ... service implementation
-    })
+    }),
   );
 }
 
 // Live layer
-export const SentryIssuesServiceLive =
-  SentryIssuesService.layer.pipe(
-    Layer.provide(FetchHttpClient.layer)
-  );
+export const SentryIssuesServiceLive = SentryIssuesService.layer.pipe(
+  Layer.provide(FetchHttpClient.layer),
+);
 ```
 
 ### API Client with Retry
 
 ```typescript
-const retryPolicy = Schedule.exponential("500 millis").pipe(
-  Schedule.compose(Schedule.recurs(2))
-);
+const retryPolicy = Schedule.exponential("500 millis").pipe(Schedule.compose(Schedule.recurs(2)));
 
 export const sentryRequest = <A, I>(
   httpClient: HttpClient.HttpClient,
   schema: Schema.Schema<A, I>,
-  params: SentryRequestParams
-): Effect.Effect<
-  { data: A; nextCursor: string | null },
-  SentryApiError | SentryRateLimitError
-> =>
+  params: SentryRequestParams,
+): Effect.Effect<{ data: A; nextCursor: string | null }, SentryApiError | SentryRateLimitError> =>
   Effect.fn("Sentry.request")(function* () {
     // Request with Bearer token auth
     // Rate limit handling (429 -> SentryRateLimitError)

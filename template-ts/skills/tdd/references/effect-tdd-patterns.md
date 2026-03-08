@@ -31,17 +31,14 @@ export const getPrice = async (basePrice: number): Promise<number> // ???
 class FeatureFlags extends Context.Tag("FeatureFlags")<
   FeatureFlags,
   {
-    readonly isEnabled: (
-      flag: string
-    ) => Effect.Effect<boolean>;
+    readonly isEnabled: (flag: string) => Effect.Effect<boolean>;
   }
 >() {}
 
 // 2. Test layer - parameterized
 const testFlagsLayer = (...enabled: string[]) =>
   Layer.succeed(FeatureFlags, {
-    isEnabled: (flag) =>
-      Effect.succeed(enabled.includes(flag)),
+    isEnabled: (flag) => Effect.succeed(enabled.includes(flag)),
   });
 
 // 3. Service that depends on FeatureFlags
@@ -51,12 +48,10 @@ const pricingLayer = Layer.effect(
     const flags = yield* FeatureFlags; // Dependency tracked in type!
     return {
       getPrice: Effect.fn(function* (base: number) {
-        return (yield* flags.isEnabled("surge"))
-          ? base * 6.5
-          : base;
+        return (yield* flags.isEnabled("surge")) ? base * 6.5 : base;
       }),
     };
-  })
+  }),
 );
 // Type: Layer.Layer<Pricing, never, FeatureFlags>
 //                                   ^^^^^^^^^^^^^^ requirement visible!
@@ -66,10 +61,7 @@ it.effect("applies surge pricing", () =>
   Effect.gen(function* () {
     const pricing = yield* Pricing;
     expect(yield* pricing.getPrice(100)).toBe(650);
-  }).pipe(
-    Effect.provide(pricingLayer),
-    Effect.provide(testFlagsLayer("surge"))
-  )
+  }).pipe(Effect.provide(pricingLayer), Effect.provide(testFlagsLayer("surge"))),
 );
 ```
 
@@ -106,7 +98,7 @@ describe("PricingService", () => {
         quantity: 1,
       });
       expect(result.total).toBe(100);
-    }).pipe(Effect.provide(testLayer))
+    }).pipe(Effect.provide(testLayer)),
   );
 
   it.effect("applies bulk discount for quantity > 10", () =>
@@ -118,7 +110,7 @@ describe("PricingService", () => {
       });
       // 15% bulk discount: 15 * 100 * 0.85 = 1275
       expect(result.total).toBe(1275);
-    }).pipe(Effect.provide(testLayer))
+    }).pipe(Effect.provide(testLayer)),
   );
 });
 ```
@@ -135,15 +127,12 @@ import { PricingService } from "../pricing-service";
 
 // Mock inventory with predefined data
 const mockInventoryLayer = Layer.succeed(InventoryService, {
-  getPrice: (itemId) =>
-    Effect.succeed(itemId === "item-1" ? 100 : 50),
+  getPrice: (itemId) => Effect.succeed(itemId === "item-1" ? 100 : 50),
   getStock: (itemId) => Effect.succeed(100),
 });
 
 // Compose test layer
-const testLayer = PricingService.layer.pipe(
-  Layer.provide(mockInventoryLayer)
-);
+const testLayer = PricingService.layer.pipe(Layer.provide(mockInventoryLayer));
 ```
 
 ### Step 3: Implement Service (GREEN)
@@ -155,9 +144,7 @@ Now implement the service to make tests pass:
 import { Context, Effect, Layer } from "effect";
 import { InventoryService } from "./inventory-service";
 
-export class PricingService extends Context.Tag(
-  "@blogic-template/PricingService"
-)<
+export class PricingService extends Context.Tag("@blogic-template/PricingService")<
   PricingService,
   {
     readonly calculatePrice: (params: {
@@ -171,26 +158,23 @@ export class PricingService extends Context.Tag(
     Effect.gen(function* () {
       const inventory = yield* InventoryService;
 
-      const calculatePrice = Effect.fn(
-        "PricingService.calculatePrice"
-      )((params: { itemId: string; quantity: number }) =>
-        Effect.gen(function* () {
-          const unitPrice = yield* inventory.getPrice(
-            params.itemId
-          );
-          let total = unitPrice * params.quantity;
+      const calculatePrice = Effect.fn("PricingService.calculatePrice")(
+        (params: { itemId: string; quantity: number }) =>
+          Effect.gen(function* () {
+            const unitPrice = yield* inventory.getPrice(params.itemId);
+            let total = unitPrice * params.quantity;
 
-          // Bulk discount for quantity > 10
-          if (params.quantity > 10) {
-            total = total * 0.85;
-          }
+            // Bulk discount for quantity > 10
+            if (params.quantity > 10) {
+              total = total * 0.85;
+            }
 
-          return { total };
-        })
+            return { total };
+          }),
       );
 
       return { calculatePrice };
-    })
+    }),
   );
 }
 
@@ -210,10 +194,8 @@ const createMockInventoryLayer = (config: {
   stock: Map<string, number>;
 }) =>
   Layer.succeed(InventoryService, {
-    getPrice: (itemId) =>
-      Effect.succeed(config.prices.get(itemId) ?? 0),
-    getStock: (itemId) =>
-      Effect.succeed(config.stock.get(itemId) ?? 0),
+    getPrice: (itemId) => Effect.succeed(config.prices.get(itemId) ?? 0),
+    getStock: (itemId) => Effect.succeed(config.stock.get(itemId) ?? 0),
   });
 
 // Usage in tests
@@ -224,8 +206,8 @@ describe("PricingService", () => {
         createMockInventoryLayer({
           prices: new Map([["free-item", 0]]),
           stock: new Map([["free-item", 100]]),
-        })
-      )
+        }),
+      ),
     );
 
     return Effect.gen(function* () {
@@ -268,7 +250,7 @@ it.effect("fails when item not found", () =>
         expect.fail("Expected Left but got Right");
       },
     });
-  }).pipe(Effect.provide(testLayer))
+  }).pipe(Effect.provide(testLayer)),
 );
 ```
 
@@ -277,19 +259,18 @@ it.effect("fails when item not found", () =>
 ```typescript
 const createFailingInventoryLayer = (errorType: string) =>
   Layer.succeed(InventoryService, {
-    getPrice: (itemId) =>
-      Effect.fail(new ItemNotFoundError({ itemId })),
+    getPrice: (itemId) => Effect.fail(new ItemNotFoundError({ itemId })),
     getStock: (itemId) =>
       Effect.fail(
         new InventoryError({
           message: "Service unavailable",
-        })
+        }),
       ),
   });
 
 it.effect("handles inventory service failure", () => {
   const testLayer = PricingService.layer.pipe(
-    Layer.provide(createFailingInventoryLayer("not-found"))
+    Layer.provide(createFailingInventoryLayer("not-found")),
   );
 
   return Effect.gen(function* () {
@@ -317,13 +298,12 @@ it.live("fetches price from external API", () => {
   globalThis.fetch = vi.fn().mockResolvedValue(
     new Response(JSON.stringify({ price: 99 }), {
       status: 200,
-    })
+    }),
   );
 
   return Effect.gen(function* () {
     const service = yield* PricingService;
-    const result =
-      yield* service.fetchExternalPrice("external-item");
+    const result = yield* service.fetchExternalPrice("external-item");
     expect(result.price).toBe(99);
   }).pipe(Effect.provide(PricingServiceLive));
 });
@@ -341,8 +321,7 @@ it.live("fetches price from external API", () => {
 
 ```typescript
 const mockLayer = Layer.succeed(MyService, {
-  doSomething: (input) =>
-    Effect.succeed(input.toUpperCase()),
+  doSomething: (input) => Effect.succeed(input.toUpperCase()),
   getValue: () => Effect.succeed(42),
 });
 ```
@@ -358,17 +337,14 @@ const realLayer = Layer.effect(
   MyService,
   Effect.gen(function* () {
     const dep = yield* SomeDependency;
-    const config = yield* Effect.promise(() =>
-      loadConfig()
-    );
+    const config = yield* Effect.promise(() => loadConfig());
 
     return {
-      doSomething: Effect.fn("MyService.doSomething")(
-        (input: string) =>
-          Effect.succeed(dep.process(input))
+      doSomething: Effect.fn("MyService.doSomething")((input: string) =>
+        Effect.succeed(dep.process(input)),
       ),
     };
-  })
+  }),
 );
 ```
 
@@ -390,7 +366,7 @@ describe("NotificationService", () => {
       });
       expect(result.sent).toBe(true);
       expect(result.channel).toBe("email");
-    }).pipe(Effect.provide(testLayer))
+    }).pipe(Effect.provide(testLayer)),
   );
 });
 ```
@@ -399,40 +375,29 @@ describe("NotificationService", () => {
 
 ```typescript
 // First, define the service tag (minimal)
-export class NotificationService extends Context.Tag(
-  "@blogic-template/NotificationService"
-)<
+export class NotificationService extends Context.Tag("@blogic-template/NotificationService")<
   NotificationService,
   {
-    readonly notify: (
-      params: NotifyParams
-    ) => Effect.Effect<NotifyResult>;
+    readonly notify: (params: NotifyParams) => Effect.Effect<NotifyResult>;
   }
 >() {
-  static readonly layer = Layer.succeed(
-    NotificationService,
-    {
-      notify: (params) =>
-        Effect.succeed({
-          sent: true,
-          channel: params.type,
-        }),
-    }
-  );
+  static readonly layer = Layer.succeed(NotificationService, {
+    notify: (params) =>
+      Effect.succeed({
+        sent: true,
+        channel: params.type,
+      }),
+  });
 }
 ```
 
 ### 3. REFACTOR - Add proper implementation with dependencies
 
 ```typescript
-export class NotificationService extends Context.Tag(
-  "@blogic-template/NotificationService"
-)<
+export class NotificationService extends Context.Tag("@blogic-template/NotificationService")<
   NotificationService,
   {
-    readonly notify: (
-      params: NotifyParams
-    ) => Effect.Effect<NotifyResult, NotificationError>;
+    readonly notify: (params: NotifyParams) => Effect.Effect<NotifyResult, NotificationError>;
   }
 >() {
   static readonly layer = Layer.effect(
@@ -441,27 +406,19 @@ export class NotificationService extends Context.Tag(
       const emailClient = yield* EmailClient;
       const smsClient = yield* SmsClient;
 
-      const notify = Effect.fn(
-        "NotificationService.notify"
-      )((params: NotifyParams) =>
+      const notify = Effect.fn("NotificationService.notify")((params: NotifyParams) =>
         Effect.gen(function* () {
           if (params.type === "email") {
-            yield* emailClient.send(
-              params.recipient,
-              params.message
-            );
+            yield* emailClient.send(params.recipient, params.message);
           } else if (params.type === "sms") {
-            yield* smsClient.send(
-              params.recipient,
-              params.message
-            );
+            yield* smsClient.send(params.recipient, params.message);
           }
           return { sent: true, channel: params.type };
-        })
+        }),
       );
 
       return { notify };
-    })
+    }),
   );
 }
 ```
@@ -488,7 +445,7 @@ it.effect("fails for invalid email", () =>
         expect.fail("Expected error for invalid email");
       },
     });
-  }).pipe(Effect.provide(testLayer))
+  }).pipe(Effect.provide(testLayer)),
 );
 ```
 

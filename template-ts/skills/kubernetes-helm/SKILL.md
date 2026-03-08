@@ -239,11 +239,11 @@ persistence:
 
 ## Namespace Convention
 
-| Environment | Namespace     |
-| ----------- | ------------- |
+| Environment | Namespace        |
+| ----------- | ---------------- |
 | Test        | `<project>-test` |
 | Production  | `<project>-prod` |
-| System      | `bl-system`   |
+| System      | `bl-system`      |
 
 ## K8s Tool Usage
 

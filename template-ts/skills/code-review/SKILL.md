@@ -66,10 +66,7 @@ export const router = {
 
 ```typescript
 // ✅ Correct - Inline simple schemas with common types
-role: z.enum([
-  OrganizationRoles.Owner,
-  OrganizationRoles.Admin,
-]);
+role: z.enum([OrganizationRoles.Owner, OrganizationRoles.Admin]);
 
 // ❌ Wrong - Hardcoded enum values
 role: z.enum(["owner", "admin"]);
@@ -98,9 +95,7 @@ const members = await db.select().from(membersTable);
 
 ```typescript
 // ✅ Correct - TRPC v11 pattern with .queryOptions()
-const { data } = useSuspenseQuery(
-  trpc.organization.getById.queryOptions({ id })
-);
+const { data } = useSuspenseQuery(trpc.organization.getById.queryOptions({ id }));
 
 // ❌ Wrong - Old pattern (doesn't exist in v11)
 const { data } = trpc.organization.getById.useQuery({ id });

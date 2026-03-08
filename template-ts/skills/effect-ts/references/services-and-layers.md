@@ -5,27 +5,21 @@
 Keep service contract and layer in one file.
 
 ```ts
-export class MyService extends Context.Tag(
-  "@project/MyService"
-)<
+export class MyService extends Context.Tag("@project/MyService")<
   MyService,
   {
-    readonly run: (
-      input: string
-    ) => Effect.Effect<string, MyError>;
+    readonly run: (input: string) => Effect.Effect<string, MyError>;
   }
 >() {
   static readonly layer = Layer.effect(
     MyService,
     Effect.gen(function* () {
       const dep = yield* SomeDependency;
-      const run = Effect.fn("MyService.run")(function* (
-        input: string
-      ) {
+      const run = Effect.fn("MyService.run")(function* (input: string) {
         return yield* dep.execute(input);
       });
       return { run };
-    })
+    }),
   );
 }
 

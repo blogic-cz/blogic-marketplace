@@ -14,7 +14,7 @@ export const router = {
     .input(
       z.object({
         userId: z.string().min(1),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const user = await ctx.db
@@ -37,10 +37,7 @@ export const router = {
 Always use enum values from `@project/common` instead of hardcoding:
 
 ```typescript
-import {
-  OrganizationRoles,
-  ProjectStatus,
-} from "@project/common";
+import { OrganizationRoles, ProjectStatus } from "@project/common";
 import { z } from "zod";
 
 export const router = {
@@ -49,12 +46,8 @@ export const router = {
       z.object({
         name: z.string().min(1).max(100),
         organizationId: z.string().min(1),
-        status: z.enum([
-          ProjectStatus.Active,
-          ProjectStatus.Archived,
-          ProjectStatus.Draft,
-        ]),
-      })
+        status: z.enum([ProjectStatus.Active, ProjectStatus.Archived, ProjectStatus.Draft]),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Implementation
@@ -65,12 +58,8 @@ export const router = {
       z.object({
         organizationId: z.string().min(1),
         memberId: z.string().min(1),
-        role: z.enum([
-          OrganizationRoles.Owner,
-          OrganizationRoles.Admin,
-          OrganizationRoles.Member,
-        ]),
-      })
+        role: z.enum([OrganizationRoles.Owner, OrganizationRoles.Admin, OrganizationRoles.Member]),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Implementation
@@ -88,7 +77,7 @@ export const router = {
         email: z.string().email(),
         organizationId: z.string().min(1),
         message: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Implementation
@@ -106,15 +95,14 @@ export const router = {
         name: z.string().min(1).optional(),
         bio: z.string().max(500).optional(),
         avatarUrl: z.string().url().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Only update provided fields
       const updates: Partial<User> = {};
       if (input.name) updates.name = input.name;
       if (input.bio) updates.bio = input.bio;
-      if (input.avatarUrl)
-        updates.avatarUrl = input.avatarUrl;
+      if (input.avatarUrl) updates.avatarUrl = input.avatarUrl;
 
       return await ctx.db
         .update(usersTable)
@@ -136,15 +124,12 @@ export const router = {
           .array(
             z.object({
               email: z.string().email(),
-              role: z.enum([
-                OrganizationRoles.Admin,
-                OrganizationRoles.Member,
-              ]),
-            })
+              role: z.enum([OrganizationRoles.Admin, OrganizationRoles.Member]),
+            }),
           )
           .min(1)
           .max(50),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Implementation
@@ -157,10 +142,7 @@ export const router = {
 For session-related inputs, use branded types from `@project/common`:
 
 ```typescript
-import {
-  AuthSessionId,
-  ClientSessionId,
-} from "@project/common";
+import { AuthSessionId, ClientSessionId } from "@project/common";
 import { z } from "zod";
 
 export const router = {
@@ -168,22 +150,18 @@ export const router = {
     .input(
       z.object({
         sessionId: z.string().$brand<AuthSessionId>(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // input.sessionId is type AuthSessionId
-      await ctx.db
-        .delete(authSessionsTable)
-        .where(eq(authSessionsTable.id, input.sessionId));
+      await ctx.db.delete(authSessionsTable).where(eq(authSessionsTable.id, input.sessionId));
     }),
 
   getClientSession: protectedProcedure
     .input(
       z.object({
-        clientSessionId: z
-          .string()
-          .$brand<ClientSessionId>(),
-      })
+        clientSessionId: z.string().$brand<ClientSessionId>(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       // input.clientSessionId is type ClientSessionId
@@ -202,11 +180,9 @@ export const router = {
         organizationId: z.string().min(1),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(20),
-        sortBy: z
-          .enum(["name", "createdAt", "updatedAt"])
-          .optional(),
+        sortBy: z.enum(["name", "createdAt", "updatedAt"]).optional(),
         sortOrder: z.enum(["asc", "desc"]).default("desc"),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const offset = (input.page - 1) * input.limit;
@@ -214,12 +190,7 @@ export const router = {
       const projects = await ctx.db
         .select()
         .from(projectsTable)
-        .where(
-          eq(
-            projectsTable.organizationId,
-            input.organizationId
-          )
-        )
+        .where(eq(projectsTable.organizationId, input.organizationId))
         .limit(input.limit)
         .offset(offset);
 
@@ -242,7 +213,7 @@ export const router = {
         organizationId: z.string().min(1),
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       // Implementation
@@ -264,19 +235,13 @@ const projectInputSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   organizationId: z.string().min(1),
-  status: z.enum([
-    ProjectStatus.Active,
-    ProjectStatus.Archived,
-    ProjectStatus.Draft,
-  ]),
+  status: z.enum([ProjectStatus.Active, ProjectStatus.Archived, ProjectStatus.Draft]),
 });
 
 export const router = {
-  createProject: protectedProcedure
-    .input(projectInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Implementation
-    }),
+  createProject: protectedProcedure.input(projectInputSchema).mutation(async ({ ctx, input }) => {
+    // Implementation
+  }),
 
   updateProject: protectedProcedure
     .input(
@@ -284,7 +249,7 @@ export const router = {
         .object({
           projectId: z.string().min(1),
         })
-        .merge(projectInputSchema.partial())
+        .merge(projectInputSchema.partial()),
     )
     .mutation(async ({ ctx, input }) => {
       // Implementation

@@ -5,21 +5,21 @@
 // Usage: Set _AGENT_KIT_SCRIPT env var to the script basename (without .sh),
 //        then require() this module. The module runs bash with correct paths.
 
-const path = require('path');
-const { execFileSync } = require('child_process');
-const os = require('os');
+const path = require("path");
+const { execFileSync } = require("child_process");
+const os = require("os");
 
 const scriptName = process.env._AGENT_KIT_SCRIPT;
 if (!scriptName) {
   process.exit(0);
 }
 
-const isWindows = os.platform() === 'win32';
-const pluginRoot = path.resolve(__dirname, '..');
-const scriptPath = path.join(__dirname, scriptName + '.sh');
+const isWindows = os.platform() === "win32";
+const pluginRoot = path.resolve(__dirname, "..");
+const scriptPath = path.join(__dirname, scriptName + ".sh");
 
 function toUnixPath(p) {
-  return p.replace(/\\/g, '/');
+  return p.replace(/\\/g, "/");
 }
 
 // Build env with forward-slash paths so bash scripts work on Windows (Git Bash)
@@ -36,11 +36,11 @@ if (isWindows) {
 const bashScriptPath = isWindows ? toUnixPath(scriptPath) : scriptPath;
 
 try {
-  execFileSync('bash', [bashScriptPath], { stdio: 'inherit', env });
+  execFileSync("bash", [bashScriptPath], { stdio: "inherit", env });
 } catch (err) {
-  if (err.code === 'ENOENT') {
+  if (err.code === "ENOENT") {
     console.error(
-      'Error: bash not found. On Windows, install Git for Windows (https://git-scm.com).'
+      "Error: bash not found. On Windows, install Git for Windows (https://git-scm.com).",
     );
     process.exit(1);
   }

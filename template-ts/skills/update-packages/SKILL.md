@@ -21,6 +21,7 @@ git checkout -b chore/update-packages-$(date +%y%m%d-%H%M)
 ```
 
 **Rules:**
+
 - Always update skills first — they may contain updated instructions for this workflow
 - Never reuse an existing update-packages branch
 - All package update commits go to this branch
@@ -29,15 +30,15 @@ git checkout -b chore/update-packages-$(date +%y%m%d-%H%M)
 
 These packages must always be updated as a group — mismatched versions cause type errors or runtime failures:
 
-| Group | Packages |
-|-------|----------|
+| Group               | Packages                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
 | **tanstack-router** | `@tanstack/react-router`, `@tanstack/router-devtools`, `@tanstack/router-plugin`, `@tanstack/start` |
-| **tanstack-query** | `@tanstack/react-query`, `@tanstack/react-query-devtools`, `@tanstack/query-core` |
-| **trpc** | `@trpc/server`, `@trpc/client`, `@trpc/react-query`, `@trpc/tanstack-react-query` |
-| **effect** | `effect`, `@effect/schema`, `@effect/platform`, `@effect/language-service` |
-| **drizzle** | `drizzle-orm`, `drizzle-kit`, `drizzle-zod` |
-| **pino** | `pino`, `pino-pretty`, `@types/pino` |
-| **playwright** | `@playwright/test`, `playwright` (+ Docker image sync — see Special Cases) |
+| **tanstack-query**  | `@tanstack/react-query`, `@tanstack/react-query-devtools`, `@tanstack/query-core`                   |
+| **trpc**            | `@trpc/server`, `@trpc/client`, `@trpc/react-query`, `@trpc/tanstack-react-query`                   |
+| **effect**          | `effect`, `@effect/schema`, `@effect/platform`, `@effect/language-service`                          |
+| **drizzle**         | `drizzle-orm`, `drizzle-kit`, `drizzle-zod`                                                         |
+| **pino**            | `pino`, `pino-pretty`, `@types/pino`                                                                |
+| **playwright**      | `@playwright/test`, `playwright` (+ Docker image sync — see Special Cases)                          |
 
 ## Update Strategy
 
@@ -46,21 +47,23 @@ These packages must always be updated as a group — mismatched versions cause t
 For each group, execute steps 1–4 before moving to the next:
 
 **Step 1 — Identify versions (old → new)**
+
 - Run `bun upgrade` interactively, note minor/major bumps
 - For catalog packages: `npm view <package> version`
 
 **Step 2 — Update + Analyze release notes IN PARALLEL**
 
-| Track A: Apply Update | Track B: Analyze Release Notes (background) |
-|---|---|
+| Track A: Apply Update                                 | Track B: Analyze Release Notes (background)                                   |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Apply version bumps via `bun upgrade` or catalog edit | `npm view <pkg> repository.url` → `gh release view <tag> --repo <owner/repo>` |
-| `bun install` if catalog | **Major**: breaking changes, migration guides, removed APIs |
-| | **Minor**: new APIs, deprecations, opt-in improvements |
-| | Search codebase for usages of changed/deprecated/new APIs |
+| `bun install` if catalog                              | **Major**: breaking changes, migration guides, removed APIs                   |
+|                                                       | **Minor**: new APIs, deprecations, opt-in improvements                        |
+|                                                       | Search codebase for usages of changed/deprecated/new APIs                     |
 
 Each package group shares one background subagent. Standalone packages get one subagent each.
 
 **Step 3 — Check + Fix**
+
 - Run `bun run check`
 - If it fails: use release notes from Step 2 for context-aware fixes
 
@@ -76,6 +79,7 @@ After all groups are updated, output a unified summary:
 ```
 
 **Rules:**
+
 - Each subagent MUST search the codebase for usages of changed/deprecated/new APIs
 - For breaking changes: list affected files with line numbers + migration snippets
 - For new features: suggest where they could be adopted (diffs only, don't apply)
@@ -102,15 +106,15 @@ Packages in Bun's catalog need manual version checks: `npm view <package> versio
 
 ## Testing Requirements
 
-| Update Type | Required Tests |
-|-------------|----------------|
-| UI/component packages | `bun run check` + visual review |
-| TRPC / TanStack Router | `bun run check` + `bun run test` |
-| Drizzle ORM | `bun run check` + `bun run test` |
-| Effect packages | `bun run check` + `bun run test` |
-| Playwright | `bun run check` + `bun run test:e2e` |
-| Bun runtime | `bun run check` + `bun run test` + `bun run test:e2e` |
-| All others | `bun run check` |
+| Update Type            | Required Tests                                        |
+| ---------------------- | ----------------------------------------------------- |
+| UI/component packages  | `bun run check` + visual review                       |
+| TRPC / TanStack Router | `bun run check` + `bun run test`                      |
+| Drizzle ORM            | `bun run check` + `bun run test`                      |
+| Effect packages        | `bun run check` + `bun run test`                      |
+| Playwright             | `bun run check` + `bun run test:e2e`                  |
+| Bun runtime            | `bun run check` + `bun run test` + `bun run test:e2e` |
+| All others             | `bun run check`                                       |
 
 ## Guardrails
 

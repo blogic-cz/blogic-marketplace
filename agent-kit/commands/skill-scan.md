@@ -10,6 +10,7 @@ Scan all available skills from plugin and project directories and inject them in
 ## Purpose
 
 This command is useful when:
+
 - You need a reminder of available skills during a session
 - Skills were added after session start
 - You want Claude to check for relevant skills before starting work
@@ -28,6 +29,7 @@ This command is useful when:
 Execute the skill scanner script to refresh the available skills list in context.
 
 Run:
+
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/list-skills.sh"
 ```

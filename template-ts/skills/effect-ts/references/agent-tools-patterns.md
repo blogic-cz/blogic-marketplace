@@ -23,13 +23,9 @@ const contextRef = yield * Ref.make<string | null>(null);
 Prefer:
 
 ```ts
-const resultOption =
-  yield * effect.pipe(Effect.timeoutOption(timeoutMs));
+const resultOption = yield * effect.pipe(Effect.timeoutOption(timeoutMs));
 if (Option.isNone(resultOption)) {
-  return (
-    yield *
-    new TimeoutError({ message: "timed out", timeoutMs })
-  );
+  return yield * new TimeoutError({ message: "timed out", timeoutMs });
 }
 ```
 
@@ -46,9 +42,7 @@ Use `Config.redacted` in config service layers.
 For command execution, use stream-based collection:
 
 ```ts
-const stdoutChunk =
-  yield *
-  proc.stdout.pipe(Stream.decodeText(), Stream.runCollect);
+const stdoutChunk = yield * proc.stdout.pipe(Stream.decodeText(), Stream.runCollect);
 const stdout = Chunk.join(stdoutChunk, "");
 ```
 

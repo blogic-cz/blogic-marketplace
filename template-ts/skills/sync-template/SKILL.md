@@ -78,13 +78,13 @@ gh pr list --repo blogic-cz/blogic-template-ts --state merged --search "merged:>
 
 Classify each change into one of:
 
-| Category | Description | Action |
-|----------|-------------|--------|
-| **Infrastructure** | CI/CD, Docker, Helm, configs, tooling | Adopt directly (with name substitution) |
-| **Dependencies** | Package version bumps, new deps | Delegate to `update-packages` skill |
-| **Patterns** | Code patterns, conventions, lint rules | Adopt with adaptation |
-| **Features** | New app features, routes, services | Evaluate — may not apply |
-| **Fixes** | Bug fixes in shared code | Adopt if the bug exists in project |
+| Category           | Description                            | Action                                  |
+| ------------------ | -------------------------------------- | --------------------------------------- |
+| **Infrastructure** | CI/CD, Docker, Helm, configs, tooling  | Adopt directly (with name substitution) |
+| **Dependencies**   | Package version bumps, new deps        | Delegate to `update-packages` skill     |
+| **Patterns**       | Code patterns, conventions, lint rules | Adopt with adaptation                   |
+| **Features**       | New app features, routes, services     | Evaluate — may not apply                |
+| **Fixes**          | Bug fixes in shared code               | Adopt if the bug exists in project      |
 
 Output a summary table:
 
@@ -133,6 +133,7 @@ If packages are behind:
 5. Verify: `bun run check && bun run test`
 
 **Rules:**
+
 - Package updates MUST be committed before any template changes
 - Use the `update-packages` skill's group coordination (tanstack, trpc, effect, drizzle groups)
 - DO NOT add packages the project doesn't use — only update existing ones
@@ -148,6 +149,7 @@ Compare the project against the template file by file to find all divergences.
 Load `references/template-files.md` for the categorized file list.
 
 For each infrastructure file in the template:
+
 1. Check if the file exists in the project
 2. If it exists, diff it against the template version
 3. If it doesn't exist, flag it as "missing from project"
@@ -174,11 +176,11 @@ grep '"@' package.json | head -5
 
 Build substitution table:
 
-| Template Value | Project Value |
-|---|---|
-| `@blogic-template/` | `@<project-scope>/` |
-| `blogic-template-ts` | `<project-name>` |
-| `blogic-template` | `<project-short-name>` |
+| Template Value       | Project Value          |
+| -------------------- | ---------------------- |
+| `@blogic-template/`  | `@<project-scope>/`    |
+| `blogic-template-ts` | `<project-name>`       |
+| `blogic-template`    | `<project-short-name>` |
 
 ### Step 3: Identify project-specific divergences to preserve
 
@@ -190,6 +192,7 @@ Some files WILL differ intentionally — the project has its own business logic.
 - Environment-specific configs (Helm values, CI secrets)
 
 **Rules:**
+
 - NEVER overwrite project-specific business logic with template defaults
 - Template infrastructure files (lint, tooling, CI) should be adopted fully
 - When a file has BOTH infrastructure changes AND project-specific content, merge selectively

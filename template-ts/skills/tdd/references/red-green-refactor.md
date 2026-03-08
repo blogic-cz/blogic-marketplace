@@ -94,10 +94,7 @@ FAIL  packages/common/src/__tests__/format-currency.test.ts
 
 ```typescript
 // packages/common/src/format-currency.ts
-export function formatCurrency(
-  amount: number,
-  currency: string
-): string {
+export function formatCurrency(amount: number, currency: string): string {
   // Minimum implementation to pass the test
   if (currency === "USD") {
     return (
@@ -165,10 +162,7 @@ You'll clean it up in REFACTOR. The goal is a passing test.
 
 ```typescript
 // Before refactoring
-export function formatCurrency(
-  amount: number,
-  currency: string
-): string {
+export function formatCurrency(amount: number, currency: string): string {
   if (currency === "USD") {
     return (
       "$" +
@@ -184,19 +178,13 @@ export function formatCurrency(
 // After refactoring
 type Currency = "USD" | "EUR" | "CZK";
 
-const CURRENCY_CONFIG: Record<
-  Currency,
-  { symbol: string; locale: string }
-> = {
+const CURRENCY_CONFIG: Record<Currency, { symbol: string; locale: string }> = {
   USD: { symbol: "$", locale: "en-US" },
   EUR: { symbol: "€", locale: "de-DE" },
   CZK: { symbol: "Kč", locale: "cs-CZ" },
 };
 
-export function formatCurrency(
-  amount: number,
-  currency: Currency
-): string {
+export function formatCurrency(amount: number, currency: Currency): string {
   const config = CURRENCY_CONFIG[currency];
   const formatted = amount.toLocaleString(config.locale, {
     minimumFractionDigits: 2,

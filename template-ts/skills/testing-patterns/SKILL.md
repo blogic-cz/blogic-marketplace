@@ -91,9 +91,7 @@ describe("K8sMetricsService", () => {
 
 ```typescript
 it.live("returns success when endpoint is ready", () => {
-  globalThis.fetch = vi
-    .fn()
-    .mockResolvedValue(new Response("ok", { status: 200 }));
+  globalThis.fetch = vi.fn().mockResolvedValue(new Response("ok", { status: 200 }));
 
   return Effect.gen(function* () {
     const svc = yield* HealthCheckService;
@@ -114,13 +112,7 @@ it.live("returns success when endpoint is ready", () => {
 ### Setup
 
 ```typescript
-import {
-  describe,
-  expect,
-  it,
-  beforeEach,
-  afterEach,
-} from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import type { PGlite } from "@electric-sql/pglite";
 import {
   createTestDb,
@@ -206,10 +198,7 @@ import {
 ```typescript
 import { expect, test } from "@playwright/test";
 import { e2eEnv } from "./env";
-import {
-  ensureTestUserExists,
-  signInWithEmail,
-} from "./auth-helpers";
+import { ensureTestUserExists, signInWithEmail } from "./auth-helpers";
 
 const testEmail = e2eEnv.E2E_TEST_EMAIL;
 const testPassword = e2eEnv.E2E_TEST_PASSWORD;
@@ -230,7 +219,7 @@ test("auth: can sign in with email", async ({ page }) => {
     page.getByRole("heading", {
       name: "Dashboard",
       exact: true,
-    })
+    }),
   ).toBeVisible({ timeout: 5_000 });
 });
 ```
@@ -238,10 +227,7 @@ test("auth: can sign in with email", async ({ page }) => {
 ### Auth helpers
 
 ```typescript
-import {
-  signInWithEmail,
-  ensureTestUserExists,
-} from "./auth-helpers";
+import { signInWithEmail, ensureTestUserExists } from "./auth-helpers";
 import { waitForHydration } from "./wait-for-hydration";
 
 // Before interacting with forms

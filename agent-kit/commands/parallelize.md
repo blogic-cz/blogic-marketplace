@@ -11,6 +11,7 @@ Split current work-in-progress into independent subtasks and execute them concur
 ## Purpose
 
 Use this command to:
+
 - Speed up complex multi-part tasks by running them in parallel
 - Split feature development across multiple independent workstreams
 - Parallelize refactoring across unrelated modules
@@ -20,6 +21,7 @@ Use this command to:
 ## When to Use
 
 **✅ Good candidates for parallelization:**
+
 - Multiple independent feature implementations
 - Refactoring separate modules/components
 - Testing multiple approaches simultaneously
@@ -29,6 +31,7 @@ Use this command to:
 - Documentation for separate features
 
 **❌ NOT suitable for parallelization:**
+
 - Tasks with dependencies (Task B needs Task A's output)
 - Changes to the same files/modules (will cause conflicts)
 - Sequential workflows (design → implement → test)
@@ -44,6 +47,7 @@ Use this command to:
 First, understand what work is in progress by analyzing **conversation context**:
 
 **Priority 1: Conversation Context**
+
 - If user provided task description as argument (`$ARGUMENTS`), use that as primary context
 - Check existing **todos** from conversation (TodoWrite list)
 - Review what user has asked for in recent messages
@@ -116,6 +120,7 @@ Parallel tracks:
 #### Validation Checks
 
 Before proposing, verify:
+
 - [ ] Each track works on different files
 - [ ] No track depends on another track's output
 - [ ] Each track can be tested independently
@@ -132,12 +137,14 @@ Show the proposed plan in this format:
 I can split this work into **N independent tracks** that can run simultaneously:
 
 ### Track 1: [Name]
+
 **Goal:** [Clear objective]
 **Files:** [Affected files/directories]
 **Deliverable:** [Specific outcome]
 **Constraints:** [What this track should NOT touch]
 
 ### Track 2: [Name]
+
 **Goal:** [Clear objective]
 **Files:** [Affected files/directories]
 **Deliverable:** [Specific outcome]
@@ -148,6 +155,7 @@ I can split this work into **N independent tracks** that can run simultaneously:
 ---
 
 **Estimated time:**
+
 - Sequential execution: ~X minutes
 - Parallel execution: ~Y minutes (Z% faster)
 
@@ -179,6 +187,7 @@ Once user confirms, launch all tasks **in a single message** using multiple Task
 For each parallel track, create a Task tool call with this prompt structure:
 
 **Essential components:**
+
 - **Task Title:** Clear, concise name
 - **Objective:** 1-2 sentence goal
 - **Scope:** Specific files/modules to work on
@@ -190,6 +199,7 @@ For each parallel track, create a Task tool call with this prompt structure:
 **Example prompts for parallel tracks:**
 
 **Track 1 Prompt Template:**
+
 ```
 Implement Login UI Components
 
@@ -225,6 +235,7 @@ When complete, provide:
 ```
 
 **Track 2 Prompt Template:**
+
 ```
 Implement Authentication API
 
@@ -269,6 +280,7 @@ When launching parallel agents, use this pattern:
 4. **Review and integrate results**
 
 Example message structure:
+
 ```
 I'm launching N parallel agents now to work on these tracks simultaneously:
 
@@ -300,11 +312,13 @@ After all agents complete:
 **Tracks completed:** N/N
 
 ### Track 1: [Name]
+
 **Status:** ✅ Complete
 **Files modified:** [list]
 **Key deliverables:** [summary]
 
 ### Track 2: [Name]
+
 **Status:** ✅ Complete
 **Files modified:** [list]
 **Key deliverables:** [summary]
@@ -341,21 +355,25 @@ After all agents complete:
 ### Common Patterns
 
 **Pattern 1: Frontend + Backend**
+
 - Track 1: UI components
 - Track 2: API endpoints
 - Track 3: Tests for both
 
 **Pattern 2: Multiple Modules**
+
 - Track 1: User module
 - Track 2: Product module
 - Track 3: Order module
 
 **Pattern 3: Refactoring**
+
 - Track 1: Refactor module A
 - Track 2: Refactor module B
 - Track 3: Update tests
 
 **Pattern 4: Research**
+
 - Track 1: Research authentication approaches
 - Track 2: Research database options
 - Track 3: Research deployment strategies
@@ -363,12 +381,14 @@ After all agents complete:
 ### Conflict Prevention
 
 **Before launching:**
+
 - Use `git diff --name-only` to see modified files
 - Verify each track touches different files
 - Check for shared dependencies
 - Identify potential merge conflicts
 
 **During execution:**
+
 - Monitor agent progress
 - Watch for agents modifying unexpected files
 - Be ready to intervene if conflicts arise
@@ -388,6 +408,7 @@ After all agents complete:
 ### When Sequential is Better
 
 Use sequential execution when:
+
 - Tasks have clear dependencies
 - Working on same codebase area
 - Need iterative refinement
@@ -401,11 +422,13 @@ Use sequential execution when:
 ### Example 1: Simple Feature Split
 
 **User request:**
+
 ```
 /parallelize Build a todo app with list view and add task form
 ```
 
 **Decomposition:**
+
 ```
 Track 1: TodoList Component
 - Display todos
@@ -425,11 +448,13 @@ Track 3: Todo API
 ### Example 2: Refactoring Multiple Modules
 
 **User request:**
+
 ```
 /parallelize Refactor authentication, payments, and notifications modules
 ```
 
 **Decomposition:**
+
 ```
 Track 1: Auth Refactoring
 - Update auth.ts
@@ -450,11 +475,13 @@ Track 3: Notifications Refactoring
 ### Example 3: Research Task
 
 **User request:**
+
 ```
 /parallelize Research best practices for React state management, testing, and deployment
 ```
 
 **Decomposition:**
+
 ```
 Track 1: State Management Research
 - Compare Redux, Zustand, Jotai
@@ -479,6 +506,7 @@ Track 3: Deployment Research
 ### Issue: Agents modified same files
 
 **Solution:**
+
 - Review diffs from both agents
 - Manually merge changes
 - Re-run one agent with updated constraints
@@ -486,6 +514,7 @@ Track 3: Deployment Research
 ### Issue: Agent couldn't complete due to missing dependency
 
 **Solution:**
+
 - Identify dependency
 - Complete dependency first
 - Re-run agent
@@ -493,6 +522,7 @@ Track 3: Deployment Research
 ### Issue: Results don't integrate well
 
 **Solution:**
+
 - Review integration points
 - Create integration layer
 - Consider if tasks were truly independent
@@ -500,6 +530,7 @@ Track 3: Deployment Research
 ### Issue: Slower than sequential execution
 
 **Possible causes:**
+
 - Tasks were too small (overhead dominated)
 - Tasks had hidden dependencies
 - Agents needed context from each other

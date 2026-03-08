@@ -277,10 +277,7 @@ Use Alpine.js `x-data` to manage page state. Use `<template x-if>` blocks for ea
   <template x-if="page === 'list'">
     <div>
       <template x-for="item in items" :key="item.id">
-        <button
-          @click="openDetail(item)"
-          class="prototype-btn-ghost w-full text-left"
-        >
+        <button @click="openDetail(item)" class="prototype-btn-ghost w-full text-left">
           <span x-text="item.name"></span>
         </button>
       </template>
@@ -308,12 +305,7 @@ Use Alpine.js `x-data` to manage page state. Use `<template x-if>` blocks for ea
       <span class="prototype-label">Count</span>
       <span class="prototype-value" x-text="count"></span>
     </div>
-    <button
-      class="prototype-btn prototype-btn-primary mt-6"
-      x-on:click="count++"
-    >
-      Increment
-    </button>
+    <button class="prototype-btn prototype-btn-primary mt-6" x-on:click="count++">Increment</button>
   </div>
 </div>
 ```

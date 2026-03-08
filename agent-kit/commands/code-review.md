@@ -1,6 +1,15 @@
 ---
 description: Perform systematic pre-PR code review covering quality, security, performance, testing, and documentation with Exa search and Context7 verification
-allowed-tools: [Read, Grep, Bash, mcp__agentsfera__exa-get_code_context_exa, mcp__agentsfera__exa-web_search_exa, mcp__agentsfera__context7-resolve-library-id, mcp__agentsfera__context7-get-library-docs]
+allowed-tools:
+  [
+    Read,
+    Grep,
+    Bash,
+    mcp__agentsfera__exa-get_code_context_exa,
+    mcp__agentsfera__exa-web_search_exa,
+    mcp__agentsfera__context7-resolve-library-id,
+    mcp__agentsfera__context7-get-library-docs,
+  ]
 ---
 
 # Code Review
@@ -10,6 +19,7 @@ Systematic code review for pull request readiness. Identifies critical issues, s
 ## Purpose
 
 Use this command to:
+
 - Review code changes before creating pull requests
 - Conduct quality assessments on recent commits
 - Identify security vulnerabilities, performance issues, and test gaps
@@ -18,6 +28,7 @@ Use this command to:
 ## Process
 
 **Overview:**
+
 1. **Identify Scope** - Determine what code to review
 2. **Scan Changes** - Analyze code across 5 categories (Quality, Security, Performance, Testing, Documentation)
 3. **Verify with Exa & Context7** - Validate uncertain patterns using real-world examples and official docs
@@ -32,12 +43,14 @@ Use this command to:
 Ask the user what to review:
 
 **Options:**
+
 1. **Recent commits** (default): Last 5 commits from HEAD
 2. **Specific files/directories**: User-provided paths
 3. **Branch comparison**: Compare feature branch against main
 4. **Full codebase**: Review entire project (for small projects)
 
 **Commands to use:**
+
 ```bash
 # Recent commits
 git log -5 --oneline
@@ -63,6 +76,7 @@ For each changed file, perform systematic analysis across five categories:
 **Check for:**
 
 **Readability Issues:**
+
 - Unclear variable/function names
 - Overly complex functions (>50 lines)
 - Deeply nested logic (>3 levels)
@@ -70,6 +84,7 @@ For each changed file, perform systematic analysis across five categories:
 - Poor code organization
 
 **Design Patterns:**
+
 - SOLID principle violations
 - God objects (classes doing too much)
 - Tight coupling between modules
@@ -77,6 +92,7 @@ For each changed file, perform systematic analysis across five categories:
 - Inappropriate design patterns
 
 **Maintainability:**
+
 - DRY violations (duplicate code)
 - Magic numbers/strings without constants
 - Lack of error handling
@@ -84,6 +100,7 @@ For each changed file, perform systematic analysis across five categories:
 - Hardcoded configuration values
 
 **Patterns to grep:**
+
 ```bash
 # Find long functions (JavaScript/TypeScript)
 grep -n "function.*{" file.ts | # check line counts
@@ -102,12 +119,14 @@ grep -n "TODO\|FIXME" file.ts
 **Check for:**
 
 **Injection Vulnerabilities:**
+
 - SQL injection (string concatenation in queries)
 - XSS vulnerabilities (unescaped user input in HTML)
 - Command injection (shell commands with user input)
 - Path traversal (user-controlled file paths)
 
 **Authentication/Authorization:**
+
 - Missing authentication checks
 - Weak password validation
 - Insecure session management
@@ -115,6 +134,7 @@ grep -n "TODO\|FIXME" file.ts
 - Privilege escalation risks
 
 **Data Protection:**
+
 - Hardcoded secrets/API keys
 - Sensitive data in logs
 - Unencrypted sensitive data
@@ -122,6 +142,7 @@ grep -n "TODO\|FIXME" file.ts
 - Error messages leaking information
 
 **Patterns to grep:**
+
 ```bash
 # Find potential SQL injection
 grep -n "query.*+\|query.*\${" file.ts
@@ -137,6 +158,7 @@ grep -n "eval(" file.ts
 ```
 
 **Common Issues:**
+
 - `eval()` usage
 - `innerHTML` without sanitization
 - Direct database queries without parameterization
@@ -150,6 +172,7 @@ grep -n "eval(" file.ts
 **Check for:**
 
 **Algorithm Complexity:**
+
 - O(n²) nested loops that could be O(n)
 - Unnecessary array iterations
 - Inefficient data structures
@@ -157,6 +180,7 @@ grep -n "eval(" file.ts
 - Redundant calculations
 
 **Resource Usage:**
+
 - Memory leaks (unclosed connections, event listeners)
 - Large bundle sizes (unnecessary imports)
 - N+1 query problems (database)
@@ -164,6 +188,7 @@ grep -n "eval(" file.ts
 - Blocking operations in async contexts
 
 **Optimization Opportunities:**
+
 - Missing lazy loading
 - No code splitting
 - Large images without optimization
@@ -171,6 +196,7 @@ grep -n "eval(" file.ts
 - Missing pagination for large datasets
 
 **Patterns to check:**
+
 ```bash
 # Find nested loops
 grep -A 5 "for.*{" file.ts | grep "for.*{"
@@ -183,6 +209,7 @@ grep -n "readFileSync\|execSync" file.ts
 ```
 
 **Common Issues:**
+
 - Nested `.map()` or `.forEach()` calls
 - Database queries inside loops
 - Large images loaded upfront
@@ -196,6 +223,7 @@ grep -n "readFileSync\|execSync" file.ts
 **Check for:**
 
 **Test Coverage:**
+
 - New features without tests
 - Critical paths untested
 - Edge cases missing
@@ -203,6 +231,7 @@ grep -n "readFileSync\|execSync" file.ts
 - Integration points untested
 
 **Test Quality:**
+
 - Flaky tests (timing-dependent)
 - Overly broad mocks
 - Tests testing implementation details
@@ -210,6 +239,7 @@ grep -n "readFileSync\|execSync" file.ts
 - Unclear test assertions
 
 **Test Patterns:**
+
 ```bash
 # Check if test file exists for source file
 test -f src/utils/helper.test.ts || echo "Missing test"
@@ -222,6 +252,7 @@ npm run test:coverage || bun test --coverage
 ```
 
 **Common Gaps:**
+
 - New API endpoints without integration tests
 - Complex business logic without unit tests
 - UI components without rendering tests
@@ -235,6 +266,7 @@ npm run test:coverage || bun test --coverage
 **Check for:**
 
 **Code Documentation:**
+
 - Complex functions without comments
 - Public APIs without JSDoc/TSDoc
 - Type definitions incomplete
@@ -242,6 +274,7 @@ npm run test:coverage || bun test --coverage
 - Algorithms without explanation
 
 **Project Documentation:**
+
 - README not updated for new features
 - API documentation missing endpoints
 - Breaking changes undocumented
@@ -249,6 +282,7 @@ npm run test:coverage || bun test --coverage
 - Configuration options unexplained
 
 **Patterns to check:**
+
 ```bash
 # Find public functions without JSDoc
 grep -B 2 "export function" file.ts | grep -v "/**"
@@ -261,6 +295,7 @@ git log --oneline | grep -i "break\|breaking"
 ```
 
 **Common Issues:**
+
 - New CLI commands not in README
 - Environment variables without documentation
 - API breaking changes without migration guide
@@ -272,6 +307,7 @@ git log --oneline | grep -i "break\|breaking"
 ## Step 2.5: Verify with Exa & Context7 🔍
 
 **MANDATORY when unsure about:**
+
 - Whether a technology/library is being used correctly
 - If a pattern/approach follows current best practices
 - Security implications of a specific implementation
@@ -295,6 +331,7 @@ When you find:
 ```
 
 **Example queries:**
+
 ```
 exa-get_code_context_exa(query: "React useEffect cleanup memory leaks best practices")
 exa-get_code_context_exa(query: "Express.js SQL injection prevention parameterized queries")
@@ -316,6 +353,7 @@ When you need:
 ```
 
 **Example workflow:**
+
 ```
 1. context7-resolve-library-id(libraryName: "next")
    → Returns: /vercel/next.js
@@ -348,6 +386,7 @@ Found uncertain code pattern?
 ### Verification Process
 
 1. **Identify Uncertain Patterns**
+
    ```
    During review, flag code where you're unsure:
    - "Is this the correct way to use React.memo?"
@@ -356,6 +395,7 @@ Found uncertain code pattern?
    ```
 
 2. **Choose Verification Tool**
+
    ```
    Framework/library-specific → Context7
    General patterns/practices → Exa Search
@@ -363,11 +403,13 @@ Found uncertain code pattern?
    ```
 
 3. **Execute Verification**
+
    ```
    Run the appropriate MCP tool with specific queries
    ```
 
 4. **Compare & Validate**
+
    ```
    - Compare reviewed code against verified patterns
    - Note discrepancies or anti-patterns
@@ -386,6 +428,7 @@ Found uncertain code pattern?
 #### Scenario 1: React Hook Usage
 
 **Found in code:**
+
 ```typescript
 useEffect(() => {
   fetchData();
@@ -395,11 +438,13 @@ useEffect(() => {
 **Uncertainty:** "Should fetchData be in dependency array?"
 
 **Verification:**
+
 1. `exa-get_code_context_exa(query: "React useEffect missing dependency warning ESLint exhaustive-deps")`
 2. Analyze real-world patterns from Exa results
 3. **Conclusion:** If fetchData is defined in component body, it should be in deps array OR wrapped in useCallback
 
 **Review comment:**
+
 ```
 ⚠️ MAJOR: Missing dependency in useEffect
 File: src/components/DataFetcher.tsx:15
@@ -417,6 +462,7 @@ Fix:
 #### Scenario 2: SQL Query Security
 
 **Found in code:**
+
 ```typescript
 const query = `SELECT * FROM users WHERE email = '${email}'`;
 ```
@@ -424,11 +470,13 @@ const query = `SELECT * FROM users WHERE email = '${email}'`;
 **Uncertainty:** "Is this vulnerable to SQL injection?"
 
 **Verification:**
+
 1. `exa-get_code_context_exa(query: "SQL injection prevention parameterized queries node.js")`
 2. Analyze multiple sources confirming string interpolation is vulnerable
 3. **Conclusion:** CRITICAL security issue - always use parameterized queries
 
 **Review comment:**
+
 ```
 🚨 CRITICAL: SQL Injection Vulnerability
 File: src/api/auth.ts:42
@@ -446,6 +494,7 @@ const result = await db.execute(query, [email]);
 #### Scenario 3: Next.js API Route Middleware
 
 **Found in code:**
+
 ```typescript
 export default function handler(req, res) {
   // No rate limiting
@@ -457,12 +506,14 @@ export default function handler(req, res) {
 **Uncertainty:** "Should API routes have rate limiting? What's the standard approach?"
 
 **Verification:**
+
 1. `context7-resolve-library-id(libraryName: "next")`
 2. `context7-get-library-docs(context7CompatibleLibraryID: "/vercel/next.js", topic: "API routes middleware")`
 3. `exa-get_code_context_exa(query: "Next.js API routes rate limiting production best practices")`
 4. **Conclusion:** Production APIs should have rate limiting; common pattern is using middleware
 
 **Review comment:**
+
 ```
 ⚠️ MAJOR: Missing Rate Limiting on Public API
 File: pages/api/process.ts:1
@@ -481,6 +532,7 @@ Suggested approach:
 ### Verification Guidelines
 
 **Always verify when you encounter:**
+
 - ❓ Unfamiliar library/framework usage
 - 🔐 Security-sensitive operations
 - ⚡ Performance-critical code paths
@@ -489,12 +541,14 @@ Suggested approach:
 - 📚 Deprecated API warnings
 
 **DON'T verify for:**
+
 - ✅ Well-known standard patterns (e.g., basic if/else, loops)
 - ✅ Project-specific conventions (check CLAUDE.md instead)
 - ✅ Simple utility functions
 - ✅ Code you're 100% confident about
 
 **Verification adds value when:**
+
 - 🎯 Prevents false positives (marking correct code as wrong)
 - 🎯 Catches subtle anti-patterns (code that "works" but is wrong)
 - 🎯 Provides authoritative sources for recommendations
@@ -509,6 +563,7 @@ Organize all findings by severity:
 ### 🚨 CRITICAL (Must Fix Before Merge)
 
 **Criteria:**
+
 - Security vulnerabilities (SQL injection, XSS, exposed secrets)
 - Data loss risks
 - Breaking changes to public APIs
@@ -516,18 +571,23 @@ Organize all findings by severity:
 - Authentication/authorization bypasses
 
 **Example:**
-```markdown
+
+````markdown
 - [Security] src/api/auth.ts:42 - SQL injection vulnerability
   Current code uses string concatenation in query:
   ```typescript
   const query = `SELECT * FROM users WHERE id = ${userId}`;
   ```
-  Fix: Use parameterized queries:
-  ```typescript
-  const query = `SELECT * FROM users WHERE id = ?`;
-  const result = await db.execute(query, [userId]);
-  ```
+````
+
+Fix: Use parameterized queries:
+
+```typescript
+const query = `SELECT * FROM users WHERE id = ?`;
+const result = await db.execute(query, [userId]);
 ```
+
+````
 
 ### ⚠️ MAJOR (Should Fix)
 
@@ -546,15 +606,18 @@ Organize all findings by severity:
   items.forEach(item => {
     categories.forEach(cat => { /* check */ });
   });
-  ```
-  Fix: Use Map for O(n) lookup:
-  ```typescript
-  const catMap = new Map(categories.map(c => [c.id, c]));
-  items.forEach(item => {
-    const cat = catMap.get(item.categoryId);
-  });
-  ```
+````
+
+Fix: Use Map for O(n) lookup:
+
+```typescript
+const catMap = new Map(categories.map((c) => [c.id, c]));
+items.forEach((item) => {
+  const cat = catMap.get(item.categoryId);
+});
 ```
+
+````
 
 ### 💡 MINOR (Consider Fixing)
 
@@ -570,7 +633,7 @@ Organize all findings by severity:
 - [Style] src/components/Button.tsx:8 - Inconsistent naming
   Component uses `onClick` and `onPress` inconsistently.
   Consider standardizing to `onClick` across all components.
-```
+````
 
 ---
 
@@ -617,6 +680,7 @@ Organize all findings by severity:
 ## ✅ POSITIVE OBSERVATIONS
 
 [Highlight good practices found in the code:]
+
 - Well-structured test coverage in src/api/
 - Clean separation of concerns in components
 - Comprehensive error handling in auth flow
@@ -632,6 +696,7 @@ Organize all findings by severity:
 [Specific next steps based on findings]
 
 **Key Takeaways:**
+
 - [Most important points]
 - [Action items]
 
@@ -658,18 +723,21 @@ After completing the code review, run automated quality checks to verify builds 
 ```
 
 This command will:
+
 1. Read `.claude/check-after-stop.sh` configuration
 2. Run build commands (e.g., `bun run build`, `dotnet build`)
 3. Run test suites (e.g., `bun test`, `npm run test:ci`)
 4. Report any failures
 
 **Why this matters:**
+
 - Code review catches logical issues, but automated checks catch runtime issues
 - Ensures builds succeed before creating PR
 - Verifies test suite passes with your changes
 - Catches integration issues early
 
 **Example flow:**
+
 ```
 1. /code-review          → Manual review (quality, security, performance)
 2. Fix critical issues   → Address findings from review
@@ -684,18 +752,21 @@ If automated checks fail, document failures in the review report and recommend f
 ## Assessment Criteria
 
 **APPROVE ✅**
+
 - No critical issues
 - No major issues OR all major issues have clear workarounds
 - Minor issues don't affect functionality
 - Code improves overall quality
 
 **NEEDS_WORK ⚠️**
+
 - One or more major issues present
 - Minor issues are numerous
 - Missing critical tests
 - Significant refactoring needed
 
 **REJECT ❌**
+
 - One or more critical security vulnerabilities
 - Breaking changes without migration path
 - Code introduces significant technical debt
@@ -721,6 +792,7 @@ If automated checks fail, document failures in the review report and recommend f
 ## Common Patterns to Check
 
 ### Security Red Flags
+
 - `eval()`
 - `innerHTML` without sanitization
 - `dangerouslySetInnerHTML` in React
@@ -729,6 +801,7 @@ If automated checks fail, document failures in the review report and recommend f
 - Passwords in plain text
 
 ### Performance Red Flags
+
 - Nested loops over large arrays
 - Database queries in loops
 - Missing indexes on queries
@@ -737,6 +810,7 @@ If automated checks fail, document failures in the review report and recommend f
 - Large dependencies imported in hot paths
 
 ### Quality Red Flags
+
 - Functions longer than 50 lines
 - Cyclomatic complexity > 10
 - Duplicate code blocks
@@ -751,6 +825,7 @@ If automated checks fail, document failures in the review report and recommend f
 **User:** `/code-review src/api/`
 
 **Assistant:**
+
 1. Scans files in src/api/
 2. Uses git diff to see recent changes
 3. Analyzes each file against the 5 categories

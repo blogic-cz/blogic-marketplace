@@ -74,23 +74,18 @@ export const sessionsTable = pgTable(
     index("sessions_user_id_idx").on(table.userId),
     uniqueIndex("sessions_token_idx").on(table.token),
     unique().on(table.userId, table.projectId), // Composite unique
-  ]
+  ],
 );
 ```
 
 ### JSONB Columns with Types
 
 ```typescript
-export const documentMetadataTable = pgTable(
-  "document_metadata",
-  {
-    configuration:
-      jsonb("configuration").$type<DocumentConfig>(),
-    tags: jsonb("tags").$type<string[]>(),
-    metadata:
-      jsonb("metadata").$type<Record<string, string>>(),
-  }
-);
+export const documentMetadataTable = pgTable("document_metadata", {
+  configuration: jsonb("configuration").$type<DocumentConfig>(),
+  tags: jsonb("tags").$type<string[]>(),
+  metadata: jsonb("metadata").$type<Record<string, string>>(),
+});
 ```
 
 ## Relations Definition
@@ -99,40 +94,31 @@ export const documentMetadataTable = pgTable(
 import { relations } from "drizzle-orm";
 
 // One-to-many
-export const organizationsRelations = relations(
-  organizationsTable,
-  ({ many }) => ({
-    members: many(membersTable),
-    projects: many(projectsTable),
-  })
-);
+export const organizationsRelations = relations(organizationsTable, ({ many }) => ({
+  members: many(membersTable),
+  projects: many(projectsTable),
+}));
 
 // Many-to-one
-export const membersRelations = relations(
-  membersTable,
-  ({ one }) => ({
-    user: one(usersTable, {
-      fields: [membersTable.userId],
-      references: [usersTable.id],
-    }),
-    organization: one(organizationsTable, {
-      fields: [membersTable.organizationId],
-      references: [organizationsTable.id],
-    }),
-  })
-);
+export const membersRelations = relations(membersTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [membersTable.userId],
+    references: [usersTable.id],
+  }),
+  organization: one(organizationsTable, {
+    fields: [membersTable.organizationId],
+    references: [organizationsTable.id],
+  }),
+}));
 
 // Combined one + many
-export const projectsRelations = relations(
-  projectsTable,
-  ({ one, many }) => ({
-    organization: one(organizationsTable, {
-      fields: [projectsTable.organizationId],
-      references: [organizationsTable.id],
-    }),
-    members: many(projectMembersTable),
-  })
-);
+export const projectsRelations = relations(projectsTable, ({ one, many }) => ({
+  organization: one(organizationsTable, {
+    fields: [projectsTable.organizationId],
+    references: [organizationsTable.id],
+  }),
+  members: many(projectMembersTable),
+}));
 ```
 
 ## Query Patterns
@@ -140,11 +126,10 @@ export const projectsRelations = relations(
 ### Simple SELECT with Relations (Query API)
 
 ```typescript
-const userMemberships =
-  await db.query.membersTable.findMany({
-    where: eq(membersTable.userId, userId),
-    with: { organization: true },
-  });
+const userMemberships = await db.query.membersTable.findMany({
+  where: eq(membersTable.userId, userId),
+  with: { organization: true },
+});
 ```
 
 ### SELECT with JOINs (Select API)
@@ -160,13 +145,7 @@ const [result] = await db
   .from(organizationsTable)
   .innerJoin(
     membersTable,
-    and(
-      eq(
-        membersTable.organizationId,
-        organizationsTable.id
-      ),
-      eq(membersTable.userId, userId)
-    )
+    and(eq(membersTable.organizationId, organizationsTable.id), eq(membersTable.userId, userId)),
   )
   .where(eq(organizationsTable.id, id))
   .limit(1);
@@ -179,10 +158,7 @@ const members = await db
     role: membersTable.role,
   })
   .from(membersTable)
-  .leftJoin(
-    usersTable,
-    eq(membersTable.userId, usersTable.id)
-  )
+  .leftJoin(usersTable, eq(membersTable.userId, usersTable.id))
   .where(eq(membersTable.organizationId, organizationId));
 ```
 
@@ -207,14 +183,8 @@ const result = await db
     `,
   })
   .from(membersTable)
-  .innerJoin(
-    organizationsTable,
-    eq(membersTable.organizationId, organizationsTable.id)
-  )
-  .leftJoin(
-    projectsTable,
-    eq(projectsTable.organizationId, organizationsTable.id)
-  )
+  .innerJoin(organizationsTable, eq(membersTable.organizationId, organizationsTable.id))
+  .leftJoin(projectsTable, eq(projectsTable.organizationId, organizationsTable.id))
   .where(eq(membersTable.userId, userId))
   .groupBy(organizationsTable.id);
 ```
@@ -232,11 +202,9 @@ await db
         db
           .select({ id: projectsTable.id })
           .from(projectsTable)
-          .where(
-            eq(projectsTable.organizationId, organizationId)
-          )
-      )
-    )
+          .where(eq(projectsTable.organizationId, organizationId)),
+      ),
+    ),
   );
 ```
 
@@ -261,10 +229,7 @@ const documents: Array<typeof documentsTable.$inferSelect> = [];
 
 ```typescript
 // INSERT with returning
-const [organization] = await db
-  .insert(organizationsTable)
-  .values({ name })
-  .returning();
+const [organization] = await db.insert(organizationsTable).values({ name }).returning();
 
 // UPDATE with where
 const [updated] = await db
@@ -274,9 +239,7 @@ const [updated] = await db
   .returning();
 
 // DELETE (cascades handled by FK)
-await db
-  .delete(organizationsTable)
-  .where(eq(organizationsTable.id, organizationId));
+await db.delete(organizationsTable).where(eq(organizationsTable.id, organizationId));
 ```
 
 ## Database Connection
@@ -305,21 +268,11 @@ export type Db = ReturnType<typeof connectDb>;
 
 ```typescript
 // packages/db/src/testing.ts
-export {
-  createTestDb,
-  cleanupTestDb,
-  type TestDb,
-} from "./__tests__/setup";
-export {
-  seedUser,
-  seedOrganization,
-  seedProject,
-} from "./__tests__/seed";
+export { createTestDb, cleanupTestDb, type TestDb } from "./__tests__/setup";
+export { seedUser, seedOrganization, seedProject } from "./__tests__/seed";
 
 // Seed functions return typed records
-export async function seedUser(
-  db: TestDb
-): Promise<typeof usersTable.$inferSelect> {
+export async function seedUser(db: TestDb): Promise<typeof usersTable.$inferSelect> {
   const [user] = await db
     .insert(usersTable)
     .values({

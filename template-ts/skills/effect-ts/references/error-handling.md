@@ -5,16 +5,11 @@
 Use `Schema.TaggedError` for typed domain failures.
 
 ```ts
-export class EmptySlugError extends Schema.TaggedError<EmptySlugError>()(
-  "EmptySlugError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class EmptySlugError extends Schema.TaggedError<EmptySlugError>()("EmptySlugError", {
+  message: Schema.String,
+}) {}
 
-return (
-  yield * new EmptySlugError({ message: "Slug is empty" })
-);
+return yield * new EmptySlugError({ message: "Slug is empty" });
 ```
 
 ## Recovery

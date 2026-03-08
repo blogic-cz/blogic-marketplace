@@ -48,6 +48,7 @@ Format: `<type>(<scope>): <what actually changed>`
 - `message`: describe the concrete change, not why you're committing
 
 **Good examples:**
+
 - `fix(auth): add null check for session token before redirect`
 - `refactor(api): extract validation logic into shared middleware`
 - `fix(db): correct JOIN condition in user query`
@@ -55,6 +56,7 @@ Format: `<type>(<scope>): <what actually changed>`
 - `style(ui): align spacing in sidebar navigation`
 
 **Bad examples (NEVER use these):**
+
 - ~~`fix: address review feedback`~~
 - ~~`fix: resolve CI check failures`~~
 - ~~`fix: address Claude PR feedback`~~
@@ -212,6 +214,7 @@ agent-tools-gh pr comment --pr <pr_number> --body "<response>"
 ```bash
 agent-tools-gh pr submit-review --pr <pr_number>
 ```
+
 **Do NOT resolve** threads where you asked a question.
 
 ##### Step 6: Validate and push

@@ -219,28 +219,22 @@ TRPC v11 provides factory methods (`.queryOptions()`, `.mutationOptions()`) that
 
 ```typescript
 import { useTRPC } from "@/infrastructure/trpc/react";
-import {
-  useQuery,
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 
 function MyComponent() {
   const trpc = useTRPC();
 
   // ✅ CORRECT - v11 pattern with factory methods
-  const { data } = useQuery(
-    trpc.organization.getById.queryOptions({ id: "123" })
-  );
+  const { data } = useQuery(trpc.organization.getById.queryOptions({ id: "123" }));
 
   const { data: suspenseData } = useSuspenseQuery(
-    trpc.organization.getById.queryOptions({ id: "123" })
+    trpc.organization.getById.queryOptions({ id: "123" }),
   );
 
   const updateOrg = useMutation(
     trpc.organization.update.mutationOptions({
       onSuccess: () => console.log("Success"),
-    })
+    }),
   );
 
   // ❌ WRONG - Old pattern (doesn't exist in v11)
@@ -273,16 +267,14 @@ function MyComponent() {
 
 ```typescript
 const { data, isLoading, error } = useQuery(
-  trpc.project.getById.queryOptions({ projectId: "123" })
+  trpc.project.getById.queryOptions({ projectId: "123" }),
 );
 ```
 
 **Suspense Query:**
 
 ```typescript
-const { data } = useSuspenseQuery(
-  trpc.project.getById.queryOptions({ projectId: "123" })
-);
+const { data } = useSuspenseQuery(trpc.project.getById.queryOptions({ projectId: "123" }));
 ```
 
 **Mutation with Options:**
@@ -296,7 +288,7 @@ const createProject = useMutation(
     onError: (error) => {
       toast.error(error.message);
     },
-  })
+  }),
 );
 ```
 
@@ -344,18 +336,13 @@ Always use `RouterInputs` and `RouterOutputs` for type inference instead of crea
 **Pattern:**
 
 ```typescript
-import type {
-  RouterOutputs,
-  RouterInputs,
-} from "@/infrastructure/trpc/router";
+import type { RouterOutputs, RouterInputs } from "@/infrastructure/trpc/router";
 
-type SessionData =
-  RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
+type SessionData = RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
 type CreateUserInput = RouterInputs["users"]["create"];
 
 function MyComponent() {
-  const [session, setSession] =
-    useState<SessionData | null>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
   // Implementation
 }
 ```
@@ -439,11 +426,7 @@ type Props = {
   userName: string;
 };
 
-export function DeleteMemberModal({
-  isOpen,
-  onClose,
-  userName,
-}: Props) {
+export function DeleteMemberModal({ isOpen, onClose, userName }: Props) {
   // Implementation
 }
 

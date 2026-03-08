@@ -19,9 +19,7 @@ export const router = {
 
   getPublicStats: publicProcedure.query(async ({ ctx }) => {
     // ctx includes: db, but no session
-    const stats = await ctx.db
-      .select({ count: count() })
-      .from(usersTable);
+    const stats = await ctx.db.select({ count: count() }).from(usersTable);
 
     return stats;
   }),
@@ -42,22 +40,20 @@ Requires authenticated user. Use for user-specific operations.
 
 ```typescript
 export const router = {
-  getCurrentUser: protectedProcedure.query(
-    async ({ ctx }) => {
-      // ctx.session is guaranteed to exist
-      return await ctx.db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.id, ctx.session.user.id))
-        .limit(1);
-    }
-  ),
+  getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+    // ctx.session is guaranteed to exist
+    return await ctx.db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, ctx.session.user.id))
+      .limit(1);
+  }),
 
   updateProfile: protectedProcedure
     .input(
       z.object({
         name: z.string().min(1),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.db
@@ -83,18 +79,13 @@ Requires admin role. Use for administrative operations.
 export const router = {
   listAllUsers: adminProcedure.query(async ({ ctx }) => {
     // ctx.session.user.isAdmin is true
-    return await ctx.db
-      .select()
-      .from(usersTable)
-      .limit(100);
+    return await ctx.db.select().from(usersTable).limit(100);
   }),
 
   deleteUser: adminProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db
-        .delete(usersTable)
-        .where(eq(usersTable.id, input.userId));
+      await ctx.db.delete(usersTable).where(eq(usersTable.id, input.userId));
     }),
 } satisfies TRPCRouterRecord;
 ```
@@ -120,12 +111,7 @@ export const router = {
       const credentials = await ctx.db
         .select()
         .from(credentialsTable)
-        .where(
-          eq(
-            credentialsTable.organizationId,
-            input.organizationId
-          )
-        );
+        .where(eq(credentialsTable.organizationId, input.organizationId));
 
       return credentials;
     }),
@@ -135,7 +121,7 @@ export const router = {
       z.object({
         organizationId: z.string().min(1),
         name: z.string().min(1),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Check if user has admin role in organization
@@ -143,17 +129,13 @@ export const router = {
         ctx.member.role !== OrganizationRoles.Admin &&
         ctx.member.role !== OrganizationRoles.Owner
       ) {
-        throw forbiddenError(
-          "Only admins can update organization details"
-        );
+        throw forbiddenError("Only admins can update organization details");
       }
 
       await ctx.db
         .update(organizationsTable)
         .set({ name: input.name })
-        .where(
-          eq(organizationsTable.id, input.organizationId)
-        );
+        .where(eq(organizationsTable.id, input.organizationId));
     }),
 } satisfies TRPCRouterRecord;
 ```
@@ -177,48 +159,36 @@ export const router = {
 Build custom procedures by chaining middleware with `.use()`:
 
 ```typescript
-export const protectedProjectAccessProcedure =
-  protectedProcedure
-    .input(z.object({ projectId: z.string().min(1) }))
-    .use(async function isProjectMember(opts) {
-      const { ctx, input } = opts;
+export const protectedProjectAccessProcedure = protectedProcedure
+  .input(z.object({ projectId: z.string().min(1) }))
+  .use(async function isProjectMember(opts) {
+    const { ctx, input } = opts;
 
-      // Check if user has access to the project
-      const projectAccess = await ctx.db
-        .select({
-          project: projectsTable,
-          member: membersTable,
-        })
-        .from(projectsTable)
-        .innerJoin(
-          membersTable,
-          eq(
-            projectsTable.organizationId,
-            membersTable.organizationId
-          )
-        )
-        .where(
-          and(
-            eq(projectsTable.id, input.projectId),
-            eq(membersTable.userId, ctx.session.user.id)
-          )
-        )
-        .limit(1);
+    // Check if user has access to the project
+    const projectAccess = await ctx.db
+      .select({
+        project: projectsTable,
+        member: membersTable,
+      })
+      .from(projectsTable)
+      .innerJoin(membersTable, eq(projectsTable.organizationId, membersTable.organizationId))
+      .where(
+        and(eq(projectsTable.id, input.projectId), eq(membersTable.userId, ctx.session.user.id)),
+      )
+      .limit(1);
 
-      if (!projectAccess.length) {
-        throw forbiddenError(
-          "You don't have access to this project"
-        );
-      }
+    if (!projectAccess.length) {
+      throw forbiddenError("You don't have access to this project");
+    }
 
-      // Return enhanced context
-      return opts.next({
-        ctx: {
-          project: projectAccess[0].project,
-          member: projectAccess[0].member,
-        },
-      });
+    // Return enhanced context
+    return opts.next({
+      ctx: {
+        project: projectAccess[0].project,
+        member: projectAccess[0].member,
+      },
     });
+  });
 ```
 
 **Usage:**
@@ -243,14 +213,10 @@ export const router = {
         ctx.member.role !== OrganizationRoles.Owner &&
         ctx.member.role !== OrganizationRoles.Admin
       ) {
-        throw forbiddenError(
-          "Only owners or admins can delete projects"
-        );
+        throw forbiddenError("Only owners or admins can delete projects");
       }
 
-      await ctx.db
-        .delete(projectsTable)
-        .where(eq(projectsTable.id, input.projectId));
+      await ctx.db.delete(projectsTable).where(eq(projectsTable.id, input.projectId));
     }),
 } satisfies TRPCRouterRecord;
 ```
@@ -260,24 +226,21 @@ export const router = {
 Create procedures that require specific roles:
 
 ```typescript
-export const protectedOwnerProcedure =
-  protectedMemberAccessProcedure.use(
-    async function requiresOwnerRole(opts) {
-      const { ctx } = opts;
+export const protectedOwnerProcedure = protectedMemberAccessProcedure.use(
+  async function requiresOwnerRole(opts) {
+    const { ctx } = opts;
 
-      if (ctx.member.role !== OrganizationRoles.Owner) {
-        throw forbiddenError(
-          "Only organization owners can perform this action"
-        );
-      }
-
-      return opts.next({
-        ctx: {
-          // Context already includes member from parent procedure
-        },
-      });
+    if (ctx.member.role !== OrganizationRoles.Owner) {
+      throw forbiddenError("Only organization owners can perform this action");
     }
-  );
+
+    return opts.next({
+      ctx: {
+        // Context already includes member from parent procedure
+      },
+    });
+  },
+);
 ```
 
 **Usage:**
@@ -290,9 +253,7 @@ export const router = {
       // User is guaranteed to be owner
       await ctx.db
         .delete(organizationsTable)
-        .where(
-          eq(organizationsTable.id, input.organizationId)
-        );
+        .where(eq(organizationsTable.id, input.organizationId));
     }),
 } satisfies TRPCRouterRecord;
 ```
@@ -302,38 +263,32 @@ export const router = {
 Create procedures that verify resource ownership:
 
 ```typescript
-export const protectedApiKeyAccessProcedure =
-  protectedProjectAccessProcedure
-    .input(
-      z.object({
-        projectId: z.string().min(1),
-        apiKeyId: z.string().min(1),
-      })
-    )
-    .use(async function isApiKeyOwner(opts) {
-      const { ctx, input } = opts;
+export const protectedApiKeyAccessProcedure = protectedProjectAccessProcedure
+  .input(
+    z.object({
+      projectId: z.string().min(1),
+      apiKeyId: z.string().min(1),
+    }),
+  )
+  .use(async function isApiKeyOwner(opts) {
+    const { ctx, input } = opts;
 
-      const apiKey = await ctx.db
-        .select()
-        .from(apiKeysTable)
-        .where(
-          and(
-            eq(apiKeysTable.id, input.apiKeyId),
-            eq(apiKeysTable.projectId, input.projectId)
-          )
-        )
-        .limit(1);
+    const apiKey = await ctx.db
+      .select()
+      .from(apiKeysTable)
+      .where(and(eq(apiKeysTable.id, input.apiKeyId), eq(apiKeysTable.projectId, input.projectId)))
+      .limit(1);
 
-      if (!apiKey.length) {
-        throw notFoundError("API key not found");
-      }
+    if (!apiKey.length) {
+      throw notFoundError("API key not found");
+    }
 
-      return opts.next({
-        ctx: {
-          apiKey: apiKey[0],
-        },
-      });
+    return opts.next({
+      ctx: {
+        apiKey: apiKey[0],
+      },
     });
+  });
 ```
 
 ## Middleware Best Practices
@@ -398,22 +353,20 @@ Include input validation in the procedure chain, not in middleware:
 
 ```typescript
 // ✅ Good
-export const protectedMemberAccessProcedure =
-  protectedProcedure
-    .input(z.object({ organizationId: z.string().min(1) }))
-    .use(async function isMemberOfOrganization(opts) {
-      // opts.input.organizationId is validated
-    });
+export const protectedMemberAccessProcedure = protectedProcedure
+  .input(z.object({ organizationId: z.string().min(1) }))
+  .use(async function isMemberOfOrganization(opts) {
+    // opts.input.organizationId is validated
+  });
 
 // ❌ Bad
-export const protectedMemberAccessProcedure =
-  protectedProcedure.use(
-    async function isMemberOfOrganization(opts) {
-      // Need to access raw input, no validation
-      const organizationId = opts.rawInput.organizationId;
-      if (!organizationId) {
-        throw badRequestError("organizationId is required");
-      }
+export const protectedMemberAccessProcedure = protectedProcedure.use(
+  async function isMemberOfOrganization(opts) {
+    // Need to access raw input, no validation
+    const organizationId = opts.rawInput.organizationId;
+    if (!organizationId) {
+      throw badRequestError("organizationId is required");
     }
-  );
+  },
+);
 ```

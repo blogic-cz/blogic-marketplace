@@ -7,17 +7,11 @@ import { inArray } from "drizzle-orm";
 
 // Instead of N queries in a loop
 for (const id of ids) {
-  const item = await db
-    .select()
-    .from(table)
-    .where(eq(table.id, id));
+  const item = await db.select().from(table).where(eq(table.id, id));
 }
 
 // Single batch query
-const items = await db
-  .select()
-  .from(table)
-  .where(inArray(table.id, ids));
+const items = await db.select().from(table).where(inArray(table.id, ids));
 
 // Build lookup map for O(1) access
 const itemMap = new Map(items.map((i) => [i.id, i]));
@@ -35,10 +29,7 @@ for (const item of items) {
 await db.insert(table).values(items);
 
 // With returning
-const inserted = await db
-  .insert(table)
-  .values(items)
-  .returning();
+const inserted = await db.insert(table).values(items).returning();
 
 // With onConflictDoNothing
 await db.insert(table).values(items).onConflictDoNothing();
@@ -58,10 +49,7 @@ await db
 ```typescript
 // Instead of individual updates
 for (const id of ids) {
-  await db
-    .update(table)
-    .set({ status: "closed" })
-    .where(eq(table.id, id));
+  await db.update(table).set({ status: "closed" }).where(eq(table.id, id));
 }
 
 // Single batch update
@@ -92,12 +80,7 @@ await db.delete(table).where(inArray(table.id, ids));
 const membership = await db
   .select()
   .from(membersTable)
-  .where(
-    and(
-      eq(membersTable.organizationId, orgId),
-      eq(membersTable.userId, userId)
-    )
-  )
+  .where(and(eq(membersTable.organizationId, orgId), eq(membersTable.userId, userId)))
   .limit(1);
 
 const org = await db
@@ -115,21 +98,12 @@ const [result] = await db
   .from(organizationsTable)
   .innerJoin(
     membersTable,
-    and(
-      eq(
-        membersTable.organizationId,
-        organizationsTable.id
-      ),
-      eq(membersTable.userId, userId)
-    )
+    and(eq(membersTable.organizationId, organizationsTable.id), eq(membersTable.userId, userId)),
   )
   .where(eq(organizationsTable.id, orgId))
   .limit(1);
 
-if (!result)
-  throw notFoundError(
-    "Organization not found or access denied"
-  );
+if (!result) throw notFoundError("Organization not found or access denied");
 ```
 
 ### LEFT JOIN for Optional Related Data
@@ -141,10 +115,7 @@ const results = await db
     membership: membersTable, // May be null
   })
   .from(usersTable)
-  .leftJoin(
-    membersTable,
-    eq(membersTable.userId, usersTable.id)
-  )
+  .leftJoin(membersTable, eq(membersTable.userId, usersTable.id))
   .where(eq(usersTable.id, userId));
 ```
 
@@ -176,13 +147,8 @@ const orgsWithProjects = await db
       db
         .select({ one: sql`1` })
         .from(projectsTable)
-        .where(
-          eq(
-            projectsTable.organizationId,
-            organizationsTable.id
-          )
-        )
-    )
+        .where(eq(projectsTable.organizationId, organizationsTable.id)),
+    ),
   );
 ```
 
@@ -191,34 +157,18 @@ const orgsWithProjects = await db
 ```typescript
 // Independent queries can run in parallel
 const [users, projects, settings] = await Promise.all([
-  db
-    .select()
-    .from(usersTable)
-    .where(inArray(usersTable.id, userIds)),
-  db
-    .select()
-    .from(projectsTable)
-    .where(eq(projectsTable.organizationId, orgId)),
-  db
-    .select()
-    .from(settingsTable)
-    .where(eq(settingsTable.userId, userId)),
+  db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+  db.select().from(projectsTable).where(eq(projectsTable.organizationId, orgId)),
+  db.select().from(settingsTable).where(eq(settingsTable.userId, userId)),
 ]);
 ```
 
 ## Pre-fetch Pattern for N+1 Prevention
 
 ```typescript
-async function processInvitations(
-  emails: string[],
-  organizationId: string
-) {
+async function processInvitations(emails: string[], organizationId: string) {
   // Step 1: Batch fetch all related data upfront
-  const [
-    existingUsers,
-    existingMembers,
-    existingInvitations,
-  ] = await Promise.all([
+  const [existingUsers, existingMembers, existingInvitations] = await Promise.all([
     db
       .select({
         id: usersTable.id,
@@ -229,15 +179,9 @@ async function processInvitations(
     db
       .select({ userId: membersTable.userId })
       .from(membersTable)
-      .innerJoin(
-        usersTable,
-        eq(membersTable.userId, usersTable.id)
-      )
+      .innerJoin(usersTable, eq(membersTable.userId, usersTable.id))
       .where(
-        and(
-          eq(membersTable.organizationId, organizationId),
-          inArray(usersTable.email, emails)
-        )
+        and(eq(membersTable.organizationId, organizationId), inArray(usersTable.email, emails)),
       ),
     db
       .select({ email: invitationsTable.email })
@@ -245,25 +189,16 @@ async function processInvitations(
       .where(
         and(
           inArray(invitationsTable.email, emails),
-          eq(
-            invitationsTable.organizationId,
-            organizationId
-          ),
-          eq(invitationsTable.status, "pending")
-        )
+          eq(invitationsTable.organizationId, organizationId),
+          eq(invitationsTable.status, "pending"),
+        ),
       ),
   ]);
 
   // Step 2: Build lookup structures
-  const userByEmail = new Map(
-    existingUsers.map((u) => [u.email, u])
-  );
-  const memberUserIds = new Set(
-    existingMembers.map((m) => m.userId)
-  );
-  const invitedEmails = new Set(
-    existingInvitations.map((i) => i.email)
-  );
+  const userByEmail = new Map(existingUsers.map((u) => [u.email, u]));
+  const memberUserIds = new Set(existingMembers.map((m) => m.userId));
+  const invitedEmails = new Set(existingInvitations.map((i) => i.email));
 
   // Step 3: Process without additional queries
   const toInvite: InvitationData[] = [];
@@ -297,7 +232,7 @@ async function processInvitations(
         userId: m.userId,
         organizationId,
         role: "member",
-      }))
+      })),
     );
   }
 
@@ -307,7 +242,7 @@ async function processInvitations(
         email: i.email,
         organizationId,
         status: "pending",
-      }))
+      })),
     );
   }
 
@@ -323,16 +258,9 @@ async function processInvitations(
 
 ```typescript
 // Instead of: check existence + conditional insert/update
-const existing = await db
-  .select()
-  .from(table)
-  .where(eq(table.id, id))
-  .limit(1);
+const existing = await db.select().from(table).where(eq(table.id, id)).limit(1);
 if (existing.length > 0) {
-  await db
-    .update(table)
-    .set({ content, updatedAt: new Date() })
-    .where(eq(table.id, id));
+  await db.update(table).set({ content, updatedAt: new Date() }).where(eq(table.id, id));
 } else {
   await db.insert(table).values({ id, content });
 }
@@ -351,10 +279,7 @@ await db
   .insert(documentsTable)
   .values({ repositoryId, path, content, sha })
   .onConflictDoUpdate({
-    target: [
-      documentsTable.repositoryId,
-      documentsTable.path,
-    ],
+    target: [documentsTable.repositoryId, documentsTable.path],
     set: { content, sha, updatedAt: new Date() },
   });
 ```

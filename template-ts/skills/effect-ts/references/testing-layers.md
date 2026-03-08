@@ -15,16 +15,14 @@ const MockDatabaseLayer = Layer.succeed(Database, {
   },
 });
 
-const TestLayer = SlugServiceLayer.pipe(
-  Layer.provide(MockDatabaseLayer)
-);
+const TestLayer = SlugServiceLayer.pipe(Layer.provide(MockDatabaseLayer));
 
 it.effect("returns slug", () =>
   Effect.gen(function* () {
     const svc = yield* SlugService;
     const slug = yield* svc.generateSlug("Doc");
     expect(slug).toBe("doc");
-  }).pipe(Effect.provide(TestLayer))
+  }).pipe(Effect.provide(TestLayer)),
 );
 ```
 

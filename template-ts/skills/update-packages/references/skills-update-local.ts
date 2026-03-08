@@ -21,7 +21,9 @@ const agentMapping: Array<{ dir: string; agent: string }> = [
 ];
 
 const cwd = process.cwd();
-const detected = agentMapping.filter(({ dir }) => existsSync(`${cwd}/${dir}`)).map(({ agent }) => agent);
+const detected = agentMapping
+  .filter(({ dir }) => existsSync(`${cwd}/${dir}`))
+  .map(({ agent }) => agent);
 const agents = detected.length > 0 ? detected : ["claude-code", "opencode"];
 
 const dryRun = process.argv.includes("--dry-run");
@@ -41,11 +43,23 @@ if (groups.size === 0) {
   process.exit(0);
 }
 
-console.log(`Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}, Agents: ${agents.join(", ")}`);
+console.log(
+  `Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}, Agents: ${agents.join(", ")}`,
+);
 
 let failed = 0;
 for (const [source, skills] of groups) {
-  const args = ["-y", "skills@latest", "add", source, "--full-depth", "--agent", ...agents, ...skills.flatMap((s) => ["--skill", s]), "-y"];
+  const args = [
+    "-y",
+    "skills@latest",
+    "add",
+    source,
+    "--full-depth",
+    "--agent",
+    ...agents,
+    ...skills.flatMap((s) => ["--skill", s]),
+    "-y",
+  ];
   const display = `bunx ${args.join(" ")}`;
   console.log(`\n→ ${display}`);
 

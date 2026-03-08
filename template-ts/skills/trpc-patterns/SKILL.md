@@ -38,12 +38,8 @@ export const router = {
       z.object({
         email: z.string().email(),
         organizationId: z.string().min(1),
-        role: z.enum([
-          OrganizationRoles.Owner,
-          OrganizationRoles.Admin,
-          OrganizationRoles.Member,
-        ]),
-      })
+        role: z.enum([OrganizationRoles.Owner, OrganizationRoles.Admin, OrganizationRoles.Member]),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Implementation
@@ -72,9 +68,7 @@ export const router = {
     .input(z.object({ organizationId: z.string() }))
     .query(async ({ ctx, input }) => {
       // Organization membership already validated
-      const credentials = await ctx.db
-        .select()
-        .from(credentialsTable);
+      const credentials = await ctx.db.select().from(credentialsTable);
       // Direct implementation
     }),
 } satisfies TRPCRouterRecord;
@@ -101,40 +95,35 @@ Build reusable base procedures using the `.use()` method for middleware logic.
 **Pattern:**
 
 ```typescript
-export const protectedMemberAccessProcedure =
-  protectedProcedure
-    .input(z.object({ organizationId: z.string().min(1) }))
-    .use(async function isMemberOfOrganization(opts) {
-      const { ctx, input } = opts;
+export const protectedMemberAccessProcedure = protectedProcedure
+  .input(z.object({ organizationId: z.string().min(1) }))
+  .use(async function isMemberOfOrganization(opts) {
+    const { ctx, input } = opts;
 
-      const memberAccess = await ctx.db
-        .select()
-        .from(membersTable)
-        .where(
-          and(
-            eq(
-              membersTable.organizationId,
-              input.organizationId
-            ),
-            eq(membersTable.userId, ctx.session.user.id)
-          )
-        )
-        .limit(1);
+    const memberAccess = await ctx.db
+      .select()
+      .from(membersTable)
+      .where(
+        and(
+          eq(membersTable.organizationId, input.organizationId),
+          eq(membersTable.userId, ctx.session.user.id),
+        ),
+      )
+      .limit(1);
 
-      if (!memberAccess.length) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "You are not a member of this organization",
-        });
-      }
-
-      return opts.next({
-        ctx: {
-          member: memberAccess[0],
-        },
+    if (!memberAccess.length) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "You are not a member of this organization",
       });
+    }
+
+    return opts.next({
+      ctx: {
+        member: memberAccess[0],
+      },
     });
+  });
 ```
 
 **Middleware Rules:**
@@ -176,9 +165,7 @@ export const router = {
       }
 
       if (project[0].ownerId !== ctx.session.user.id) {
-        throw forbiddenError(
-          "You don't have permission to delete this project"
-        );
+        throw forbiddenError("You don't have permission to delete this project");
       }
 
       // Implementation...
@@ -220,10 +207,9 @@ export const router = {
 } satisfies TRPCRouterRecord;
 
 // Frontend: Types are automatically inferred via static imports
-const estimate =
-  trpc.project.estimateProjectCreation.useQuery({
-    organizationId: "123",
-  });
+const estimate = trpc.project.estimateProjectCreation.useQuery({
+  organizationId: "123",
+});
 // TypeScript knows estimate.data has { integrationsCount: number, estimatedSeconds: number }
 ```
 
@@ -258,35 +244,21 @@ Always prefer single SQL queries with JOINs over multiple separate queries.
 ```typescript
 // ✅ Good - Single optimized query with joins
 export const router = {
-  getOrganizationsDetails: protectedProcedure.query(
-    async ({ ctx: { session, db } }) => {
-      const result = await db
-        .select({
-          organization: organizationsTable,
-          project: projectsTable,
-          integration: organizationIntegrationsTable,
-          userRole: membersTable.role,
-        })
-        .from(membersTable)
-        .innerJoin(
-          organizationsTable,
-          eq(
-            membersTable.organizationId,
-            organizationsTable.id
-          )
-        )
-        .leftJoin(
-          projectsTable,
-          eq(
-            projectsTable.organizationId,
-            organizationsTable.id
-          )
-        )
-        .where(eq(membersTable.userId, session.user.id));
+  getOrganizationsDetails: protectedProcedure.query(async ({ ctx: { session, db } }) => {
+    const result = await db
+      .select({
+        organization: organizationsTable,
+        project: projectsTable,
+        integration: organizationIntegrationsTable,
+        userRole: membersTable.role,
+      })
+      .from(membersTable)
+      .innerJoin(organizationsTable, eq(membersTable.organizationId, organizationsTable.id))
+      .leftJoin(projectsTable, eq(projectsTable.organizationId, organizationsTable.id))
+      .where(eq(membersTable.userId, session.user.id));
 
-      return groupResults(result);
-    }
-  ),
+    return groupResults(result);
+  }),
 };
 ```
 

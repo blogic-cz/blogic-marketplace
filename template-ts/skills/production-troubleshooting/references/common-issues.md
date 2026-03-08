@@ -184,11 +184,7 @@ agent-tools-k8s logs --pod <pod-name> --env <env> | grep "[SSR]"
    const projects = await fetchProjects();
 
    // ✅ Good - Parallel (200ms total)
-   const [user, org, projects] = await Promise.all([
-     fetchUser(),
-     fetchOrg(),
-     fetchProjects(),
-   ]);
+   const [user, org, projects] = await Promise.all([fetchUser(), fetchOrg(), fetchProjects()]);
    ```
 
 2. **Add prefetching in route loaders:**
@@ -243,17 +239,11 @@ agent-tools-k8s logs --pod <pod-name> --env <env> | grep "[SSR]"
    // ❌ Bad - N+1 problem
    const users = await db.select().from(users);
    for (const user of users) {
-     const org = await db
-       .select()
-       .from(orgs)
-       .where(eq(orgs.id, user.orgId));
+     const org = await db.select().from(orgs).where(eq(orgs.id, user.orgId));
    }
 
    // ✅ Good - Single query with JOIN
-   const result = await db
-     .select()
-     .from(users)
-     .innerJoin(orgs, eq(users.orgId, orgs.id));
+   const result = await db.select().from(users).innerJoin(orgs, eq(users.orgId, orgs.id));
    ```
 
 3. **Fetch only needed columns:**

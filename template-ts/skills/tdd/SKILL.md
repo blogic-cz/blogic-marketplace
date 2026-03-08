@@ -132,7 +132,7 @@ describe("PricingService", () => {
         quantity: 2,
       });
       expect(result.total).toBe(200);
-    }).pipe(Effect.provide(testLayer))
+    }).pipe(Effect.provide(testLayer)),
   );
 
   it.effect("applies bulk discount for quantity > 10", () =>
@@ -143,7 +143,7 @@ describe("PricingService", () => {
         quantity: 15,
       });
       expect(result.total).toBe(1350); // 15% discount
-    }).pipe(Effect.provide(testLayer))
+    }).pipe(Effect.provide(testLayer)),
   );
 });
 ```
@@ -152,20 +152,15 @@ describe("PricingService", () => {
 
 ```typescript
 // Create parameterized mock layers for different test scenarios
-const createMockInventoryLayer = (
-  inventory: Map<string, number>
-) =>
+const createMockInventoryLayer = (inventory: Map<string, number>) =>
   Layer.succeed(InventoryService, {
-    getStock: (itemId) =>
-      Effect.succeed(inventory.get(itemId) ?? 0),
+    getStock: (itemId) => Effect.succeed(inventory.get(itemId) ?? 0),
     reserveStock: (itemId, qty) => Effect.succeed(void 0),
   });
 
 // Use in tests
 const testLayer = PricingService.layer.pipe(
-  Layer.provide(
-    createMockInventoryLayer(new Map([["item-1", 100]]))
-  )
+  Layer.provide(createMockInventoryLayer(new Map([["item-1", 100]]))),
 );
 ```
 
@@ -281,11 +276,7 @@ describe("UserService", () => {
 
 ```typescript
 // ❌ BAD - Test passes, move on without cleanup
-export function calc(
-  a: number,
-  b: number,
-  c: string
-): number {
+export function calc(a: number, b: number, c: string): number {
   if (c === "add") return a + b;
   if (c === "sub") return a - b;
   if (c === "mul") return a * b;
@@ -295,20 +286,13 @@ export function calc(
 // ✅ GOOD - Refactor to cleaner design
 type Operation = "add" | "subtract" | "multiply";
 
-const operations: Record<
-  Operation,
-  (a: number, b: number) => number
-> = {
+const operations: Record<Operation, (a: number, b: number) => number> = {
   add: (a, b) => a + b,
   subtract: (a, b) => a - b,
   multiply: (a, b) => a * b,
 };
 
-export function calculate(
-  a: number,
-  b: number,
-  op: Operation
-): number {
+export function calculate(a: number, b: number, op: Operation): number {
   return operations[op](a, b);
 }
 ```

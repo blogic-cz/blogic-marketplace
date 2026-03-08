@@ -155,8 +155,7 @@ yield * Effect.all(items.map(processItem));
 yield * Effect.all(items.map(processItem), { concurrency: 10 });
 
 // Parallel independent fetches
-const [data1, data2] =
-  yield * Effect.all([fetchData1(params), fetchData2(params)]);
+const [data1, data2] = yield * Effect.all([fetchData1(params), fetchData2(params)]);
 ```
 
 ### Pre-fetching with Lookup Maps
@@ -166,10 +165,7 @@ const [data1, data2] =
 const [users, members, invitations] = await Promise.all([
   db.select().from(usersTable).where(inArray(usersTable.email, emails)),
   db.select().from(membersTable).where(inArray(membersTable.userId, userIds)),
-  db
-    .select()
-    .from(invitationsTable)
-    .where(inArray(invitationsTable.email, emails)),
+  db.select().from(invitationsTable).where(inArray(invitationsTable.email, emails)),
 ]);
 
 // Build lookup maps
@@ -228,11 +224,7 @@ export const myTable = pgTable(
     index("idx_my_table_user_id").on(table.userId),
     index("idx_my_table_status").on(table.status),
     // Composite index for common query pattern
-    index("idx_my_table_user_status_created").on(
-      table.userId,
-      table.status,
-      table.createdAt,
-    ),
+    index("idx_my_table_user_status_created").on(table.userId, table.status, table.createdAt),
   ],
 );
 ```

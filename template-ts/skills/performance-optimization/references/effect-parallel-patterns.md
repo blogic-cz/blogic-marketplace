@@ -6,13 +6,7 @@
 
 ```typescript
 // All effects run in parallel, collect all results
-const results =
-  yield *
-  Effect.all([
-    fetchUserEffect,
-    fetchProjectsEffect,
-    fetchSettingsEffect,
-  ]);
+const results = yield * Effect.all([fetchUserEffect, fetchProjectsEffect, fetchSettingsEffect]);
 // results is a tuple: [user, projects, settings]
 ```
 
@@ -20,9 +14,7 @@ const results =
 
 ```typescript
 // Process array of items in parallel
-const processedItems =
-  yield *
-  Effect.all(items.map((item) => processItemEffect(item)));
+const processedItems = yield * Effect.all(items.map((item) => processItemEffect(item)));
 ```
 
 ### Bounded Concurrency
@@ -33,7 +25,7 @@ const results =
   yield *
   Effect.all(
     items.map((item) => callApiEffect(item)),
-    { concurrency: 10 } // Max 10 concurrent
+    { concurrency: 10 }, // Max 10 concurrent
   );
 ```
 
@@ -55,18 +47,14 @@ const results =
   Effect.all(
     items.map((item) =>
       processItem(item).pipe(
-        Effect.either // Converts to Either<Error, Success>
-      )
-    )
+        Effect.either, // Converts to Either<Error, Success>
+      ),
+    ),
   );
 
 // results is Array<Either<Error, Success>>
-const successes = results
-  .filter(Either.isRight)
-  .map((e) => e.right);
-const failures = results
-  .filter(Either.isLeft)
-  .map((e) => e.left);
+const successes = results.filter(Either.isRight).map((e) => e.right);
+const failures = results.filter(Either.isLeft).map((e) => e.left);
 ```
 
 ### Continue on Individual Errors
@@ -79,14 +67,11 @@ const results =
     items.map((item) =>
       processItem(item).pipe(
         Effect.catchAll((error) => {
-          logger.warn(
-            { item, error },
-            "Failed to process item"
-          );
+          logger.warn({ item, error }, "Failed to process item");
           return Effect.succeed(null); // Fallback value
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 ```
 
@@ -117,31 +102,25 @@ const collectData = Effect.fn("Service.collectData")(function* (params: Params) 
 ### Parallel with Logging
 
 ```typescript
-const processItems = Effect.fn("Items.process")(function* (
-  items: Item[]
-) {
+const processItems = Effect.fn("Items.process")(function* (items: Item[]) {
   const results = yield* Effect.all(
     items.map((item) =>
       processItem(item).pipe(
-        Effect.tap(() =>
-          Effect.log(`Processed item ${item.id}`)
-        ),
+        Effect.tap(() => Effect.log(`Processed item ${item.id}`)),
         Effect.catchAll((error) =>
-          Effect.logWarning(
-            `Failed to process item ${item.id}: ${error.message}`
-          ).pipe(Effect.as({ success: false, item, error }))
+          Effect.logWarning(`Failed to process item ${item.id}: ${error.message}`).pipe(
+            Effect.as({ success: false, item, error }),
+          ),
         ),
-        Effect.map(() => ({ success: true, item }))
-      )
+        Effect.map(() => ({ success: true, item })),
+      ),
     ),
-    { concurrency: 10 }
+    { concurrency: 10 },
   );
 
   const succeeded = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
-  yield* Effect.log(
-    `Processed ${succeeded} items, ${failed} failed`
-  );
+  yield* Effect.log(`Processed ${succeeded} items, ${failed} failed`);
 
   return results;
 });
@@ -160,9 +139,7 @@ const dashboard = yield * buildDashboard(user, permissions); // Depends on both
 
 ```typescript
 // Fetch independent data in parallel
-const [user, settings] =
-  yield *
-  Effect.all([fetchUser(userId), fetchSettings(userId)]);
+const [user, settings] = yield * Effect.all([fetchUser(userId), fetchSettings(userId)]);
 
 // Then use results sequentially
 const permissions = yield * fetchPermissions(user.roleId);
@@ -193,8 +170,7 @@ const results =
 
 ```typescript
 // When running different effects in parallel
-const [a, b, c] =
-  yield * Effect.all([effectA(), effectB(), effectC()]);
+const [a, b, c] = yield * Effect.all([effectA(), effectB(), effectC()]);
 ```
 
 ## Performance Tips
@@ -203,27 +179,17 @@ const [a, b, c] =
 
 ```typescript
 // Bad: Creates unnecessary nesting
-const results =
-  yield *
-  Effect.all(
-    items.map((item) =>
-      Effect.all([fetchA(item), fetchB(item)])
-    )
-  );
+const results = yield * Effect.all(items.map((item) => Effect.all([fetchA(item), fetchB(item)])));
 
 // Better: Flatten the structure
 const results =
   yield *
   Effect.all(
     items.flatMap((item) => [
-      fetchA(item).pipe(
-        Effect.map((a) => ({ item, type: "a", data: a }))
-      ),
-      fetchB(item).pipe(
-        Effect.map((b) => ({ item, type: "b", data: b }))
-      ),
+      fetchA(item).pipe(Effect.map((a) => ({ item, type: "a", data: a }))),
+      fetchB(item).pipe(Effect.map((b) => ({ item, type: "b", data: b }))),
     ]),
-    { concurrency: 20 }
+    { concurrency: 20 },
   );
 ```
 

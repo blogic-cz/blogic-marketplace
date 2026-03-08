@@ -12,16 +12,14 @@ Always use `RouterOutputs` to infer response types from TRPC procedures:
 import type { RouterOutputs } from "@/infrastructure/trpc/router";
 
 // Infer type from TRPC query response
-type Organization =
-  RouterOutputs["organization"]["getById"];
+type Organization = RouterOutputs["organization"]["getById"];
 
 // Infer type from array response
 type ProjectsList = RouterOutputs["projects"]["list"];
 type Project = ProjectsList[number];
 
 // Infer nested types
-type SessionData =
-  RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
+type SessionData = RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
 ```
 
 ### RouterInputs for Input Types
@@ -32,8 +30,7 @@ Use `RouterInputs` to infer input types for TRPC procedures:
 import type { RouterInputs } from "@/infrastructure/trpc/router";
 
 // Infer input type from mutation
-type CreateProjectInput =
-  RouterInputs["projects"]["create"];
+type CreateProjectInput = RouterInputs["projects"]["create"];
 
 // Infer input type from query
 type GetProjectsInput = RouterInputs["projects"]["list"];
@@ -244,15 +241,12 @@ export function ProjectsList({
 ```typescript
 import type { RouterOutputs } from "@/infrastructure/trpc/router";
 
-type Member =
-  RouterOutputs["members"]["getByOrgId"][number];
+type Member = RouterOutputs["members"]["getByOrgId"][number];
 
 // Utility function with inferred types
 function filterAdminMembers(members: Member[]): Member[] {
   return members.filter(
-    (m) =>
-      m.role === OrganizationRoles.Admin ||
-      m.role === OrganizationRoles.Owner
+    (m) => m.role === OrganizationRoles.Admin || m.role === OrganizationRoles.Owner,
   );
 }
 
@@ -481,8 +475,7 @@ import {
 } from "@project/common";
 import type { RouterOutputs } from "@/infrastructure/trpc/router";
 
-type Member =
-  RouterOutputs["members"]["getByOrgId"][number];
+type Member = RouterOutputs["members"]["getByOrgId"][number];
 
 function getRoleLabel(role: OrganizationRoles): string {
   switch (role) {
@@ -518,8 +511,7 @@ type SessionData = {
 };
 
 // ✅ GOOD - Using RouterOutputs
-type SessionData =
-  RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
+type SessionData = RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
 ```
 
 ### ❌ Don't Use Plain Strings for Session IDs
@@ -532,10 +524,7 @@ type Props = {
 };
 
 // ✅ GOOD - Using branded types
-import type {
-  AuthSessionId,
-  ClientSessionId,
-} from "@project/common";
+import type { AuthSessionId, ClientSessionId } from "@project/common";
 
 type Props = {
   sessionId: AuthSessionId;
