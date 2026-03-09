@@ -52,7 +52,7 @@ function isSkippedVersion(version: string): boolean {
 }
 
 function cleanVersion(version: string): string {
-  return version.replace(/^[~^>=<]+/, "").split(" ")[0]!;
+  return version.replace(/^[~^>=<]+/, "").split(" ")[0] ?? "";
 }
 
 function findPackageJsonFiles(dir: string): string[] {
@@ -163,22 +163,17 @@ if (!JSON_OUTPUT) {
   );
 }
 
-// Fetch latest in parallel (batched to avoid rate limiting)
-const BATCH_SIZE = 20;
+// Fetch latest in parallel
 const names = [...allPackages.keys()];
+const latestResults = await Promise.all(
+  names.map(async (name) => ({
+    name,
+    latest: await fetchLatest(name),
+  }))
+);
 const latestMap = new Map<string, string>();
-
-for (let i = 0; i < names.length; i += BATCH_SIZE) {
-  const batch = names.slice(i, i + BATCH_SIZE);
-  const results = await Promise.all(
-    batch.map(async (name) => ({
-      name,
-      latest: await fetchLatest(name),
-    }))
-  );
-  for (const { name, latest } of results) {
-    if (latest) latestMap.set(name, latest);
-  }
+for (const { name, latest } of latestResults) {
+  if (latest) latestMap.set(name, latest);
 }
 
 // Compare
@@ -220,12 +215,12 @@ for (const [file, entries] of byFile) {
   console.log(`\n${file}`);
   for (const { package: pkg, current, latest } of entries) {
     const isMajor =
-      parseInt(latest.split(".")[0]!) >
-      parseInt(current.split(".")[0]!);
+      parseInt(latest.split(".")[0] ?? "0", 10) >
+      parseInt(current.split(".")[0] ?? "0", 10);
     const isMinor =
       !isMajor &&
-      parseInt(latest.split(".")[1]!) >
-        parseInt(current.split(".")[1]!);
+      parseInt(latest.split(".")[1] ?? "0", 10) >
+        parseInt(current.split(".")[1] ?? "0", 10);
     const tag = isMajor
       ? " [MAJOR]"
       : isMinor
