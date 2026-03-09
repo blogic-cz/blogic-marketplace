@@ -48,8 +48,14 @@ For each group, execute steps 1–4 before moving to the next:
 
 **Step 1 — Identify versions (old → new)**
 
-- Run `bun upgrade` interactively, note minor/major bumps
-- For catalog packages: `npm view <package> version`
+Run the check-outdated script to get a full list of what needs updating:
+
+```bash
+bun run .agents/skills/update-packages/references/check-outdated.ts
+```
+
+This scans all workspace `package.json` files (incl. catalog/catalogs), skips `workspace:*` and `catalog:` refs, and outputs a grouped list with `[MAJOR]`/`[minor]` tags.
+For catalog packages, version pins are in the root `package.json` under `"catalog"` / `"catalogs"` — update them manually.
 
 **Step 2 — Update + Analyze release notes IN PARALLEL**
 
@@ -120,11 +126,11 @@ Packages in Bun's catalog need manual version checks: `npm view <package> versio
 
 - **DO NOT** update packages with `workspace:*` — these are internal monorepo packages
 - **DO NOT** skip `@typescript/native-preview` updates — affects TypeScript LSP performance
-- **DO NOT** use `bun outdated` — misses catalog packages; use `bun upgrade` interactively
+- **DO NOT** use `bun outdated` — hangs and misses catalog packages; use `check-outdated.ts` instead
 - If packages fail to install: `bun clean:packages && bun install`
 
 ## Definition of Done
 
-- `bun upgrade` shows all packages at latest versions
+- `check-outdated.ts` shows no remaining direct dependency updates
 - All checks pass (`bun run check`)
 - All relevant tests pass
