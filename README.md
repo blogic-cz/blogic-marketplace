@@ -67,6 +67,7 @@ npx skills update
 | `effect-ts`                  | Effect TypeScript services, layers, and error handling     |
 | `frontend-design`            | UI components, styling, and layouts                        |
 | `git-workflow`               | PR lifecycle, branch management, and CI monitoring         |
+| `github-triage`              | GitHub triage — resolve issues and review PRs              |
 | `kubernetes-helm`            | Kubernetes deployments with Helm charts                    |
 | `marketing-expert`           | Marketing copy and landing pages                           |
 | `performance-optimization`   | N+1 fixes, batch operations, and query optimization        |
@@ -76,6 +77,7 @@ npx skills update
 | `requirements`               | Structured 5-phase requirements gathering                  |
 | `scan-effect-solutions`      | Effect TypeScript compliance audit                         |
 | `sentry-integration`         | Error tracking and tracing with Sentry                     |
+| `sync-template`              | Sync project with blogic-template-ts upstream              |
 | `tanstack-frontend`          | TanStack Router routes, TRPC prefetching, and forms        |
 | `tdd`                        | Test-driven development with Red-Green-Refactor            |
 | `testing-patterns`           | Unit tests, TRPC integration tests, and E2E tests          |
