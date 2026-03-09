@@ -94,7 +94,7 @@ async function fetchLatest(
       }
     );
     if (!res.ok) return null;
-    const json = (await res.json()) as { version: string };
+    const json: { version?: string } = await res.json();
     return json.version ?? null;
   } catch {
     return null;
@@ -132,9 +132,10 @@ const fileMap = new Map<string, Map<string, string>>(); // file -> { name -> cur
 for (const file of pkgFiles) {
   let pkg: PackageJson;
   try {
-    pkg = JSON.parse(
-      readFileSync(file, "utf8")
-    ) as PackageJson;
+    const raw = readFileSync(file, "utf8");
+    const parsed: PackageJson = JSON.parse(raw);
+    pkg = parsed;
+
   } catch {
     continue;
   }
