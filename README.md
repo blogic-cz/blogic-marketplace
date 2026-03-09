@@ -26,7 +26,14 @@ gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-u
 
 - **MCP Servers**: Chrome DevTools, Sentry Spotlight, Sentry Cloud, Agentsfera
 - **Automated Hooks**: Post-edit checks, post-stop quality gates
-- **Skills**: andocs rendering, skill-creator, process-spec
+
+### Available skills
+
+| Skill            | Description                                        |
+| ---------------- | -------------------------------------------------- |
+| `andocs`         | Andocs markdown rendering and documentation        |
+| `process-spec`   | Structured business process specification creation |
+| `skill-creator`  | Guide for creating new agent skills                |
 
 ## template-ts Skills
 
