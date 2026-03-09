@@ -26,7 +26,7 @@ gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-u
 
 - **MCP Servers**: Chrome DevTools, Sentry Spotlight, Sentry Cloud, Agentsfera
 - **Automated Hooks**: Post-edit checks, post-stop quality gates
-- **Skills**: andocs rendering, skill-creator
+- **Skills**: andocs rendering, skill-creator, process-spec
 
 ## template-ts Skills
 
