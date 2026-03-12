@@ -74,21 +74,34 @@ Inform user: "PR created/updated. Entering active watch loop — monitoring CI a
 
 #### LOOP START
 
-##### Step 1: Watch CI checks
+##### Step 1: Poll CI checks (non-blocking)
 
-Wait for all CI checks to complete:
+**Do NOT use `--watch` — it blocks for 10+ minutes and times out.** Instead, poll CI status in a loop with review checks interleaved:
 
-```bash
-agent-tools-gh pr checks --pr <pr_number> --watch --fail-fast > /dev/null 2>&1; echo $?
+```
+POLL LOOP:
+  1. Check CI status (non-blocking):
+     agent-tools-gh pr checks --pr <pr_number>
+
+  2. Parse output:
+     - ALL PASSED  → set ci_status=passed, break poll loop
+     - ANY FAILED  → set ci_status=failed, break poll loop
+     - STILL RUNNING → proceed to step 3
+
+  3. While CI is running, check for reviews:
+     agent-tools-gh pr review-triage --pr <pr_number>
+     agent-tools-gh pr threads --pr <pr_number> --unresolved-only
+     → If reviews found, address them NOW (go to Step 4, then return here)
+
+  4. Wait ~60 seconds, then repeat from step 1
+     (use: sleep 60 or equivalent delay)
 ```
 
-**Exit codes:** `0` = all passed, `1` = failure detected.
-
-The `--fail-fast` flag exits immediately on first failure for faster iteration.
+**This interleaved approach means you're productively addressing reviews while CI runs, instead of blocking on CI.**
 
 ##### Step 2: Handle CI results
 
-**If checks failed (exit code 1):**
+**If ci_status=failed:**
 
 1. Get failed check details immediately:
 
@@ -118,7 +131,7 @@ The `--fail-fast` flag exits immediately on first failure for faster iteration.
    ```
 8. **→ Go back to LOOP START**
 
-**If checks passed (exit code 0):** proceed to Step 3.
+**If ci_status=passed:** proceed to Step 3.
 
 ##### Step 3: Check for reviews and comments
 
