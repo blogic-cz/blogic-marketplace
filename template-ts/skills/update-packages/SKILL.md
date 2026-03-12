@@ -48,13 +48,15 @@ For each group, execute steps 1–4 before moving to the next:
 
 **Step 1 — Identify versions (old → new)**
 
-Run the check-outdated script to get a full list of what needs updating:
+Run both reports to get a full list of package updates and toolchain/runtime drift:
 
 ```bash
 bun run .agents/skills/update-packages/references/check-outdated.ts
+bun run .agents/skills/update-packages/references/report.ts
 ```
 
 This scans all workspace `package.json` files (incl. catalog/catalogs), skips `workspace:*` and `catalog:` refs, and outputs a grouped list with `[MAJOR]`/`[minor]` tags.
+The runtime report also checks pinned versions in workflows, pipelines, Dockerfiles, and package manifests.
 For catalog packages, version pins are in the root `package.json` under `"catalog"` / `"catalogs"` — update them manually.
 
 **Step 2 — Update + Analyze release notes IN PARALLEL**
@@ -96,9 +98,25 @@ After all groups are updated, output a unified summary:
 ### Bun Runtime Updates
 
 1. Update `packageManager` in root `package.json`: `"bun@X.Y.Z"`
-2. Update `ARG BUN_VERSION=X.Y.Z` in all Dockerfiles
-3. Update `BUN_VERSION` in CI pipeline files
+2. Update every Bun runtime pin in Dockerfiles, including `ARG BUN_VERSION=X.Y.Z` and any `FROM oven/bun:X.Y.Z-*` base images
+3. Update Bun versions in CI workflow and pipeline files, e.g. `bun-version: X.Y.Z` in GitHub Actions and `BUN_VERSION="X.Y.Z"` in Azure pipelines
 4. `bun run check` → commit: `chore: update bun to vX.Y.Z`
+
+If the report shows drift, fix all Bun pins before finishing. The report covers:
+
+- `packageManager`
+- `@types/bun`
+- `bun-version:` in workflows
+- `BUN_VERSION=` / `ARG BUN_VERSION=` in scripts and Dockerfiles
+- `FROM oven/bun:...` Docker base images
+- `node-version:` in workflows
+- Playwright package/image version alignment
+
+Manual search fallback:
+
+```bash
+grep -R "bun-version:\|BUN_VERSION=\|bun@1\.\|oven/bun:1\." .
+```
 
 ### Playwright Updates
 
