@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run:*)",
+      "Bash(ls \"C:\\\\Work\\\\SAB\\\\nexus-fe\"/lefthook* 2>/dev/null; ls \"C:\\\\Work\\\\SAB\\\\nexus-fe\"/package.json 2>/dev/null)",
+      "Bash(cd \"C:\\\\Work\\\\blogic\\\\blogic-marketplace\" && bun install)"
+    ]
+  }
+}

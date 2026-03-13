@@ -53,6 +53,18 @@ function printResult(result: StepResult): void {
   }
 }
 
+async function typecheck(): Promise<{
+  success: boolean;
+  output?: string;
+}> {
+  const result = await run(["bunx", "tsc", "--noEmit"]);
+
+  return {
+    success: result.exitCode === 0,
+    output: result.exitCode === 0 ? undefined : result.stderr || result.stdout,
+  };
+}
+
 async function formatCheck(): Promise<{ success: boolean; output?: string }> {
   const result = await run(["bun", "run", "format:check"]);
 
@@ -72,7 +84,11 @@ async function lint(): Promise<{ success: boolean; output?: string }> {
 }
 
 export async function main(): Promise<void> {
-  const results = await Promise.all([runStep("format", formatCheck), runStep("lint", lint)]);
+  const results = await Promise.all([
+    runStep("format", formatCheck),
+    runStep("lint", lint),
+    runStep("typecheck", typecheck),
+  ]);
 
   let hasFailures = false;
 

@@ -40,7 +40,12 @@ EOF
 )
     fi
 
-    REASON=$(echo "$ERROR_MESSAGE" | jq -Rs .)
+    REASON=$(echo "$ERROR_MESSAGE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>process.stdout.write(JSON.stringify(d)))")
+
+    # Fallback if node stringify failed
+    if [ -z "$REASON" ]; then
+      REASON="\"$failure_msg\""
+    fi
 
     if [ "$hook_type" = "PostToolUse" ]; then
       cat <<EOJSON

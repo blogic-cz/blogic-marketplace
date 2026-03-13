@@ -10,7 +10,7 @@ validate_all_json() {
   local failed=0
   local count=0
   for file in $(find "${CLAUDE_PROJECT_DIR}" -name "*.json" -not -path "*/node_modules/*" 2>/dev/null); do
-    if ! jq empty "$file" 2>&1; then
+    if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$file" 2>/dev/null; then
       echo "Invalid JSON: $file"
       failed=1
     fi

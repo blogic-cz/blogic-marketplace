@@ -7,20 +7,10 @@
  *   bun run .agents/skills/update-packages/references/check-outdated.ts --json
  */
 
-import {
-  readdirSync,
-  readFileSync,
-  statSync,
-} from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const SKIP_DIRS = new Set([
-  "node_modules",
-  "opensrc",
-  ".agents",
-  ".git",
-  ".cache",
-]);
+const SKIP_DIRS = new Set(["node_modules", "opensrc", ".agents", ".git", ".cache"]);
 
 const JSON_OUTPUT = process.argv.includes("--json");
 
@@ -82,28 +72,23 @@ function findPackageJsonFiles(dir: string): string[] {
   return results;
 }
 
-async function fetchLatest(
-  pkg: string
-): Promise<string | null> {
+async function fetchLatest(pkg: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://registry.npmjs.org/${pkg}/latest`,
-      {
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(8000),
-      }
-    );
+    const res = await fetch(`https://registry.npmjs.org/${pkg}/latest`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok) return null;
-    const json: { version?: string } = await res.json();
+    const json = (await res.json()) as {
+      version?: string;
+    };
     return json.version ?? null;
   } catch {
     return null;
   }
 }
 
-function collectDeps(
-  pkg: PackageJson
-): Record<string, string> {
+function collectDeps(pkg: PackageJson): Record<string, string> {
   const deps: Record<string, string> = {};
   for (const source of [
     pkg.dependencies,
@@ -135,7 +120,6 @@ for (const file of pkgFiles) {
     const raw = readFileSync(file, "utf8");
     const parsed: PackageJson = JSON.parse(raw);
     pkg = parsed;
-
   } catch {
     continue;
   }
@@ -159,9 +143,7 @@ if (allPackages.size === 0) {
 }
 
 if (!JSON_OUTPUT) {
-  console.log(
-    `Checking ${allPackages.size} unique packages across ${fileMap.size} files...\n`
-  );
+  console.log(`Checking ${allPackages.size} unique packages across ${fileMap.size} files...\n`);
 }
 
 // Fetch latest in parallel
@@ -170,7 +152,7 @@ const latestResults = await Promise.all(
   names.map(async (name) => ({
     name,
     latest: await fetchLatest(name),
-  }))
+  })),
 );
 const latestMap = new Map<string, string>();
 for (const { name, latest } of latestResults) {
@@ -216,21 +198,13 @@ for (const [file, entries] of byFile) {
   console.log(`\n${file}`);
   for (const { package: pkg, current, latest } of entries) {
     const isMajor =
-      parseInt(latest.split(".")[0] ?? "0", 10) >
-      parseInt(current.split(".")[0] ?? "0", 10);
+      parseInt(latest.split(".")[0] ?? "0", 10) > parseInt(current.split(".")[0] ?? "0", 10);
     const isMinor =
       !isMajor &&
-      parseInt(latest.split(".")[1] ?? "0", 10) >
-        parseInt(current.split(".")[1] ?? "0", 10);
-    const tag = isMajor
-      ? " [MAJOR]"
-      : isMinor
-        ? " [minor]"
-        : "";
+      parseInt(latest.split(".")[1] ?? "0", 10) > parseInt(current.split(".")[1] ?? "0", 10);
+    const tag = isMajor ? " [MAJOR]" : isMinor ? " [minor]" : "";
     console.log(`  ${pkg}: ${current} → ${latest}${tag}`);
   }
 }
 
-console.log(
-  `\n${outdated.length} outdated package(s) found.`
-);
+console.log(`\n${outdated.length} outdated package(s) found.`);

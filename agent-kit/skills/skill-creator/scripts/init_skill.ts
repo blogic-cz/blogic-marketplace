@@ -270,19 +270,11 @@ function initSkill(skillName: string, path: string): string | null {
   }
 
   // Print next steps
-  console.log(
-    `\n✅ Skill '${skillName}' initialized successfully at ${skillDir}`,
-  );
+  console.log(`\n✅ Skill '${skillName}' initialized successfully at ${skillDir}`);
   console.log("\nNext steps:");
-  console.log(
-    "1. Edit SKILL.md to complete the TODO items and update the description",
-  );
-  console.log(
-    "2. Customize or delete the example files in scripts/, references/, and assets/",
-  );
-  console.log(
-    "3. Run the validator when ready to check the skill structure",
-  );
+  console.log("1. Edit SKILL.md to complete the TODO items and update the description");
+  console.log("2. Customize or delete the example files in scripts/, references/, and assets/");
+  console.log("3. Run the validator when ready to check the skill structure");
 
   return skillDir;
 }
