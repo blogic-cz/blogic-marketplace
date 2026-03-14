@@ -1,7 +1,30 @@
-import { readdirSync, readFileSync, statSync } from "fs";
-import { join, relative } from "path";
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "fs";
+import { dirname, join, relative } from "path";
 
 const JSON_OUTPUT = Bun.argv.includes("--json");
+
+const REFERENCES_DIR = dirname(
+  new URL(import.meta.url).pathname
+);
+
+function saveReport(
+  filename: string,
+  data: unknown
+): string {
+  const outPath = join(REFERENCES_DIR, filename);
+  mkdirSync(dirname(outPath), { recursive: true });
+  writeFileSync(
+    outPath,
+    JSON.stringify(data, null, 2) + "\n"
+  );
+  return outPath;
+}
 
 const SKIP_DIRS = new Set([
   ".git",
@@ -19,9 +42,20 @@ const SKIP_DIRS = new Set([
   "tmp",
 ]);
 
-const TEXT_FILE_NAMES = new Set(["Dockerfile", "package.json", "bunfig.toml", "dev.sh"]);
+const TEXT_FILE_NAMES = new Set([
+  "Dockerfile",
+  "package.json",
+  "bunfig.toml",
+  "dev.sh",
+]);
 
-const TEXT_FILE_EXTENSIONS = new Set([".json", ".sh", ".toml", ".yaml", ".yml"]);
+const TEXT_FILE_EXTENSIONS = new Set([
+  ".json",
+  ".sh",
+  ".toml",
+  ".yaml",
+  ".yml",
+]);
 
 type PinKind =
   | "packageManager"
@@ -114,7 +148,10 @@ function findFiles(dir: string): string[] {
   return results;
 }
 
-function lineNumberAt(content: string, index: number): number {
+function lineNumberAt(
+  content: string,
+  index: number
+): number {
   return content.slice(0, index).split("\n").length;
 }
 
@@ -124,7 +161,7 @@ function pushMatches(
   content: string,
   kind: PinKind,
   regex: RegExp,
-  extractor: (match: RegExpExecArray) => string,
+  extractor: (match: RegExpExecArray) => string
 ): void {
   regex.lastIndex = 0;
 
@@ -145,7 +182,11 @@ function pushMatches(
   }
 }
 
-function collectPackageFields(file: string, content: string, entries: PinEntry[]): void {
+function collectPackageFields(
+  file: string,
+  content: string,
+  entries: PinEntry[]
+): void {
   let parsed: PackageJson;
 
   try {
@@ -173,7 +214,9 @@ function collectPackageFields(file: string, content: string, entries: PinEntry[]
     parsed.dependencies,
     parsed.devDependencies,
     parsed.catalog,
-    ...(parsed.catalogs ? Object.values(parsed.catalogs) : []),
+    ...(parsed.catalogs
+      ? Object.values(parsed.catalogs)
+      : []),
   ];
 
   for (const source of sources) {
@@ -181,7 +224,9 @@ function collectPackageFields(file: string, content: string, entries: PinEntry[]
       continue;
     }
 
-    for (const [name, rawVersion] of Object.entries(source)) {
+    for (const [name, rawVersion] of Object.entries(
+      source
+    )) {
       const value = cleanVersion(rawVersion);
       const needle = `"${name}": "${rawVersion}"`;
       const index = content.indexOf(needle);
@@ -199,7 +244,10 @@ function collectPackageFields(file: string, content: string, entries: PinEntry[]
         });
       }
 
-      if (name === "@playwright/test" || name === "playwright") {
+      if (
+        name === "@playwright/test" ||
+        name === "playwright"
+      ) {
         entries.push({
           ...baseEntry,
           kind: "playwrightPackage",
@@ -234,7 +282,7 @@ function collectPins(cwd: string): PinEntry[] {
       content,
       "bunVersion",
       /\bbun-version:\s*["']?([^"'\s#]+)/g,
-      (match) => match[1] ?? "",
+      (match) => match[1] ?? ""
     );
     pushMatches(
       entries,
@@ -242,7 +290,7 @@ function collectPins(cwd: string): PinEntry[] {
       content,
       "nodeVersion",
       /\bnode-version:\s*["']?([^"'\s#]+)/g,
-      (match) => match[1] ?? "",
+      (match) => match[1] ?? ""
     );
     pushMatches(
       entries,
@@ -250,7 +298,7 @@ function collectPins(cwd: string): PinEntry[] {
       content,
       "dockerArgBunVersion",
       /\bARG\s+BUN_VERSION\s*=\s*["']?([^"'\s]+)/g,
-      (match) => match[1] ?? "",
+      (match) => match[1] ?? ""
     );
     pushMatches(
       entries,
@@ -258,7 +306,7 @@ function collectPins(cwd: string): PinEntry[] {
       content,
       "bunVersion",
       /(?<!ARG\s)\bBUN_VERSION\s*=\s*["']?([^"'\s]+)/g,
-      (match) => match[1] ?? "",
+      (match) => match[1] ?? ""
     );
     pushMatches(
       entries,
@@ -266,7 +314,7 @@ function collectPins(cwd: string): PinEntry[] {
       content,
       "dockerFromBun",
       /\bFROM\s+oven\/bun:([^\s]+)/g,
-      (match) => (match[1] ?? "").split("-")[0] ?? "",
+      (match) => (match[1] ?? "").split("-")[0] ?? ""
     );
     pushMatches(
       entries,
@@ -274,7 +322,7 @@ function collectPins(cwd: string): PinEntry[] {
       content,
       "playwrightImage",
       /mcr\.microsoft\.com\/playwright:v([^\-\s"']+)(?:-[^\s"']+)?/g,
-      (match) => match[1] ?? "",
+      (match) => match[1] ?? ""
     );
   }
 
@@ -283,14 +331,19 @@ function collectPins(cwd: string): PinEntry[] {
 
 function parseRootExpectations(cwd: string): Expectations {
   try {
-    const content = readFileSync(join(cwd, "package.json"), "utf8");
+    const content = readFileSync(
+      join(cwd, "package.json"),
+      "utf8"
+    );
     const parsed = JSON.parse(content) as PackageJson;
 
     const sources = [
       parsed.dependencies,
       parsed.devDependencies,
       parsed.catalog,
-      ...(parsed.catalogs ? Object.values(parsed.catalogs) : []),
+      ...(parsed.catalogs
+        ? Object.values(parsed.catalogs)
+        : []),
     ];
 
     let playwright: string | undefined;
@@ -299,7 +352,8 @@ function parseRootExpectations(cwd: string): Expectations {
         continue;
       }
 
-      const playwrightVersion = source["@playwright/test"] ?? source.playwright;
+      const playwrightVersion =
+        source["@playwright/test"] ?? source.playwright;
       if (playwrightVersion) {
         playwright = cleanVersion(playwrightVersion);
         break;
@@ -315,12 +369,17 @@ function parseRootExpectations(cwd: string): Expectations {
   }
 }
 
-function classifyEntries(entries: PinEntry[], expectations: Expectations): DriftEntry[] {
+function classifyEntries(
+  entries: PinEntry[],
+  expectations: Expectations
+): DriftEntry[] {
   const expectedBun = expectations.bun;
   const expectedPlaywright = expectations.playwright;
 
   const nodeValues = new Set(
-    entries.filter((entry) => entry.kind === "nodeVersion").map((entry) => entry.value),
+    entries
+      .filter((entry) => entry.kind === "nodeVersion")
+      .map((entry) => entry.value)
   );
 
   return entries.map((entry) => {
@@ -329,7 +388,9 @@ function classifyEntries(entries: PinEntry[], expectations: Expectations): Drift
         ...entry,
         status: nodeValues.size > 1 ? "drift" : "ok",
         reason:
-          nodeValues.size > 1 ? "Multiple node-version values found" : "Node version is consistent",
+          nodeValues.size > 1
+            ? "Multiple node-version values found"
+            : "Node version is consistent",
       };
     }
 
@@ -347,7 +408,10 @@ function classifyEntries(entries: PinEntry[], expectations: Expectations): Drift
 
     if (entry.kind === "playwrightImage") {
       const status =
-        expectedPlaywright !== undefined && entry.value !== expectedPlaywright ? "drift" : "ok";
+        expectedPlaywright !== undefined &&
+        entry.value !== expectedPlaywright
+          ? "drift"
+          : "ok";
       return {
         ...entry,
         expected: expectedPlaywright,
@@ -365,7 +429,8 @@ function classifyEntries(entries: PinEntry[], expectations: Expectations): Drift
       const isCatalogRef = entry.raw.startsWith("catalog:");
       const status = isCatalogRef
         ? "info"
-        : expectedBun !== undefined && entry.value !== expectedBun
+        : expectedBun !== undefined &&
+            entry.value !== expectedBun
           ? "drift"
           : "ok";
       return {
@@ -388,7 +453,11 @@ function classifyEntries(entries: PinEntry[], expectations: Expectations): Drift
       entry.kind === "dockerFromBun" ||
       entry.kind === "packageManager"
     ) {
-      const status = expectedBun !== undefined && entry.value !== expectedBun ? "drift" : "ok";
+      const status =
+        expectedBun !== undefined &&
+        entry.value !== expectedBun
+          ? "drift"
+          : "ok";
       return {
         ...entry,
         expected: expectedBun,
@@ -411,55 +480,84 @@ function classifyEntries(entries: PinEntry[], expectations: Expectations): Drift
 }
 
 function printHuman(entries: DriftEntry[]): void {
-  const expectedBun = entries.find((entry) => entry.kind === "packageManager")?.value;
-  const expectedPlaywright = entries.find((entry) => entry.kind === "playwrightPackage")?.value;
+  const expectedBun = entries.find(
+    (entry) => entry.kind === "packageManager"
+  )?.value;
+  const expectedPlaywright = entries.find(
+    (entry) => entry.kind === "playwrightPackage"
+  )?.value;
 
   console.log("Runtime Expectations");
   console.log(`  Bun: ${expectedBun ?? "not found"}`);
-  console.log(`  Playwright: ${expectedPlaywright ?? "not found"}`);
+  console.log(
+    `  Playwright: ${expectedPlaywright ?? "not found"}`
+  );
 
-  const groups: Array<{ title: string; kinds: PinKind[] }> = [
-    {
-      title: "Bun Runtime Pins",
-      kinds: ["packageManager", "typesBun", "bunVersion", "dockerArgBunVersion", "dockerFromBun"],
-    },
-    {
-      title: "Playwright Pins",
-      kinds: ["playwrightPackage", "playwrightImage"],
-    },
-    {
-      title: "Node Pins",
-      kinds: ["nodeVersion"],
-    },
-  ];
+  const groups: Array<{ title: string; kinds: PinKind[] }> =
+    [
+      {
+        title: "Bun Runtime Pins",
+        kinds: [
+          "packageManager",
+          "typesBun",
+          "bunVersion",
+          "dockerArgBunVersion",
+          "dockerFromBun",
+        ],
+      },
+      {
+        title: "Playwright Pins",
+        kinds: ["playwrightPackage", "playwrightImage"],
+      },
+      {
+        title: "Node Pins",
+        kinds: ["nodeVersion"],
+      },
+    ];
 
   for (const group of groups) {
-    const groupEntries = entries.filter((entry) => group.kinds.includes(entry.kind));
+    const groupEntries = entries.filter((entry) =>
+      group.kinds.includes(entry.kind)
+    );
     if (groupEntries.length === 0) {
       continue;
     }
 
     console.log(`\n${group.title}`);
-    for (const entry of groupEntries.toSorted((a: DriftEntry, b: DriftEntry) =>
-      a.file.localeCompare(b.file),
+    for (const entry of groupEntries.toSorted(
+      (a: DriftEntry, b: DriftEntry) =>
+        a.file.localeCompare(b.file)
     )) {
-      const driftTag = entry.status === "drift" ? " [DRIFT]" : "";
-      const expected = entry.expected ? ` | expected ${entry.expected}` : "";
+      const driftTag =
+        entry.status === "drift" ? " [DRIFT]" : "";
+      const expected = entry.expected
+        ? ` | expected ${entry.expected}`
+        : "";
       console.log(
-        `  ${entry.file}:${entry.line} | ${entry.kind} = ${entry.value}${expected}${driftTag}`,
+        `  ${entry.file}:${entry.line} | ${entry.kind} = ${entry.value}${expected}${driftTag}`
       );
     }
   }
 
-  const driftCount = entries.filter((entry) => entry.status === "drift").length;
+  const driftCount = entries.filter(
+    (entry) => entry.status === "drift"
+  ).length;
   console.log(`\n${driftCount} drift item(s) found.`);
 }
 
 const cwd = process.cwd();
-const entries = classifyEntries(collectPins(cwd), parseRootExpectations(cwd));
+const entries = classifyEntries(
+  collectPins(cwd),
+  parseRootExpectations(cwd)
+);
 
 if (JSON_OUTPUT) {
+  const savedPath = saveReport(
+    "runtime-report.json",
+    entries
+  );
   console.log(JSON.stringify(entries, null, 2));
+  console.error(`\nSaved to ${savedPath}`);
 } else if (entries.length === 0) {
   console.log("No runtime pins found.");
 } else {
