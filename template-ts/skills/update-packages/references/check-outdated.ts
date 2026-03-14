@@ -232,8 +232,8 @@ function parseVersionFromTag(tag: string): string | null {
  *  -1 if a < b, 0 if a == b, 1 if a > b
  */
 function compareSemver(a: string, b: string): number {
-  const pa = a.split(".").map(Number);
-  const pb = b.split(".").map(Number);
+  const pa = a.replace(/-.*$/, "").split(".").map(Number);
+  const pb = b.replace(/-.*$/, "").split(".").map(Number);
   for (let i = 0; i < 3; i++) {
     const va = pa[i] ?? 0;
     const vb = pb[i] ?? 0;
