@@ -5,7 +5,7 @@
 > **Autor:**
 > **Stav:** Draft | Review | Schváleno
 
-***
+---
 
 ## 1. Business cíl
 
@@ -23,13 +23,13 @@
 | ---- | ----------- |
 |      |             |
 
-***
+---
 
 ## 2. Vstupní a výstupní data
 
 ### 2.1 Vstupní data
 
-* API endpoint, nebo DB struktura, ze které se získávají data
+- API endpoint, nebo DB struktura, ze které se získávají data
 
 | Název | Zdroj | Popis |
 | ----- | ----- | ----- |
@@ -45,7 +45,7 @@
 
 [Popis závislostí na jiných datech/systémech - ASCII diagram]
 
-***
+---
 
 ## 3. Validace dat
 
@@ -67,21 +67,21 @@
 | ------- | ---------------- | -------- |
 |         |                  |          |
 
-***
+---
 
 ## 4. Popis operací
 
 ### 4.1 Automatické operace
 
-| # | Operace | Trigger | Popis | Výstup |
-| - | ------- | ------- | ----- | ------ |
-| 1 |         |         |       |        |
+| #   | Operace | Trigger | Popis | Výstup |
+| --- | ------- | ------- | ----- | ------ |
+| 1   |         |         |       |        |
 
 ### 4.2 Ruční operace
 
-| # | Operace | Vykonavatel | Popis | Očekávaný výstup |
-| - | ------- | ----------- | ----- | ---------------- |
-| 1 |         |             |       |                  |
+| #   | Operace | Vykonavatel | Popis | Očekávaný výstup |
+| --- | ------- | ----------- | ----- | ---------------- |
+| 1   |         |             |       |                  |
 
 ### 4.3 Detail operace: [Název]
 
@@ -119,7 +119,7 @@
 [Stav A] --akce--> [Stav B] --akce--> [Stav C]
 ```
 
-***
+---
 
 ## 5. Popis UI
 
@@ -147,7 +147,7 @@
 
 [Odkaz nebo vložený obrázek]
 
-***
+---
 
 ## 6. Procesní výjimky
 
@@ -167,7 +167,7 @@
 
 [Popis možností vrácení operace nebo zrušení procesu]
 
-***
+---
 
 ## 7. Integrace na stávající systém
 
@@ -195,28 +195,28 @@
 | ------ | ------------- | ---- |
 |        |               |      |
 
-***
+---
 
 ## 8. BPMN diagram
 
 [Uživatel vloží odkaz na BPMN diagram]
 
-***
+---
 
 ## 9. Specifika
 
 [Sekce pro specifické aspekty procesu - např. AML zpracování, konverze měn, speciální business logika]
 
-***
+---
 
 ## Přílohy
 
-* [ ] BPMN soubor
-* [ ] Wireframes
-* [ ] Technická specifikace
-* [ ] Testovací scénáře
+- [ ] BPMN soubor
+- [ ] Wireframes
+- [ ] Technická specifikace
+- [ ] Testovací scénáře
 
-***
+---
 
 ## Historie změn
 

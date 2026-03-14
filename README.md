@@ -29,11 +29,11 @@ gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-u
 
 ### Available skills
 
-| Skill            | Description                                        |
-| ---------------- | -------------------------------------------------- |
-| `andocs`         | Andocs markdown rendering and documentation        |
-| `process-spec`   | Structured business process specification creation |
-| `skill-creator`  | Guide for creating new agent skills                |
+| Skill           | Description                                        |
+| --------------- | -------------------------------------------------- |
+| `andocs`        | Andocs markdown rendering and documentation        |
+| `process-spec`  | Structured business process specification creation |
+| `skill-creator` | Guide for creating new agent skills                |
 
 ## template-ts Skills
 

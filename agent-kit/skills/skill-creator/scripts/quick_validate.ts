@@ -49,10 +49,7 @@ function validateSkill(skillPath: string): [boolean, string] {
       ];
     }
     if (name.startsWith("-") || name.endsWith("-") || name.includes("--")) {
-      return [
-        false,
-        `Name '${name}' cannot start/end with hyphen or contain consecutive hyphens`,
-      ];
+      return [false, `Name '${name}' cannot start/end with hyphen or contain consecutive hyphens`];
     }
   }
 
