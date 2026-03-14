@@ -358,7 +358,7 @@ type GitHubRelease = {
 /**
  * Fetch GitHub releases between `current` (exclusive) and `latest` (inclusive).
  * Uses GITHUB_TOKEN/GH_TOKEN if available (5000 req/hour), otherwise unauthenticated (60 req/hour).
- * Fetches up to 100 releases and filters by version range.
+ * Paginates through all releases (100 per page, max 5 pages) to handle prolific monorepos.
  *
  * For monorepo packages (e.g. @tanstack/react-router), pass `tagPrefix`
  * to filter releases whose tag starts with the package name.
@@ -370,6 +370,7 @@ async function fetchReleaseNotes(
   latest: string,
   tagPrefix?: string
 ): Promise<ReleaseNote[]> {
+  const MAX_PAGES = 5;
   try {
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
@@ -380,42 +381,67 @@ async function fetchReleaseNotes(
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-    const res = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`,
-      {
-        headers,
-        signal: AbortSignal.timeout(10_000),
-      }
-    );
-    if (!res.ok) return [];
-    const releases: GitHubRelease[] = await res.json();
 
     const notes: ReleaseNote[] = [];
-    for (const release of releases) {
-      if (release.draft || release.prerelease) continue;
+    let foundLatest = false;
+    let url: string | null =
+      `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`;
 
-      if (
-        tagPrefix &&
-        !release.tag_name.startsWith(tagPrefix)
-      ) {
-        continue;
+    for (let page = 0; page < MAX_PAGES && url; page++) {
+      // eslint-disable-next-line no-await-in-loop -- sequential pagination: next URL depends on previous response's Link header
+      const res = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) break;
+      // eslint-disable-next-line no-await-in-loop
+      const releases: GitHubRelease[] = await res.json();
+      if (releases.length === 0) break;
+
+      for (const release of releases) {
+        if (release.draft || release.prerelease) continue;
+
+        if (
+          tagPrefix &&
+          !release.tag_name.startsWith(tagPrefix)
+        ) {
+          continue;
+        }
+
+        const version = parseVersionFromTag(
+          release.tag_name
+        );
+        if (!version) continue;
+
+        // Include releases where: current < version <= latest
+        if (
+          compareSemver(version, current) > 0 &&
+          compareSemver(version, latest) <= 0
+        ) {
+          notes.push({
+            tag: release.tag_name,
+            version,
+            url: release.html_url,
+            body: (release.body ?? "").trim(),
+          });
+          if (version === latest) foundLatest = true;
+        }
+
+        // Stop paginating once we've passed the current version (releases are newest-first)
+        if (compareSemver(version, current) <= 0) {
+          foundLatest = true;
+          break;
+        }
       }
 
-      const version = parseVersionFromTag(release.tag_name);
-      if (!version) continue;
+      if (foundLatest) break;
 
-      // Include releases where: current < version <= latest
-      if (
-        compareSemver(version, current) > 0 &&
-        compareSemver(version, latest) <= 0
-      ) {
-        notes.push({
-          tag: release.tag_name,
-          version,
-          url: release.html_url,
-          body: (release.body ?? "").trim(),
-        });
-      }
+      // Parse Link header for next page
+      const linkHeader = res.headers.get("link");
+      const nextMatch = linkHeader?.match(
+        /<([^>]+)>;\s*rel="next"/
+      );
+      url = nextMatch?.[1] ?? null;
     }
 
     // Sort oldest → newest

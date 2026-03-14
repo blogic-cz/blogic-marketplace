@@ -12,23 +12,32 @@
 import { existsSync } from "node:fs";
 
 type SkillEntry = { source: string; sourceType: string };
-type SkillsLock = { version: number; skills: Record<string, SkillEntry> };
+type SkillsLock = {
+  version: number;
+  skills: Record<string, SkillEntry>;
+};
 
-const agentMapping: Array<{ dir: string; agent: string }> = [
-  { dir: ".claude", agent: "claude-code" },
-  { dir: ".opencode", agent: "opencode" },
-  { dir: ".codex", agent: "codex" },
-];
+const agentMapping: Array<{ dir: string; agent: string }> =
+  [
+    { dir: ".claude", agent: "claude-code" },
+    { dir: ".opencode", agent: "opencode" },
+    { dir: ".codex", agent: "codex" },
+  ];
 
 const cwd = process.cwd();
 const detected = agentMapping
   .filter(({ dir }) => existsSync(`${cwd}/${dir}`))
   .map(({ agent }) => agent);
-const agents = detected.length > 0 ? detected : ["claude-code", "opencode"];
+const agents =
+  detected.length > 0
+    ? detected
+    : ["claude-code", "opencode"];
 
 const dryRun = process.argv.includes("--dry-run");
 
-const lock: SkillsLock = await Bun.file("skills-lock.json").json();
+const lock: SkillsLock = await Bun.file(
+  "skills-lock.json"
+).json();
 
 const groups = new Map<string, string[]>();
 for (const [name, entry] of Object.entries(lock.skills)) {
@@ -44,7 +53,7 @@ if (groups.size === 0) {
 }
 
 console.log(
-  `Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}, Agents: ${agents.join(", ")}`,
+  `Sources: ${groups.size}, Skills: ${Object.keys(lock.skills).length}, Agents: ${agents.join(", ")}`
 );
 
 let failed = 0;
@@ -65,7 +74,10 @@ for (const [source, skills] of groups) {
 
   if (dryRun) continue;
 
-  const proc = Bun.spawn(["bunx", ...args], { stdout: "inherit", stderr: "inherit" });
+  const proc = Bun.spawn(["bunx", ...args], {
+    stdout: "inherit",
+    stderr: "inherit",
+  });
   // eslint-disable-next-line no-await-in-loop -- sequential execution required: each skill update must complete before the next
   const code = await proc.exited;
   if (code !== 0) {
