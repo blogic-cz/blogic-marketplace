@@ -623,18 +623,26 @@ if (CHANGELOG_MODE) {
       continue;
     }
 
-    const tagPrefix = pkg.startsWith("@")
-      ? `${pkg}@`
-      : undefined;
     fetchPromises.push(
       fetchReleaseNotes(
         gh.owner,
         gh.repo,
         current,
         latest,
-        tagPrefix
+        `${pkg}@`
       ).then((notes) => {
-        releaseNoteResults.set(pkg, notes);
+        if (notes.length > 0) {
+          releaseNoteResults.set(pkg, notes);
+          return;
+        }
+        return fetchReleaseNotes(
+          gh.owner,
+          gh.repo,
+          current,
+          latest
+        ).then((fallbackNotes) => {
+          releaseNoteResults.set(pkg, fallbackNotes);
+        });
       })
     );
   }
