@@ -127,6 +127,56 @@ After all groups are updated, output a unified summary:
 - For T2 features: generate concrete diffs with file paths and before/after snippets, prefix with `ADOPTABLE:`
 - Skip patch-only updates in the report (the `--changelog` output already excludes them)
 
+### What's New Summary
+
+After the Release Notes Report, generate a user-facing **What's New** summary. This highlights notable features and improvements from the updates — not version numbers, but what the team can now use.
+
+**How to gather data:**
+
+1. Read the saved `outdated-changelog.json` — each entry has `releases[]` with full release notes
+2. For packages where `releases[]` is empty, use a librarian agent to fetch release notes from GitHub
+3. Focus on minor+ updates only — skip patches unless they contain notable features
+
+**Output format** (use this exact structure, one section per package with notable changes):
+
+```markdown
+## What's New from Package Updates
+
+### <Package Name> <version range> — <one-line summary>
+- **<Feature name>** — <what it does and why it matters>
+- **<Feature name>** — <what it does and why it matters>
+
+### <Package Name> <version range> — <one-line summary>
+- **<Feature name>** — <what it does and why it matters>
+```
+
+**Rules:**
+
+- Skip packages where only bug fixes happened (no new features worth mentioning)
+- Mark breaking changes with a warning emoji and explain what needs to change
+- Keep each bullet to one line — concise, actionable
+- Group related packages (e.g., "Sentry 10.43" covers both `@sentry/opentelemetry` and `@sentry/tanstackstart-react`)
+- Write in the language the user uses (if they speak Czech/Slovak, write in Czech/Slovak)
+
+**Example:**
+
+```markdown
+## What's New from Package Updates
+
+### TRPC 11.13 — OpenAPI generation
+- **OpenAPI JSON spec** — generate OpenAPI specs directly from your appRouter
+- **`streamHeader`** option on `httpBatchStreamLink` — inject custom headers into streaming responses
+
+### shadcn v4 (MAJOR) — monorepo + new colors
+- **Monorepo support** — `--monorepo` flag for init, supports TanStack Start workspaces
+- **New base colors**: `mauve`, `olive`, `mist`, `taupe`
+- **New CLI commands**: `shadcn docs`, `--preset`, `--dry-run`/`--diff`
+
+### @base-ui/react 1.3 — Drawer stable
+- **`Drawer` is now stable** (preview → production)
+- **`Toast.closeAll()`** — close all toasts at once
+```
+
 ## Special Cases
 
 ### Bun Runtime Updates
