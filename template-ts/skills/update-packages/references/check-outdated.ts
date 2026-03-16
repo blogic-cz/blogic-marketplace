@@ -641,7 +641,7 @@ if (CHANGELOG_MODE) {
           current,
           latest
         ).then((fallbackNotes) => {
-          releaseNoteResults.set(pkg, fallbackNotes);
+          return releaseNoteResults.set(pkg, fallbackNotes);
         });
       })
     );
