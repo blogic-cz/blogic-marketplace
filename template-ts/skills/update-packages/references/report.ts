@@ -4,8 +4,8 @@ import {
   readFileSync,
   statSync,
   writeFileSync,
-} from "fs";
-import { dirname, join, relative } from "path";
+} from "node:fs";
+import { dirname, join, relative } from "node:path";
 
 const JSON_OUTPUT = Bun.argv.includes("--json");
 
