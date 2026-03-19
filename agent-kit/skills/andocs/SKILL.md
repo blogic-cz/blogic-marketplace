@@ -193,12 +193,16 @@ Use `$schema` for editor validation:
 ```text
 prototypes/
   prototype.json          # Root marker (required)
-  shared.css               # Optional shared styles (auto-discovered)
+  shared.css               # Optional shared styles (auto-discovered, cascades down)
   shared.js                # Optional shared scripts (auto-discovered)
   pages/
     counter.html
     dashboard.html
-    detail.html
+  sub-app/
+    prototype.json         # Sub-prototype marker
+    shared.css              # Overrides/extends parent shared.css
+    pages/
+      detail.html          # Gets BOTH shared.css files (root first, sub-app second)
 ```
 
 ### Markdown syntax
@@ -233,11 +237,33 @@ With title and height:
 
 - Andocs auto-injects **Alpine.js** (v3 CDN) and **Tailwind CSS v4** (`@tailwindcss/browser` from jsdelivr) into the iframe
 - Andocs injects light-theme design tokens as CSS custom properties
-- `shared.css` is auto-discovered from the nearest parent `prototype.json` root and injected automatically
+- **`shared.css` cascade**: Andocs collects `shared.css` from ALL `prototype.json` roots walking up the directory tree — not just the nearest one. Root-level styles load first, deeper (more specific) styles load last. This lets you define base styles at the root and override/extend them in sub-prototypes without duplication.
 - `shared.js` is auto-discovered from the nearest parent `prototype.json` root and injected as `<script data-andocs-shared-js>` in `<head>` — ideal for Web Component class definitions shared across pages
 - Shared JS executes before the HTML body renders (injected in `<head>`, before Tailwind/Alpine CDN scripts)
 - Iframe runs in sandbox mode (`allow-scripts` only)
 - "Open in new tab" uses a resolvable server URL (`/api/prototype-preview`) instead of fragile blob URLs (web-app only; CLI falls back to blob)
+
+### CSS cascade for shared styles
+
+When a prototype page is nested under multiple `prototype.json` roots, Andocs collects `shared.css` from **all** of them and injects them in cascade order (root first → deepest last). This means:
+
+- **Root `shared.css`** provides base/global styles (resets, buttons, cards, typography)
+- **Sub-prototype `shared.css`** adds or overrides styles specific to that prototype
+
+```text
+prototypes/
+  prototype.json        ← root
+  shared.css             ← base styles (.prototype-btn, .prototype-shell)
+  crm/
+    prototype.json      ← sub-prototype
+    shared.css           ← CRM-specific styles (.status-badge, .data-table)
+    pages/
+      dashboard.html    ← gets: base shared.css + crm shared.css
+```
+
+The cascade means `dashboard.html` receives both CSS files concatenated: root styles first, then CRM styles. No duplication needed — sub-prototypes inherit everything from parent levels.
+
+If a `prototype.json` exists but has no `shared.css`, that level is simply skipped in the cascade.
 
 **IMPORTANT — Tailwind v4 CDN:** The injected CDN is `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4` (NOT `cdn.tailwindcss.com` which only supports v3). All Tailwind v4 utility classes work out of the box.
 
