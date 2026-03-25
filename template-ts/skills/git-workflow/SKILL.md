@@ -18,12 +18,12 @@ The entire PR lifecycle runs as one continuous aggressive loop. There is no sepa
 Run everything as ONE chained command so user approves only once:
 
 ```bash
-git checkout -b <branch> && git add -A && git commit -m "<msg>" && git push -u origin HEAD && agent-tools-gh pr create --base <base> --title "<title>" --body "<body>"
+git checkout -b <branch> && git add -A && git commit -m "<msg>" && git push -u origin HEAD && gh-tool pr create --base <base> --title "<title>" --body "<body>"
 ```
 
 - If already on a feature branch, skip `git checkout -b`
-- Check if PR exists: `agent-tools-gh pr status` (auto-detects PR for current branch or GitButler workspace)
-- If PR exists, use `agent-tools-gh pr edit --pr <pr_number> --title "<title>" --body "<body>"` instead of `agent-tools-gh pr create`
+- Check if PR exists: `gh-tool pr status` (auto-detects PR for current branch or GitButler workspace)
+- If PR exists, use `gh-tool pr edit --pr <pr_number> --title "<title>" --body "<body>"` instead of `gh-tool pr create`
 - Base branch: argument provided by user (default: `test`)
 - Branch naming: `feat/`, `fix/`, `chore/` based on changes
 
@@ -81,7 +81,7 @@ Inform user: "PR created/updated. Entering active watch loop — monitoring CI a
 ```
 POLL LOOP:
   1. Check CI status (non-blocking):
-     agent-tools-gh pr checks --pr <pr_number>
+gh-tool pr checks --pr <pr_number>
 
   2. Parse output:
      - ALL PASSED  → set ci_status=passed, break poll loop
@@ -89,8 +89,8 @@ POLL LOOP:
      - STILL RUNNING → proceed to step 3
 
   3. While CI is running, check for reviews:
-     agent-tools-gh pr review-triage --pr <pr_number>
-     agent-tools-gh pr threads --pr <pr_number> --unresolved-only
+gh-tool pr review-triage --pr <pr_number>
+gh-tool pr threads --pr <pr_number> --unresolved-only
      → If reviews found, address them NOW (go to Step 4, then return here)
 
   4. Wait ~60 seconds, then repeat from step 1
@@ -106,13 +106,13 @@ POLL LOOP:
 1. Get failed check details immediately:
 
    ```bash
-   agent-tools-gh pr checks-failed --pr <pr_number>
+gh-tool pr checks-failed --pr <pr_number>
    ```
 
 2. For deeper CI log analysis, fetch clean parsed logs for the failed job:
 
    ```bash
-   agent-tools-gh workflow job-logs --run <run_id> --job "<job_name>" --failed-steps-only
+gh-tool workflow job-logs --run <run_id> --job "<job_name>" --failed-steps-only
    ```
 
 3. Analyze the error from the logs
@@ -127,7 +127,7 @@ POLL LOOP:
    ```
 7. If the failure seems flaky (e.g., timeout, network issue), consider rerunning instead of fixing:
    ```bash
-   agent-tools-gh pr rerun-checks --pr <pr_number> --failed-only
+gh-tool pr rerun-checks --pr <pr_number> --failed-only
    ```
 8. **→ Go back to LOOP START**
 
@@ -138,7 +138,7 @@ POLL LOOP:
 Run a full triage immediately:
 
 ```bash
-agent-tools-gh pr review-triage --pr <pr_number>
+gh-tool pr review-triage --pr <pr_number>
 ```
 
 Then check each source of feedback:
@@ -146,7 +146,7 @@ Then check each source of feedback:
 **3.1 Inline review threads:**
 
 ```bash
-agent-tools-gh pr threads --pr <pr_number> --unresolved-only
+gh-tool pr threads --pr <pr_number> --unresolved-only
 ```
 
 Each thread includes `threadId`, `commentId`, `path`, `line`, and `body`.
@@ -154,9 +154,9 @@ Each thread includes `threadId`, `commentId`, `path`, `line`, and `body`.
 **3.2 AI reviewer issue comments** (Claude bot, Sentry Seer, etc.):
 
 ```bash
-agent-tools-gh pr discussion-summary --pr <pr_number>
-agent-tools-gh pr issue-comments-latest --pr <pr_number> --author claude --body-contains "Claude Code Review"
-agent-tools-gh pr issue-comments-latest --pr <pr_number> --author sentry-io --body-contains "Sentry"
+gh-tool pr discussion-summary --pr <pr_number>
+gh-tool pr issue-comments-latest --pr <pr_number> --author claude --body-contains "Claude Code Review"
+gh-tool pr issue-comments-latest --pr <pr_number> --author sentry-io --body-contains "Sentry"
 ```
 
 AI reviewers post findings as general PR comments with severity-tagged items (Critical, Major, Minor), specific file paths and line numbers, and code suggestions.
@@ -188,8 +188,8 @@ For each comment/finding:
 First, identify all threads needing replies:
 
 ```bash
-agent-tools-gh pr threads --pr <pr_number>
-agent-tools-gh pr comments --pr <pr_number>
+gh-tool pr threads --pr <pr_number>
+gh-tool pr comments --pr <pr_number>
 ```
 
 Threads with only 1 comment (the original) need a reply added.
@@ -199,20 +199,20 @@ Threads with only 1 comment (the original) need a reply added.
 For inline threads — use the shortcut to reply and resolve in one step:
 
 ```bash
-agent-tools-gh pr reply-and-resolve --pr <pr_number> --comment-id <comment_id> --thread-id <thread_id> --body "<response>"
+gh-tool pr reply-and-resolve --pr <pr_number> --comment-id <comment_id> --thread-id <thread_id> --body "<response>"
 ```
 
 Or reply separately then resolve:
 
 ```bash
-agent-tools-gh pr reply --pr <pr_number> --comment-id <comment_id> --body "<response>"
-agent-tools-gh pr resolve --thread-id <thread_id>
+gh-tool pr reply --pr <pr_number> --comment-id <comment_id> --body "<response>"
+gh-tool pr resolve --thread-id <thread_id>
 ```
 
 For general PR comments:
 
 ```bash
-agent-tools-gh pr comment --pr <pr_number> --body "<response>"
+gh-tool pr comment --pr <pr_number> --body "<response>"
 ```
 
 **Response format:**
@@ -225,7 +225,7 @@ agent-tools-gh pr comment --pr <pr_number> --body "<response>"
 **If reply fails with "pending review" error:** Submit the pending review first, then retry:
 
 ```bash
-agent-tools-gh pr submit-review --pr <pr_number>
+gh-tool pr submit-review --pr <pr_number>
 ```
 
 **Do NOT resolve** threads where you asked a question.

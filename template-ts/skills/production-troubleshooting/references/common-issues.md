@@ -110,7 +110,7 @@ kubectl get endpoints -n <project>
 
 ```bash
 # Check application logs
-agent-tools-k8s logs --pod <pod-name> --env <env> | grep "DB Pool"
+k8s-tool logs --pod <pod-name> --env <env> | grep "DB Pool"
 
 # Check database connection count
 # (depends on database, example for PostgreSQL)
@@ -161,7 +161,7 @@ kubectl exec -it <postgres-pod> -- psql -c "SELECT count(*) FROM pg_stat_activit
 
 ```bash
 # Check SSR timing in logs
-agent-tools-k8s logs --pod <pod-name> --env <env> | grep "[SSR]"
+k8s-tool logs --pod <pod-name> --env <env> | grep "[SSR]"
 
 # Review Sentry traces for waterfall pattern
 # (use Sentry MCP to analyze traces)

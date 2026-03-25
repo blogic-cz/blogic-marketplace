@@ -59,10 +59,10 @@ Use the opensrc clone and GitHub API to find everything that changed:
 
 ```bash
 # List all template releases after the project's version
-agent-tools-gh release list --repo blogic-cz/blogic-template-ts
+gh-tool release list --repo blogic-cz/blogic-template-ts
 
 # View specific release notes for each version
-agent-tools-gh release view <tag> --repo blogic-cz/blogic-template-ts
+gh-tool release view <tag> --repo blogic-cz/blogic-template-ts
 
 # Get commit log between versions (using the opensrc clone)
 git -C opensrc/repos/github.com/blogic-cz/blogic-template-ts log --oneline <old-tag>..<new-tag>

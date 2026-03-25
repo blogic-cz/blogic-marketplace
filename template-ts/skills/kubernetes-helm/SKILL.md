@@ -249,13 +249,13 @@ persistence:
 
 ```bash
 # Query pods
-agent-tools-k8s pods --env test
+k8s-tool pods --env test
 
 # View logs
-agent-tools-k8s logs --pod <pod> --env prod --tail 100
+k8s-tool logs --pod <pod> --env prod --tail 100
 
 # Check resources
-agent-tools-k8s top --env test
+k8s-tool top --env test
 ```
 
 ## Adding New Environment Variables Checklist
