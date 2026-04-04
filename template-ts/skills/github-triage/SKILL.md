@@ -1,15 +1,19 @@
 ---
 name: github-triage
-description: "GitHub triage - resolve issues and review PRs. Goal is to FIX problems, not just label them. Issues get investigated and resolved (code fixes, infra fixes, answers). PRs get reviewed and merged. 1 item = 1 background subagent. Triggers: 'triage', 'triage issues', 'triage PRs', 'github triage'."
+description: "This skill should be used when reviewing open issues, cleaning up a GitHub backlog, triaging incoming issues, or processing incoming PRs. It resolves items end-to-end (fixes, answers, infra actions, merge decisions) instead of labeling only."
 ---
 
 # GitHub Triage
 
-Goal: **resolve** every item — fix bugs, answer questions, fix infra, merge good PRs. Not just triage and move on.
+Resolve each triaged item end-to-end: fix bugs, answer questions, address infra issues, and process merge-ready PRs.
 
 Never close issues automatically — monitoring systems recreate them if unresolved.
 
 Each issue fix gets its own branch and PR. Never bundle multiple issues into one branch.
+
+Use one background subagent per approved item.
+
+For detailed per-item execution prompts, use [references/subagent-templates.md](references/subagent-templates.md).
 
 ## Workflow
 
@@ -19,17 +23,19 @@ Each issue fix gets its own branch and PR. Never bundle multiple issues into one
 gh-tool issue triage-summary --state open --limit 100
 ```
 
-Full `gh-tool` command reference → load skill `agent-tools`.
+Load skill `agent-tools` for full `gh-tool` command reference.
+
+If `agent-tools` is unavailable, continue with native GitHub CLI equivalents (`gh issue list/view/comment`, `gh pr list/view/review/merge`) and local `git` commands.
 
 ### 2. Investigate and present plan with solutions
 
-For each item:
+For each item, perform investigation before proposing action:
 
 1. Read existing comments to understand history
-2. **Investigate the root cause yourself** — read code, check logs, search codebase, check Sentry, check k8s state
+2. Investigate root cause — read code, check logs, search codebase, inspect Sentry, inspect Kubernetes state when relevant
 3. Identify the concrete fix (which file, what change, what config)
 
-Then present a **triage plan** to the user:
+Present a triage plan after investigation:
 
 | Item      | Root Cause                                       | Fix                                             |
 | --------- | ------------------------------------------------ | ----------------------------------------------- |
@@ -39,20 +45,26 @@ Then present a **triage plan** to the user:
 | #488 (PR) | Merge conflicts, WIP                             | Skip — owner needs to rebase                    |
 
 The plan must include **specific root cause and concrete fix** — not "investigate" or "needs analysis".
-If you genuinely cannot determine root cause after investigation, explain what you checked and what's still unknown.
+If root cause remains unknown after investigation, document what was checked and what remains unknown.
 
-**STOP HERE. Wait for user approval before dispatching any subagents.**
+Do not dispatch subagents in this phase.
+
+Stop after presenting the plan and wait for user approval.
 
 User may:
 
 - Approve all: "go" / "ok"
 - Skip items: "skip #488"
 - Change action: "for #471 just comment, don't fix"
-- Ask questions: "what did you find in the logs for #309?"
+- Ask questions: "what was found in the logs for #309?"
 
 ### 3. Execute approved items
 
-Only after user confirms, dispatch subagents. Match category and skills to complexity:
+Run this phase only after explicit user approval.
+
+Dispatch exactly one background subagent per approved item. Do not batch multiple items into one subagent.
+
+Match category and skills to complexity:
 
 #### Issue categories
 
@@ -70,7 +82,7 @@ Only after user confirms, dispatch subagents. Match category and skills to compl
 
 #### Skip rules
 
-- Already assigned AND has recent activity (someone is handling it) → propose skip in plan, let user decide
+- Already assigned and has recent activity (new comment, commit push, PR review, status update, or label/state change in the last 7 days) → propose skip in plan, let user decide
 - User explicitly said to skip
 
 ### 4. Report
@@ -82,78 +94,6 @@ After all subagents complete, produce summary table:
 | #481 | INFRA     | Fixed    | Updated helm image tag |
 | #476 | PR/BUGFIX | Reviewed | Merged                 |
 
-## Subagent Templates
+Use reference templates for subagent prompts and fallback command mapping:
 
-### BUG issue
-
-```
-Issue #{number}: "{title}" | {author} | {labels}
-{body}
-URL: {url}
-
-Find the root cause in the codebase. Create a dedicated branch (e.g. `fix/issue-{number}-short-desc`), implement the fix, and create a PR. If you can't fix it, post a detailed analysis of the root cause and what's needed: `gh-tool issue comment --issue {number} --body "..."`.
-```
-
-### QUESTION issue
-
-```
-Issue #{number}: "{title}" | {author} | {labels}
-{body}
-URL: {url}
-
-Search codebase for relevant code/docs. Post a thorough answer: `gh-tool issue comment --issue {number} --body "..."`.
-```
-
-### INFRA/MONITORING issue
-
-```
-Issue #{number}: "{title}" | {author} | {labels}
-{body}
-URL: {url}
-
-Diagnose the infrastructure problem. Check logs, pods, deployments, error tracking. Fix the root cause if possible (config, helm values, code) on a dedicated branch (e.g. `fix/issue-{number}-short-desc`). Post your findings and what you fixed: `gh-tool issue comment --issue {number} --body "..."`. Do NOT close — monitoring manages lifecycle.
-```
-
-### OTHER issue
-
-```
-Issue #{number}: "{title}" | {author} | {labels}
-{body}
-URL: {url}
-
-Investigate and assess. If actionable, work on resolving it. Post findings: `gh-tool issue comment --issue {number} --body "..."`. Do NOT close.
-```
-
-### BUGFIX PR (CI pass, mergeable)
-
-```
-PR #{number}: "{title}" | {author} | {baseRefName}→{headRefName}
-CI: {ciStatus} | Review: {reviewDecision}
-URL: {url}
-
-Review: `gh-tool pr review-triage --pr {number} --format json`
-Diff: `git diff origin/{baseRefName}...origin/{headRefName}`
-If clean → merge: `gh-tool pr merge --pr {number} --strategy squash --delete-branch --confirm`
-If concerns → comment only: `gh-tool pr comment --pr {number} --body "..."`. Do NOT merge.
-```
-
-### WIP / CONFLICTING PR
-
-```
-PR #{number}: "{title}" | {author} | {baseRefName}→{headRefName}
-Mergeable: {mergeable} | Draft: {isDraft}
-URL: {url}
-
-Post status comment noting what's blocking (conflicts, WIP, missing reviews): `gh-tool pr comment --pr {number} --body "..."`.
-```
-
-### OTHER PR (needs review)
-
-```
-PR #{number}: "{title}" | {author} | {baseRefName}→{headRefName}
-URL: {url}
-
-Review: `gh-tool pr review-triage --pr {number} --format json`
-Diff: `git diff origin/{baseRefName}...origin/{headRefName}`
-Check logic, style, regressions. Post feedback: `gh-tool pr comment --pr {number} --body "..."`.
-```
+- [references/subagent-templates.md](references/subagent-templates.md)

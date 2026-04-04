@@ -38,10 +38,7 @@
     "react-perf/jsx-no-new-array-as-prop": "off",
     "react-perf/jsx-no-new-object-as-prop": "off",
     "typescript/ban-ts-comment": "error",
-    "typescript/consistent-type-definitions": [
-      "error",
-      "type"
-    ],
+    "typescript/consistent-type-definitions": ["error", "type"],
     "typescript/consistent-type-imports": "error",
     "typescript/no-deprecated": "error",
     "typescript/no-explicit-any": "error",
@@ -64,9 +61,7 @@
       "off",
       {
         "maxLines": 500,
-        "extensions": [
-          ".tsx"
-        ]
+        "extensions": [".tsx"]
       }
     ],
     "file-quality/no-barrel-files": "error",

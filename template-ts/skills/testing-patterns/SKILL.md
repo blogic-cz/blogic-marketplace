@@ -1,25 +1,27 @@
 ---
 name: testing-patterns
-description: "LOAD THIS SKILL when: writing unit tests, TRPC integration tests, or E2E tests. Covers Vitest patterns, Effect service testing, PGlite database testing, and Playwright E2E."
+description: "This skill should be used when implementing or reviewing testing workflows in template-ts projects, especially for testing, Vitest, Playwright, integration test, and mocking scenarios."
 compatibility: opencode
 ---
 
 # Testing Patterns
 
-## Test Hierarchy (ALWAYS prefer simpler)
+Use this skill to choose the lightest effective test type and apply project-consistent patterns for Vitest unit tests, TRPC integration tests with PGlite, and Playwright E2E tests.
 
-1. **Unit tests** (preferred) - Pure functions, parsers, Effect services
-2. **TRPC Integration** (ask first) - Full TRPC stack with PGlite
-3. **E2E** (ask + justify) - Browser automation, slowest
+## Test Hierarchy (prefer simpler first)
+
+1. **Unit tests** (preferred) - Cover pure functions, parsers, and Effect services.
+2. **TRPC integration tests** - Cover full TRPC + database behavior.
+3. **E2E tests** - Cover browser and full user flows.
 
 ## When to Use Each
 
-| Situation                        | Test Type             | Action                       |
-| -------------------------------- | --------------------- | ---------------------------- |
-| Pure function, parser, util      | Unit                  | Write immediately            |
-| Effect service with dependencies | Unit with mock layers | Write immediately            |
-| TRPC procedure (DB logic)        | TRPC Integration      | Ask user first               |
-| User-facing flow, UI behavior    | E2E                   | Ask + warn about maintenance |
+| Situation                        | Test Type             | Action                  |
+| -------------------------------- | --------------------- | ----------------------- |
+| Pure function, parser, util      | Unit                  | Write immediately       |
+| Effect service with dependencies | Unit with mock layers | Write immediately       |
+| TRPC procedure (DB logic)        | TRPC integration      | Follow decision process |
+| User-facing flow, UI behavior    | E2E                   | Follow decision process |
 
 ## Test File Locations
 
@@ -31,216 +33,51 @@ compatibility: opencode
 
 ---
 
+## Decision Process (canonical)
+
+Before writing any test, apply this sequence:
+
+1. **Can this be unit tested?** Write a unit test immediately.
+2. **Does this require DB behavior (joins, constraints, TRPC + persistence)?**
+   - If the user explicitly requested an integration test, implement it directly.
+   - Otherwise, ask a question like: "Would you like an integration test for this TRPC/database behavior?"
+3. **Does this require browser/UI flow validation?**
+   - If the user explicitly requested E2E coverage, implement it directly.
+   - Otherwise, ask a question like: "Would you like an E2E test here? It is the most expensive test type to maintain."
+
+Never re-ask for a test type that the user already requested explicitly.
+
 ## Unit Test Patterns
 
-### Basic Vitest
+Use unit tests by default.
 
-```typescript
-import { describe, expect, it } from "vitest";
+For concrete examples, see `references/examples.md`:
 
-describe("parseResourceSize", () => {
-  it("parses Ki units", () => {
-    expect(parseResourceSize("512Ki")).toBe(524288);
-  });
-});
-```
+- Basic Vitest
+- Effect tests with `@effect/vitest` and mock layers
+- Service-layer tests using real service logic with mocked boundaries
 
-### Effect with @effect/vitest
-
-```typescript
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Either, Layer } from "effect";
-
-describe("K8sMetricsService", () => {
-  // Mock layer factory
-  const createMockLayer = (responses: Map<string, unknown>) =>
-    Layer.succeed(K8sHttpClient, {
-      request: (params) => Effect.succeed(responses.get(params.path)),
-    });
-
-  const testLayer = K8sMetricsService.layer.pipe(
-    Layer.provide(createMockLayer(mockResponses))
-  );
-
-  it.effect("collects metrics", () =>
-    Effect.gen(function* () {
-      const service = yield* K8sMetricsService;
-      const result = yield* service.collectMetrics({ ... });
-      expect(result.namespaces).toHaveLength(3);
-    }).pipe(Effect.provide(testLayer))
-  );
-
-  // Error handling with Either.match
-  it.effect("handles error case", () =>
-    Effect.gen(function* () {
-      const result = yield* myEffect.pipe(Effect.either);
-      Either.match(result, {
-        onLeft: (error) => {
-          expect(error._tag).toBe("K8sConnectionError");
-        },
-        onRight: () => {
-          expect.fail("Expected Left but got Right");
-        },
-      });
-    }).pipe(Effect.provide(testLayer))
-  );
-});
-```
-
-### Live Effect tests (real dependencies)
-
-```typescript
-it.live("returns success when endpoint is ready", () => {
-  globalThis.fetch = vi.fn().mockResolvedValue(new Response("ok", { status: 200 }));
-
-  return Effect.gen(function* () {
-    const svc = yield* HealthCheckService;
-    const result = yield* svc.checkApiHealth("http://api", {
-      maxRetries: 1,
-    });
-    expect(result.success).toBe(true);
-  }).pipe(Effect.provide(HealthCheckServiceLive));
-});
-```
+Clarify terminology: "service-layer tests using real service logic with mocked boundaries" means testing the real service implementation while replacing external boundaries (for example HTTP, DB, or filesystem clients) with mocks.
 
 ---
 
 ## TRPC Integration Test Patterns
 
-**Ask user before writing:** "Does an integration test make sense for this TRPC endpoint?"
+Follow the canonical decision process above for consent and escalation.
 
-### Setup
+For concrete setup and seed-helper examples, see `references/examples.md`.
 
-```typescript
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import type { PGlite } from "@electric-sql/pglite";
-import {
-  createTestDb,
-  cleanupTestDb,
-  type TestDb,
-  seedUser,
-  seedOrganization,
-  seedMember,
-  seedProject,
-} from "@project/db/testing";
-import { createTestCaller } from "./trpc-test-utils";
-
-describe("agents.listRuns", () => {
-  let db: TestDb;
-  let client: PGlite | undefined;
-
-  beforeEach(async () => {
-    const testDb = await createTestDb();
-    db = testDb.db;
-    client = testDb.client;
-  });
-
-  afterEach(async () => {
-    await cleanupTestDb(client);
-    client = undefined;
-  });
-
-  it("returns correct results", async () => {
-    // Seed data
-    const user = await seedUser(db);
-    const org = await seedOrganization(db);
-    await seedMember(db, {
-      userId: user.id,
-      organizationId: org.id,
-    });
-    const project = await seedProject(db, {
-      organizationId: org.id,
-    });
-
-    // Create caller with auth context
-    const caller = createTestCaller({
-      db,
-      userId: user.id,
-    });
-
-    // Call TRPC procedure
-    const result = await caller.agents.listRuns({
-      projectId: project.id,
-      page: 1,
-      pageSize: 10,
-    });
-
-    expect(result.runs).toHaveLength(0);
-    expect(result.total).toBe(0);
-  });
-});
-```
-
-### Available seed helpers
-
-```typescript
-import {
-  seedUser,
-  seedOrganization,
-  seedMember,
-  seedProject,
-  seedAgentTemplate,
-  seedAgentInstance,
-  seedAgentRun,
-  seedGitHubIssue,
-  seedCompleteScenario, // Creates full user -> org -> project -> agent -> run chain
-} from "@project/db/testing";
-```
+Use seed helpers from `@project/db/testing` to set up the minimum required state per case.
 
 ---
 
 ## E2E Test Patterns
 
-**Ask user + warn:** "E2E tests are the most expensive to maintain. Is this really needed for this feature?"
+Follow the canonical decision process above for consent and escalation.
 
-### Basic E2E
+For concrete E2E and auth-helper examples, see `references/examples.md`.
 
-```typescript
-import { expect, test } from "@playwright/test";
-import { e2eEnv } from "./env";
-import { ensureTestUserExists, signInWithEmail } from "./auth-helpers";
-
-const testEmail = e2eEnv.E2E_TEST_EMAIL;
-const testPassword = e2eEnv.E2E_TEST_PASSWORD;
-
-test("auth: can sign in with email", async ({ page }) => {
-  await ensureTestUserExists(page.request, {
-    email: testEmail,
-    password: testPassword,
-    name: "E2E Test User",
-  });
-
-  await signInWithEmail(page, {
-    email: testEmail,
-    password: testPassword,
-  });
-
-  await expect(
-    page.getByRole("heading", {
-      name: "Dashboard",
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 5_000 });
-});
-```
-
-### Auth helpers
-
-```typescript
-import { signInWithEmail, ensureTestUserExists } from "./auth-helpers";
-import { waitForHydration } from "./wait-for-hydration";
-
-// Before interacting with forms
-await waitForHydration(page);
-```
-
-### Test credentials
-
-```typescript
-// From e2eEnv
-const testEmail = e2eEnv.E2E_TEST_EMAIL; // test@example.com
-const testPassword = e2eEnv.E2E_TEST_PASSWORD; // TestPass123
-```
+Warn about maintenance cost only when E2E was not explicitly requested.
 
 ---
 
@@ -258,22 +95,10 @@ bun run vitest run packages/common/src/__tests__/pagination.test.ts
 bun run vitest run apps/web-app/src/__tests__/formatters.test.ts
 ```
 
-**WRONG syntax (DO NOT USE):**
+Avoid these command patterns:
 
 ```bash
 # These DO NOT work:
 bun run test packages/common/src/__tests__/file.test.ts  # script doesn't accept path
 cd packages/common && bun run vitest run src/__tests__/file.test.ts  # wrong cwd
 ```
-
----
-
-## Decision Process
-
-Before writing ANY test:
-
-1. **Can this be unit tested?** -> Write unit test immediately
-2. **Need DB behavior (joins, constraints)?** -> Ask: "Does an integration test make sense here?"
-3. **Need browser/UI?** -> Ask + warn: "E2E tests are expensive to maintain. Is this necessary?"
-
-**Never** write integration or E2E tests without user confirmation.

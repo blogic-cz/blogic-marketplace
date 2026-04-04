@@ -34,17 +34,17 @@ Use concise `function*` style unless explicit wrapping is needed.
 - Avoid ad-hoc `provide` chains in domain functions
 - Test code can compose dedicated test layers per spec
 
-## CRITICAL: Never Use `Effect.runPromise` in Production Code
+## Runtime Execution Rule
 
-**`Effect.runPromise` uses the default runtime which has NO layers** — no tracer, no config, no observability. Effect spans (`Effect.fn`, `Effect.withSpan`) will be invisible to Sentry/OpenTelemetry.
+Avoid `Effect.runPromise` by default in production paths.
 
-**Always use `runtime.runPromise`** from the app's `ManagedRuntime` (defined in `effect-runtime.ts`). This runtime includes `AppLayer` with all production layers (`SentryTracingLive`, `ServerConfigLayer`, service layers, etc.).
+Use `runtime.runPromise` from the app's `ManagedRuntime` whenever possible so tracing/config/service layers stay active.
 
 ```ts
-// ❌ BAD — spans invisible, no tracing, no layers
+// Avoid by default: spans may be invisible, layers may be missing
 const result = await Effect.runPromise(program.pipe(Effect.provide(someLocalLayer)));
 
-// ✅ GOOD — full observability via AppLayer (SentryTracingLive, etc.)
+// Preferred: preserve observability via AppLayer (SentryTracingLive, etc.)
 import { runtime } from "@/infrastructure/effect-runtime";
 
 const result = await runtime.runPromise(
@@ -52,7 +52,7 @@ const result = await runtime.runPromise(
 );
 ```
 
-**If `runtime.runPromise` is not possible** (e.g., circular dependency, or code must stay decoupled from the global runtime), add `SentryTracingLive` explicitly to the local layer chain:
+Use `Effect.runPromise` only when `runtime.runPromise` is not viable (for example circular dependency constraints, intentionally decoupled modules, tests, or one-off scripts/CLI where full tracing is unnecessary). When taking this path in production code, add required tracer/config layers explicitly:
 
 ```ts
 import { SentryTracingLive } from "@/infrastructure/effect-sentry-tracing";
@@ -60,14 +60,14 @@ import { SentryTracingLive } from "@/infrastructure/effect-sentry-tracing";
 const result = await Effect.runPromise(
   program.pipe(
     Effect.provide(localServiceLayer),
-    Effect.provide(SentryTracingLive), // Ensures Effect spans appear in Sentry
+    Effect.provide(SentryTracingLive), // Preserve Effect spans in Sentry
   ),
 );
 ```
 
-**Why this matters:** Without a tracer layer, `Effect.fn("ServiceName.method")` spans are silently dropped. This was the root cause of missing Effect spans in Sentry traces (discovered Feb 2026).
+Preserve tracer layers so `Effect.fn("ServiceName.method")` spans are not silently dropped.
 
-**Allowed exceptions:**
+Allowed exceptions:
 
 - Test files (`__tests__/`) — tests provide their own layers
 - One-off scripts and CLI tools — may use `Effect.runPromise` if tracing is not needed
@@ -81,7 +81,7 @@ const result = await Effect.runPromise(
 
 Environment variables are managed via **Effect ServerConfig** — a `Context.Tag` + `Layer` dependency injection pattern.
 
-**Key files:**
+Template convention (blogic-template-ts) key files:
 
 | File                                                | Purpose                                                                     |
 | --------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -89,7 +89,7 @@ Environment variables are managed via **Effect ServerConfig** — a `Context.Tag
 | `apps/web-app/src/env/client.ts`                    | Client-side env (Effect Schema, `import.meta.env`)                          |
 | `apps/web-app/src/infrastructure/effect-runtime.ts` | `AppLayer` includes `ServerConfigLayer`, re-exports `ServerConfig`          |
 
-**Usage in TRPC routers** (preferred — via Effect DI):
+Usage in TRPC routers (preferred — via Effect DI):
 
 ```ts
 import { Effect } from "effect";
@@ -104,7 +104,7 @@ return runtime.runPromise(
 );
 ```
 
-**Usage in Effect services** (Layer dependency):
+Usage in Effect services (Layer dependency):
 
 ```ts
 import { ServerConfig } from "@/env/server"; // NOT from effect-runtime (avoid circular deps)
@@ -119,7 +119,7 @@ export const MyServiceLive = Layer.effect(
 // Then add Layer.provide(ServerConfigLayer) in effect-runtime.ts
 ```
 
-**Usage in utility functions** (config as parameter):
+Usage in utility functions (config as parameter):
 
 ```ts
 import type { ServerEnv } from "@/env/server";
@@ -130,15 +130,15 @@ export function myUtil(param: string, config: ServerEnv) {
 // Caller passes config from ServerConfig yield
 ```
 
-**Bootstrap exceptions** (these 4 files may import `env` directly):
+Template convention (blogic-template-ts) bootstrap exceptions (these files may import `env` directly):
 
 - `apps/web-app/src/auth/auth.ts` — Better Auth needs sync env access at init
 - `apps/web-app/src/infrastructure/db.ts` — DB pool created before Effect runtime
 - `apps/web-app/src/infrastructure/effect-runtime.ts` — integrates ServerConfigLayer into AppLayer
 - `apps/web-app/server.ts` — server entry point
 
-**Rules:**
+Rules:
 
-- ❌ NEVER import `env` directly in TRPC routers or services — use `ServerConfig` DI
-- ❌ NEVER import `ServerConfig` from `@/env/server` in TRPC routers — use `@/infrastructure/effect-runtime` re-export
-- ✅ DO import `ServerConfig` from `@/env/server` inside Effect Layer definitions (to avoid circular deps)
+- Do not import `env` directly in TRPC routers or services; use `ServerConfig` DI
+- Do not import `ServerConfig` from `@/env/server` in TRPC routers; use the `@/infrastructure/effect-runtime` re-export
+- Import `ServerConfig` from `@/env/server` inside Effect Layer definitions to avoid circular dependencies

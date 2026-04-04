@@ -1,6 +1,6 @@
 ---
 name: performance-optimization
-description: "LOAD THIS SKILL when: analyzing performance bottlenecks, implementing batch operations, fixing N+1 queries, parallelizing operations, or adding database indexes. Covers Effect parallel patterns and Drizzle ORM optimization."
+description: "This skill should be used when analyzing performance bottlenecks, implementing batch operations, fixing N+1 query patterns, parallelizing independent operations, or adding database indexes in template-ts style projects."
 compatibility: opencode
 metadata:
   source: https://effect.website/docs/concurrency
@@ -8,7 +8,7 @@ metadata:
 
 # Performance Optimization Skill
 
-Use this skill when analyzing and implementing performance optimizations for API calls, database queries, and data processing patterns.
+Analyze and implement performance optimizations for API calls, database queries, and data processing patterns.
 
 ## When to Use
 
@@ -18,24 +18,28 @@ Use this skill when analyzing and implementing performance optimizations for API
 - Parallelizing independent operations
 - Adding database indexes
 
-## Project Scope Rules (andocs)
+## Project Scope Rules
 
-- Always discover the active Sentry organization and project for the current repository before investigating runtime performance.
-- Always scope runtime performance investigation to the discovered project first.
-- Always scope code search to the current repository first.
-- Expand to other projects or repos only when explicitly requested by the user.
+- Scope code search to the current repository first.
+- Scope runtime performance investigation to the current repository's active observability project first.
+- Expand to other projects or repositories only when explicitly requested.
 
-## Real Data Sources (Required Before Deep Refactor)
+## Real Data Sources for Evidence-Driven Refactors
 
-Before proposing major optimization work, verify real hotspots from observability data.
+Verify real hotspots from observability data before proposing deep refactors or broad architectural changes.
+
+Skip Sentry project discovery for small local optimizations that are already proven by local profiling, tests, or clear static N+1/sequential patterns.
 
 ### Sentry MCP (Primary Runtime Source)
 
-Use Sentry MCP to inspect real slow transactions, slow spans, and high-percentile latency after project discovery. Prefer evidence from recent windows and aggregate views before proposing code changes.
+Use Sentry MCP to inspect slow transactions, slow spans, and high-percentile latency after project discovery.
 
-### agent-tools Skill (Optional, for Operational Ground Truth)
+- Run discovery when runtime behavior is uncertain, cross-service latency is suspected, or a deep refactor is being considered.
+- Prefer evidence from recent windows and aggregate views before proposing code changes.
 
-Load `agent-tools` when you need infra/log/database context to validate bottlenecks with real data:
+### agent-tools Skill (Optional Operational Ground Truth)
+
+Load `agent-tools` when infra/log/database context is needed to validate bottlenecks with real data:
 
 - `bun run logs-tool ...` for application log timing patterns
 - `bun run db-tool ...` for SQL checks and row/cardinality checks
@@ -43,162 +47,33 @@ Load `agent-tools` when you need infra/log/database context to validate bottlene
 
 Use these tools to confirm whether the bottleneck is application logic, database behavior, or infrastructure limits.
 
+If `agent-tools` is unavailable in the current agent/runtime, use fallback signals:
+
+- Use repository-local logs and debug instrumentation
+- Use test fixtures and reproducible benchmark scripts
+- Use database query plans and timing output (`EXPLAIN (ANALYZE, BUFFERS)` where available)
+- Note uncertainty explicitly when infrastructure-level data cannot be collected
+
 ## Analysis Workflow
 
 ### 1. Identify Bottlenecks
 
-Search for these patterns:
+Search for these high-impact patterns in the codebase:
 
-```typescript
-// N+1 Pattern - Loop with API/DB calls
-for (const item of items) {
-  const data = await db.select().from(table).where(eq(table.id, item.id));
-}
-
-// Sequential Independent Calls
-const a = await fetchA();
-const b = await fetchB(); // Could be parallel
-
-// Individual Inserts/Updates in Loop
-for (const item of items) {
-  await db.insert(table).values(item);
-}
-```
+- N+1 loops with API/DB calls
+- Sequential independent calls that can run in parallel
+- Individual inserts/updates/deletes inside loops
+- Repeated read-then-write flows that can become upserts
 
 ### 2. Apply Optimizations
 
-#### Batch Database Queries
+- Batch reads with `inArray` and lookup maps
+- Batch writes (`insert(values[])`, `update ... where inArray`, `delete ... where inArray`)
+- Consolidate multi-query flows with joins/subqueries where it improves cardinality and latency
+- Parallelize independent work with `Effect.all` / `Effect.forEach(..., { concurrency })` and `Promise.all`
+- Use upsert patterns to avoid read-before-write round trips
 
-```typescript
-// Before: N queries
-for (const id of ids) {
-  const item = await db.select().from(table).where(eq(table.id, id));
-}
-
-// After: 1 query
-const items = await db.select().from(table).where(inArray(table.id, ids));
-const itemMap = new Map(items.map((i) => [i.id, i]));
-```
-
-#### Parallel Effect Operations
-
-```typescript
-// Before: Sequential
-const a = yield * effectA();
-const b = yield * effectB();
-
-// After: Parallel
-const [a, b] = yield * Effect.all([effectA(), effectB()]);
-
-// With concurrency limit
-const results =
-  yield *
-  Effect.all(
-    items.map((item) => processItem(item)),
-    { concurrency: 10 },
-  );
-```
-
-#### Parallel Promise Operations
-
-```typescript
-// Before: Sequential
-await octokit.issues.createComment({...});
-await octokit.issues.update({...});
-
-// After: Parallel
-await Promise.all([
-  octokit.issues.createComment({...}),
-  octokit.issues.update({...}),
-]);
-```
-
-#### Batch Updates
-
-```typescript
-// Before: N updates
-for (const id of ids) {
-  await db.update(table).set({ status: "closed" }).where(eq(table.id, id));
-}
-
-// After: 1 update
-await db.update(table).set({ status: "closed" }).where(inArray(table.id, ids));
-```
-
-#### Query Consolidation with JOINs
-
-```typescript
-// Before: 2 queries
-const membership = await db.select().from(membersTable).where(...);
-const org = await db.select().from(organizationsTable).where(...);
-
-// After: 1 query with JOIN
-const [result] = await db
-  .select({ org: organizationsTable, member: membersTable })
-  .from(organizationsTable)
-  .innerJoin(membersTable, eq(membersTable.organizationId, organizationsTable.id))
-  .where(and(
-    eq(organizationsTable.id, orgId),
-    eq(membersTable.userId, userId)
-  ));
-```
-
-## Common Codebase Patterns
-
-### Effect.all for Parallel Operations
-
-```typescript
-// Parallel with unbounded concurrency (for few items)
-yield * Effect.all(items.map(processItem));
-
-// Parallel with bounded concurrency (for many items)
-yield * Effect.all(items.map(processItem), { concurrency: 10 });
-
-// Parallel independent fetches
-const [data1, data2] = yield * Effect.all([fetchData1(params), fetchData2(params)]);
-```
-
-### Pre-fetching with Lookup Maps
-
-```typescript
-// Fetch all needed data upfront
-const [users, members, invitations] = await Promise.all([
-  db.select().from(usersTable).where(inArray(usersTable.email, emails)),
-  db.select().from(membersTable).where(inArray(membersTable.userId, userIds)),
-  db.select().from(invitationsTable).where(inArray(invitationsTable.email, emails)),
-]);
-
-// Build lookup maps
-const userByEmail = new Map(users.map((u) => [u.email, u]));
-const memberByUserId = new Map(members.map((m) => [m.userId, m]));
-
-// Use in loop without DB calls
-for (const email of emails) {
-  const user = userByEmail.get(email);
-  // ...
-}
-```
-
-### Upsert with onConflictDoUpdate
-
-```typescript
-// Instead of: SELECT + conditional INSERT/UPDATE
-const existing = await db.select().from(table).where(eq(table.id, id));
-if (existing.length > 0) {
-  await db.update(table).set({...}).where(eq(table.id, id));
-} else {
-  await db.insert(table).values({...});
-}
-
-// Use: Single upsert
-await db
-  .insert(table)
-  .values({ id, ...data })
-  .onConflictDoUpdate({
-    target: table.id,
-    set: { ...data, updatedAt: new Date() },
-  });
-```
+Keep full code examples in references to reduce SKILL.md size and keep cross-agent portability.
 
 ## Database Index Guidelines
 
@@ -207,56 +82,39 @@ await db
 1. **Single-column queries**: If filtering by one column frequently
 2. **Composite queries**: If filtering by multiple columns together
 3. **ORDER BY columns**: If sorting by a column frequently
-4. **Foreign keys**: Usually auto-indexed, but verify
+4. **Foreign keys**: PostgreSQL does **not** auto-index foreign key columns; create indexes explicitly when FK columns are used in joins, filters, or delete/update cascades
 
-### Index Syntax (Drizzle)
+## Validation and Measurement Workflow
 
-```typescript
-export const myTable = pgTable(
-  "my_table",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
-    status: text("status").notNull(),
-    createdAt: timestamp("created_at").notNull(),
-  },
-  (table) => [
-    index("idx_my_table_user_id").on(table.userId),
-    index("idx_my_table_status").on(table.status),
-    // Composite index for common query pattern
-    index("idx_my_table_user_status_created").on(table.userId, table.status, table.createdAt),
-  ],
-);
-```
+### 1. Establish Baseline
 
-## Validation Checklist
+- Capture p50/p95 latency, query counts, and throughput for the target path.
+- Capture memory and error-rate signals where applicable.
+- Record the baseline window and workload assumptions.
 
-After implementing optimizations:
+### 2. Implement the Smallest High-Impact Change
 
-- [ ] `bun run check` passes
-- [ ] Tests updated if behavior changed
-- [ ] Error handling preserved
-- [ ] Logging maintained (summary vs per-item as appropriate)
-- [ ] Concurrency limits added for external APIs
-- [ ] Memory usage considered for large batch operations
+- Change one hotspot class at a time (N+1, sequential independent calls, non-batched writes, missing indexes).
+- Preserve functional behavior and existing error semantics.
 
-## Measuring Impact
+### 3. Validate Correctness
 
-Before optimizing, measure:
+- Run checks (`bun run check`) and related tests.
+- Verify error handling and logging remain appropriate.
+- Verify concurrency limits for external APIs.
 
-```typescript
-const start = performance.now();
-// ... operation
-console.log(`Operation took ${performance.now() - start}ms`);
-```
+### 4. Re-measure Under Comparable Load
 
-Or use Effect tracing:
+- Compare p50/p95 latency, query counts, throughput, and resource usage against baseline.
+- Confirm improvements are statistically meaningful and not noise.
 
-```typescript
-yield * myOperation.pipe(Effect.withSpan("MyOperation"));
-```
+### 5. Guard Against Regressions
+
+- Keep benchmarks or trace evidence with the change.
+- Add targeted tests for critical optimized paths when behavior could regress.
+- Document any remaining bottleneck that requires infra-level validation.
 
 ## References
 
-- See `references/effect-parallel-patterns.md` for Effect-specific patterns
-- See `references/drizzle-batch-patterns.md` for Drizzle ORM patterns
+- See `references/effect-parallel-patterns.md` for Effect parallelization patterns and concurrency guidance.
+- See `references/drizzle-batch-patterns.md` for Drizzle batch operations, joins, pre-fetch maps, and upsert patterns.

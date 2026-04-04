@@ -1,270 +1,35 @@
 ---
 name: kubernetes-helm
-description: "ALWAYS LOAD THIS SKILL when user asks about: helm, kubernetes, k8s, deployment, values, secrets, env variable, production URL, test environment, pod, ingress, namespace. Contains EXACT file paths and configurations not in CLAUDE.md. Load BEFORE reading helm files or answering k8s questions."
+description: "This skill should be used when working on Kubernetes or Helm changes in template-ts projects, including values files, env vars, secrets, ingress, resources, hooks, namespaces, pods, and environment-specific deployment settings."
 ---
 
-# Kubernetes & Helm Patterns
+# Kubernetes & Helm Workflow
 
-## Overview
+Apply consistent Helm patterns for test and production Kubernetes environments.
 
-Configure Kubernetes deployments using Helm charts following the project's established patterns for test and production environments.
+## Use this skill when
 
-## When to Use This Skill
+- Update Helm values files
+- Add or change environment variables
+- Configure resources, probes, ingress, security, jobs, or cronjobs
+- Work with Kubernetes secrets, namespaces, pods, and environment URLs
 
-- Modifying Helm values files
-- Adding new environment variables
-- Configuring resource limits
-- Setting up CronJobs or Jobs
-- Working with Kubernetes secrets
+## Follow this workflow
 
-## Helm Chart Structure
+1. Locate the target chart in `kubernetes/helm/` and edit both `values.test.yaml` and `values.prod.yaml` unless the change is environment-specific.
+2. Add non-sensitive variables under `extraEnvVars` with direct `value`; keep entries alphabetically sorted.
+3. Add sensitive variables with `valueFrom.secretKeyRef`; never inline secrets in values files.
+4. Define hook/job secrets through the chart values key `hooks.secretName` (in `values.*.yaml`), then consume it in hook templates (for example migration/sync jobs).
+5. If the repository uses local env files, mirror new variables in `.env.example` and `.env` with safe placeholder defaults.
+6. Check chart-specific secret naming and namespace conventions before deploying.
+7. Use `k8s-tool` for runtime checks only after prerequisites are met: `k8s-tool` is a project wrapper around `kubectl` with environment shortcuts, and requires an installed CLI plus valid kubeconfig/cluster access.
 
-```
-kubernetes/helm/
-├── web-app/           # Main web application (Deployment)
-│   ├── Chart.yaml
-│   ├── values.test.yaml
-│   ├── values.prod.yaml
-│   └── templates/
-│       ├── deployment.yaml
-│       ├── service.yaml
-│       ├── ingress.yaml
-│       ├── hpa.yaml
-│       ├── pre-install-migration-job.yaml
-│       └── post-install-sync-job.yaml
-│
-├── agent-runner/      # CronJob for agent processing (if applicable)
-├── token-refresh/     # CronJob for OAuth token refresh (if applicable)
-└── e2e-tests/         # Job for E2E testing
-```
+## Reference material
 
-## Environment Variable Patterns
+Read concrete snippets and YAML examples in:
 
-### Adding Environment Variables to Helm
-
-```yaml
-# In values.test.yaml or values.prod.yaml
-# KEEP ALPHABETICALLY SORTED!
-
-extraEnvVars:
-  # Non-sensitive - direct value
-  - name: BASE_URL
-    value: "https://<project>-test.<domain>"
-  - name: ENVIRONMENT
-    value: "test"
-
-  # Sensitive - reference K8s Secret
-  - name: BETTER_AUTH_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: web-app-secrets
-        key: BETTER_AUTH_SECRET
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: web-app-secrets
-        key: DATABASE_URL
-```
-
-### Secret Names by Chart
-
-| Chart        | Secret Name                                |
-| ------------ | ------------------------------------------ |
-| web-app      | `web-app-secrets`                          |
-| agent-runner | `agent-runner-secrets`                     |
-| hooks/jobs   | `web-app-secrets` (via `hooks.secretName`) |
-
-## Resource Configuration
-
-### Test Environment (Conservative)
-
-```yaml
-# values.test.yaml
-resources:
-  limits:
-    cpu: 500m
-    memory: 640Mi
-  requests:
-    cpu: 100m
-    memory: 320Mi
-```
-
-### Production Environment
-
-```yaml
-# values.prod.yaml
-resources:
-  limits:
-    cpu: 1000m
-    memory: 2Gi
-  requests:
-    cpu: 200m
-    memory: 1Gi
-```
-
-### CronJob Resources
-
-```yaml
-resources:
-  limits:
-    cpu: "1000m"
-    memory: "768Mi"
-  requests:
-    cpu: "200m"
-    memory: "384Mi"
-```
-
-## Deployment Patterns
-
-### Standard Deployment Template
-
-```yaml
-# templates/deployment.yaml
-env:
-  - name: VERSION
-    value: {{ .Values.image.tag | default "0" | quote }}
-  {{- range .Values.extraEnvVars }}
-  - name: {{ .name }}
-    {{- if .value }}
-    value: {{ .value | quote }}
-    {{- end }}
-    {{- if .valueFrom }}
-    valueFrom:
-      {{- toYaml .valueFrom | nindent 16 }}
-    {{- end }}
-  {{- end }}
-```
-
-### Helm Hooks for Migrations
-
-```yaml
-# Pre-install: Run migrations BEFORE deployment
-annotations:
-  "helm.sh/hook": pre-install,pre-upgrade
-  "helm.sh/hook-weight": "-5"
-  "helm.sh/hook-delete-policy": before-hook-creation
-
-# Post-install: Sync data AFTER deployment
-annotations:
-  "helm.sh/hook": post-install,post-upgrade
-  "helm.sh/hook-weight": "5"
-  "helm.sh/hook-delete-policy": before-hook-creation
-```
-
-### CronJob Pattern
-
-```yaml
-apiVersion: batch/v1
-kind: CronJob
-spec:
-  schedule: "*/1 * * * *" # Every minute
-  concurrencyPolicy: Forbid # Prevent overlapping runs
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  startingDeadlineSeconds: 300
-  jobTemplate:
-    spec:
-      backoffLimit: 1
-      activeDeadlineSeconds: 600 # 10 min timeout
-      template:
-        spec:
-          restartPolicy: Never
-```
-
-## Security Context
-
-```yaml
-podSecurityContext:
-  fsGroup: 1000
-
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
-```
-
-## Ingress Configuration
-
-```yaml
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/proxy-body-size: 50m
-  hosts:
-    - host: <project>-test.<domain>
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: <project>-web-app-tls
-      hosts:
-        - <project>-test.<domain>
-```
-
-## Health Probes
-
-```yaml
-livenessProbe:
-  httpGet:
-    path: /api/alive
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
-    path: /api/health
-    port: http
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  failureThreshold: 3
-```
-
-## Persistence
-
-```yaml
-persistence:
-  enabled: true
-  accessMode: ReadWriteMany
-  storageClass: longhorn-rwx
-  size: 1Gi
-```
-
-## Namespace Convention
-
-| Environment | Namespace        |
-| ----------- | ---------------- |
-| Test        | `<project>-test` |
-| Production  | `<project>-prod` |
-| System      | `bl-system`      |
-
-## K8s Tool Usage
-
-```bash
-# Query pods
-k8s-tool pods --env test
-
-# View logs
-k8s-tool logs --pod <pod> --env prod --tail 100
-
-# Check resources
-k8s-tool top --env test
-```
-
-## Adding New Environment Variables Checklist
-
-1. Add to `.env.example` and `.env` with `xxx` default value
-2. Add to `kubernetes/helm/web-app/values.test.yaml` (alphabetically sorted)
-3. Add to `kubernetes/helm/web-app/values.prod.yaml` (alphabetically sorted)
-4. If sensitive, create K8s secret and use `valueFrom.secretKeyRef`
-5. Update CI/CD pipeline if applicable
+- `references/chart-structure.md`
+- `references/helm-examples.md`
 
 ## Key Rules
 

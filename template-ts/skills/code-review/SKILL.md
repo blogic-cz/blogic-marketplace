@@ -1,313 +1,124 @@
 ---
 name: code-review
-description: "LOAD THIS SKILL when: reviewing code before PR, user mentions 'code review', 'review', 'pre-PR check', 'code quality audit'. Contains project-specific review checklist covering TRPC, TanStack, Drizzle, security, performance, and Effect patterns."
+description: "This skill should be used when running a code review or pre-PR review in template-ts repositories. It provides a severity-based checklist for architecture, security, performance, and testing quality gates."
 compatibility: opencode
 ---
 
 # Code Review Methodology
 
-Systematic pre-PR code review for the project codebase. Identifies critical issues with focus on TRPC patterns, TanStack Router, Drizzle ORM, and security best practices.
+Run a systematic pre-PR review for template-ts codebases. Identify critical risks first, then report major and minor issues with concrete fixes.
 
 ## Review Process
 
-1. **Identify Scope** — Determine what code to review
-2. **Scan Changes** — Analyze against project-specific patterns
-3. **Verify with Exa & Context7** — Validate uncertain patterns
-4. **Categorize Findings** — Organize by severity (Critical, Major, Minor)
-5. **Generate Report** — Structured report with actionable feedback
-6. **Run Automated Checks** — Execute `bun run check`
+1. **Identify scope** — Determine exactly what to review.
+2. **Scan changes** — Analyze against template-ts review categories.
+3. **Verify uncertain patterns** — Use external lookup only when uncertainty remains.
+4. **Categorize findings** — Classify as Critical, Major, or Minor.
+5. **Generate report** — Produce an actionable review summary.
+6. **Run automated checks** — Run repository-standard quality gates.
 
 ---
 
 ## Step 1: Identify Scope
 
-Ask the user what to review:
+Determine scope in this order:
 
-1. **Recent commits** (default): `git log -5 --oneline && git diff HEAD~5..HEAD --stat`
-2. **Specific files/directories**: User-provided paths
-3. **Branch comparison**: `git diff main..HEAD --stat`
-
----
-
-## Step 2: Vivus-Specific Review Categories
-
-### 1. TRPC Patterns
-
-**Check against skill:** `trpc-patterns`
-
-**Critical patterns to verify:**
-
-```typescript
-// ✅ Correct - Using RouterOutputs/RouterInputs
-type SessionData = RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
-
-// ❌ Wrong - Manual type definitions
-type SessionData = { sessionId: string; ... };
-```
-
-```typescript
-// ✅ Correct - Using error helpers
-throw notFoundError("Project not found");
-
-// ❌ Wrong - Manual TRPCError
-throw new TRPCError({ code: "NOT_FOUND", message: "..." });
-```
-
-```typescript
-// ✅ Correct - protectedMemberAccessProcedure for org-scoped
-export const router = {
-  getOrgData: protectedMemberAccessProcedure
-    .input(z.object({ organizationId: z.string() }))
-    .query(...)
-}
-
-// ❌ Wrong - Manual membership check in protectedProcedure
-```
-
-```typescript
-// ✅ Correct - Inline simple schemas with common types
-role: z.enum([OrganizationRoles.Owner, OrganizationRoles.Admin]);
-
-// ❌ Wrong - Hardcoded enum values
-role: z.enum(["owner", "admin"]);
-```
-
-**SQL Query Optimization:**
-
-```typescript
-// ✅ Correct - Single query with JOINs
-const result = await db.select({...}).from(membersTable)
-  .innerJoin(organizationsTable, eq(...))
-  .leftJoin(projectsTable, eq(...))
-
-// ❌ Wrong - Multiple separate queries (N+1)
-const orgs = await db.select().from(organizationsTable);
-const members = await db.select().from(membersTable);
-```
+1. **Use explicit user scope first.** Review the exact files, PR, commits, or branch comparison provided by the user.
+2. **Infer recent commits by default when scope is missing.** Use `git log -5 --oneline` and `git diff HEAD~5..HEAD --stat` when no scope was given and repository context is available.
+3. **Ask one precise scope question only when needed.** Ask only when repository state is unavailable or multiple plausible scopes exist and inference would be unreliable.
 
 ---
 
-### 2. TanStack Router & Query Patterns
+## Step 2: Apply Template-ts Review Categories
 
-**Check against skill:** `tanstack-frontend`
+Use the full category checklist and examples in `references/review-pattern-catalog.md`.
 
-**Critical patterns to verify:**
+Apply these category groups:
 
-```typescript
-// ✅ Correct - TRPC v11 pattern with .queryOptions()
-const { data } = useSuspenseQuery(trpc.organization.getById.queryOptions({ id }));
+- TRPC patterns
+- TanStack Router and Query patterns
+- Code deduplication (DRY)
+- Code quality and style conventions
+- Security
+- Performance
+- Testing
+- Effect patterns (when Effect code is in scope)
 
-// ❌ Wrong - Old pattern (doesn't exist in v11)
-const { data } = trpc.organization.getById.useQuery({ id });
-```
+Load related skills when deeper specialization is required:
 
-```typescript
-// ✅ Correct - Prefetch critical data with await
-loader: async ({ context, params }) => {
-  await context.queryClient.prefetchQuery(
-    context.trpc.organization.getById.queryOptions({ id: params.id })
-  );
-  // Secondary data - void for optimization
-  void context.queryClient.prefetchQuery(
-    context.trpc.analytics.getStats.queryOptions({ id: params.id })
-  );
-}
-
-// ❌ Wrong - Sequential await (slow)
-await context.queryClient.prefetchQuery(...);
-await context.queryClient.prefetchQuery(...);
-await context.queryClient.prefetchQuery(...);
-
-// ❌ Wrong - All void (component will suspend)
-void context.queryClient.prefetchQuery(...);  // critical data!
-```
-
-```typescript
-// ✅ Correct - Props type naming
-type Props = { isOpen: boolean; onClose: () => void; };
-
-// ❌ Wrong - Component-specific props naming
-type DeleteMemberModalProps = { ... };
-```
-
-```typescript
-// ✅ Correct - Cache invalidation
-await queryClient.invalidateQueries({
-  queryKey: trpc.organization.queryKey(),
-});
-```
+- `trpc-patterns`
+- `tanstack-frontend`
+- `effect-ts`
+- `scan-effect-solutions` (for deep Effect audits)
 
 ---
 
-### 3. Code Deduplication (DRY)
+## Step 3: Verify Uncertain Patterns
 
-**Identify duplicate or near-duplicate code:**
+Use lookup tools only when local codebase evidence is insufficient.
 
-- Same logic implemented in multiple files with different approaches
-- Copy-pasted functions with minor variations
-- Repeated patterns that could be extracted to shared utilities
+Use **Exa** to validate uncertain real-world usage patterns for external libraries or evolving APIs.
 
-**When to extract:**
+Use **Context7** to confirm official documentation details (exact API names, version-specific behavior, deprecations).
 
-- Same logic appears in 2+ locations
-- Functions differ only in minor details (parameterize instead)
-- Utility is general enough to be reused
-
-**Where to place shared code:**
-
-- `packages/services/src/` — Cross-service shared utilities
-- `packages/common/src/` — Cross-package shared types/utilities
-- Same-directory `utils.ts` — Local module utilities
+Skip both when the repository already contains a clear canonical pattern.
 
 ---
 
-### 4. Code Quality & Style
+## Step 4: Apply Test Expectations Proportionally
 
-**Check CLAUDE.md conventions:**
+Require tests for behavior changes.
 
-- **Imports:** Always absolute (`@/path` or `@project/*`), never relative in `apps/web-app/src`
-- **Nullish coalescing:** Use `??` not `||` for defaults
-- **Bun APIs:** Use `Bun.file()`, `Bun.spawn()` instead of Node.js polyfills
-- **File naming:** kebab-case (`contact-form.tsx`, not `ContactForm.tsx`)
-- **Types:** Use `type` not `interface` unless extending
-- **Logger:** Use `@project/logger` for backend, `console.log/error` is OK for frontend React components
-- **No barrel files:** Don't create `index.ts` that only re-exports (causes circular imports, slow dev)
+Treat these as behavior changes:
 
-**DO NOT REPORT these as issues (they are acceptable):**
+- New or changed business logic
+- API contract changes
+- Query/loader behavior changes
+- Security or authorization logic changes
+- User-visible component behavior changes
 
-- `packages/*/src/index.ts` using `export *` — Package entry points are allowed exceptions
-- Relative imports (`../`) inside `packages/` directories — Only apps/web-app requires absolute imports
-- `console.log/error` in React components (frontend) — Only backend code requires `@project/logger`
+Treat these as low-risk changes where new tests are optional:
 
----
+- Documentation-only updates
+- Comment-only updates
+- Mechanical refactors with no logic change (for example rename-only, formatting-only, import reordering)
 
-### 5. Security
-
-**Critical checks:**
-
-- Hardcoded secrets/API keys: `grep -iE "api[_-]?key|password|secret|token"`
-- SQL injection: String interpolation in queries
-- Missing auth: Endpoints without `protectedProcedure` or `protectedMemberAccessProcedure`
-- Sensitive data in logs
-- Missing input validation
-
-**Use error helpers from `@/infrastructure/errors`:**
-
-- `badRequestError()`, `unauthorizedError()`, `forbiddenError()`, `notFoundError()`
+State test rationale explicitly in the final review summary.
 
 ---
 
-### 6. Performance
+## Step 5: Run Automated Checks
 
-**Database:**
+Run `bun run check` when the repository uses the standard template-ts quality-gate script.
 
-- N+1 queries (multiple queries that could be JOINs)
-- Missing indexes on frequently queried columns
-- Sequential API calls instead of `Promise.all()`
+Run the repository-equivalent command set when a different convention is used (for example separate lint, typecheck, and test commands).
 
-**Frontend:**
-
-- Missing prefetch in loaders
-- Sequential `await` instead of `Promise.all()` in loaders
-- `fetchQuery` when `prefetchQuery` would suffice
+Capture command outcomes in the final report.
 
 ---
 
-### 7. Testing
+## Severity Classification
 
-**Check for:**
-
-- New TRPC endpoints without tests in `packages/services/src/__tests__/`
-- New components without tests
-- Missing E2E tests for critical flows
-
----
-
-### 8. Effect Patterns (if changes include Effect code)
-
-**Check against skill:** `effect-ts`
-
-**Applies to:** `packages/services/`, `effect-runtime.ts`, files with `Effect.gen`, `Context.Tag`
-
-```typescript
-// ✅ Correct - Service with @project namespace
-export class MyService extends Context.Tag("@project/MyService")<...>() {}
-
-// ❌ Wrong - Missing namespace
-export class MyService extends Context.Tag("MyService")<...>() {}
-```
-
-```typescript
-// ✅ Correct - Effect.fn for tracing
-const doSomething = Effect.fn("MyService.doSomething")(
-  function* (params) { ... }
-);
-
-// ❌ Wrong - No tracing
-const doSomething = (params) => Effect.gen(function* () { ... });
-```
-
-```typescript
-// ✅ Correct - Schema.TaggedError
-export class MyError extends Schema.TaggedError<MyError>()("MyError", {...}) {}
-
-// ❌ Wrong - Data.TaggedError (less Schema interop)
-export class MyError extends Data.TaggedError("MyError")<{...}> {}
-```
-
-```typescript
-// ✅ Correct - ManagedRuntime for TRPC
-import { runtime } from "@/infrastructure/effect-runtime";
-await runtime.runPromise(Effect.gen(function* () { ... }));
-
-// ❌ Wrong - Inline provide per request
-await Effect.runPromise(effect.pipe(Effect.provide(ServiceLive)));
-```
-
-**For comprehensive Effect analysis, run:** `/scan-effect-solutions`
-
----
-
-## Verify Uncertain Patterns
-
-**Use Exa Search** for real-world patterns:
-
-```
-Query: "React useEffect cleanup best practices"
-Query: "TRPC v11 queryOptions pattern"
-```
-
-**Use Context7** for official docs:
-
-```
-1. context7-resolve-library-id(libraryName: "tanstack-query")
-2. context7-get-library-docs(context7CompatibleLibraryID: "...", topic: "prefetchQuery")
-```
-
----
-
-## Finding Severity Classification
-
-### CRITICAL (Must Fix Before Merge)
+### CRITICAL (must fix before merge)
 
 - Security vulnerabilities
-- SQL injection, hardcoded secrets
+- SQL injection or hardcoded secrets
 - Missing authentication on protected endpoints
 - Breaking changes to public APIs
 
-### MAJOR (Should Fix)
+### MAJOR (should fix)
 
 - Wrong TRPC v11 patterns (`.useQuery` instead of `.queryOptions`)
 - N+1 database queries
 - Missing prefetch causing slow page loads
 - Manual types instead of `RouterInputs`/`RouterOutputs`
-- Code duplication — same logic in multiple files (DRY violation)
+- Code duplication violating DRY
 
-### MINOR (Consider Fixing)
+### MINOR (consider fixing)
 
 - Style inconsistencies
 - Missing documentation
-- Non-critical refactoring
+- Non-critical refactoring opportunities
 
 ---
 
@@ -339,6 +150,20 @@ Query: "TRPC v11 queryOptions pattern"
 
 ---
 
+## TEST EXPECTATIONS
+
+- Behavior-changing code paths covered: [Yes/No + details]
+- Low-risk changes with test exemption: [Yes/No + rationale]
+
+---
+
+## AUTOMATED CHECKS
+
+- Commands run: [List]
+- Result: [Pass/Fail]
+
+---
+
 ## POSITIVE OBSERVATIONS
 
 - [Good patterns found]
@@ -363,20 +188,20 @@ Query: "TRPC v11 queryOptions pattern"
 **APPROVE**
 
 - No critical issues
-- TRPC and TanStack patterns correct
-- `bun run check` passes
+- Core TRPC and TanStack patterns are correct
+- Repository quality-gate checks pass
 
 **NEEDS_WORK**
 
-- Major pattern violations
-- Missing tests for new functionality
-- Performance issues
+- Major pattern violations exist
+- Required tests are missing for behavior changes
+- Performance issues impact reliability or UX
 
 **REJECT**
 
-- Security vulnerabilities
-- Breaking changes without migration
-- Fundamental design flaws
+- Security vulnerabilities exist
+- Breaking changes are introduced without migration path
+- Fundamental design flaws make the change unsafe to merge
 
 ---
 
