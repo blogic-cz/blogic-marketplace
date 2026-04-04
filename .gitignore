@@ -6,3 +6,4 @@
 .claude/.edit-tracker
 .opencode/plugin/debug.log
 node_modules/
+.opencode/plugin/session-map.json
