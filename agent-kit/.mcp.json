@@ -1,17 +1,5 @@
 {
   "mcpServers": {
-    "chrome-dev-tools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
-    },
-    "sentry-spotlight": {
-      "command": "npx",
-      "args": ["-y", "@spotlightjs/spotlight", "--stdio-mcp"]
-    },
-    "sentry": {
-      "type": "http",
-      "url": "https://mcp.sentry.dev/mcp"
-    },
     "agentsfera": {
       "type": "http",
       "url": "https://api.agentsfera.ai"
