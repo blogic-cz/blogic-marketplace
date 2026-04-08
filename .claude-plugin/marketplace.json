@@ -9,7 +9,7 @@
       "name": "agent-kit",
       "source": "./agent-kit",
       "description": "Base plugin by blogic",
-      "skills": ["./skills/andocs", "./skills/code-review", "./skills/skill-creator"]
+      "skills": ["./skills/andocs", "./skills/skill-creator"]
     }
   ]
 }
