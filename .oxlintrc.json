@@ -1,18 +1,21 @@
 {
+  "extends": ["@blogic-cz/oxc-config/oxlint/ts"],
   "ignorePatterns": [".git/**", "bun.lock", "node_modules/**"],
-  "plugins": ["import", "node", "oxc", "promise", "typescript", "unicorn"],
-  "categories": {
-    "correctness": "error",
-    "perf": "error",
-    "suspicious": "error"
-  },
   "rules": {
-    "eslint/no-empty": "error",
-    "eslint/no-var": "error",
-    "import/no-duplicates": "error",
-    "typescript/consistent-type-imports": "error",
-    "typescript/no-explicit-any": "error",
-    "unicorn/error-message": "error",
-    "unicorn/throw-new-error": "error"
-  }
+    "import/no-default-export": "error",
+    "import/no-unassigned-import": "error"
+  },
+  "overrides": [
+    {
+      "files": [".agents/**"],
+      "rules": {
+        "eslint/no-await-in-loop": "off",
+        "eslint/no-shadow": "off",
+        "eslint/require-await": "off",
+        "import/no-relative-parent-imports": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "unicorn/no-array-sort": "off"
+      }
+    }
+  ]
 }
