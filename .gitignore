@@ -7,4 +7,5 @@
 .opencode/plugin/debug.log
 .claude/settings.local.json
 
-node_modules
+node_modules/
+.opencode/plugin/session-map.json

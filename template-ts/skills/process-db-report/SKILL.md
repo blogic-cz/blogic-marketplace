@@ -1,19 +1,34 @@
 ---
 name: process-db-report
-description: "LOAD THIS SKILL when: analyzing database performance reports, user mentions 'db report', 'database performance', 'dead rows', 'VACUUM', 'sequential scans', 'unused indexes', 'cache hit ratio'. Contains PostgreSQL performance triage heuristics, priority ranking, and action plan templates for Drizzle ORM codebases."
+description: "This skill should be used when analyzing PostgreSQL performance reports, including pasted PostgreSQL reports, or when users mention db report, database performance, dead rows, VACUUM, sequential scans, unused indexes, or cache hit ratio. It provides PostgreSQL triage heuristics, priority ranking, and action-plan guidance for Drizzle ORM codebases."
 compatibility: opencode
 ---
 
 # Database Performance Report Processing
 
-Use this skill to analyze database observability reports and create prioritized optimization plans. Covers PostgreSQL performance triage heuristics specific to Drizzle ORM codebases.
+Analyze database observability reports and produce prioritized optimization plans for Drizzle ORM codebases.
 
 ## Triage Workflow
 
-1. **Parse Report** — Extract data from the pasted observability report
-2. **Analyze Issues** — Identify critical performance problems
-3. **Priority Ranking** — Sort issues by impact (high/medium/low)
-4. **Generate Action Plan** — Create specific tasks with code snippets
+1. **Parse report** — Extract structured data from the pasted observability report.
+2. **Validate report completeness** — Identify missing sections before making recommendations.
+3. **Analyze issues** — Detect high-impact problems with evidence-based rules.
+4. **Rank priorities** — Sort issues by impact (high/medium/low).
+5. **Generate action plan** — Propose specific, safe tasks with schema-level guidance.
+
+## Incomplete Report Handling
+
+- Ask for missing sections instead of guessing when required data is absent.
+- Request only the missing parts needed for the blocked recommendation.
+- Mark recommendations as conditional when partial data is available.
+
+Required sections for full triage:
+
+- Table Statistics
+- High Sequential Scans
+- Unused/Rarely Used Indexes
+- Foreign Keys Without Indexes
+- Cache Hit Ratio
 
 ---
 
@@ -21,24 +36,24 @@ Use this skill to analyze database observability reports and create prioritized 
 
 ### Critical Issues (Immediate Action)
 
-| Issue                        | Detection Rule                              | Action                                             |
-| ---------------------------- | ------------------------------------------- | -------------------------------------------------- |
-| Bloated Tables               | Dead rows >10% in Table Statistics          | VACUUM via /app/admin/observability UI             |
-| Missing Indexes              | Index usage <50% with high sequential scans | Add composite index in `packages/db/src/schema.ts` |
-| Foreign Keys Without Indexes | FK columns without corresponding indexes    | Add index in schema.ts                             |
+| Issue                        | Detection Rule                                                                   | Action                                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Bloated Tables               | Dead rows >10% in Table Statistics                                               | VACUUM via /app/admin/observability UI                                                        |
+| Missing/Weak Index Coverage  | Index usage <50% with high sequential scans and known query filter/sort patterns | Propose an index strategy in `packages/db/src/schema.ts` only after validating query patterns |
+| Foreign Keys Without Indexes | FK columns without corresponding indexes                                         | Add index in schema.ts                                                                        |
 
 ### Medium Priority (Next Sprint)
 
-| Issue             | Detection Rule                         | Action                                             |
-| ----------------- | -------------------------------------- | -------------------------------------------------- |
-| Unused Indexes    | Non-unique indexes with <10 uses       | Remove from schema.ts (verify not PK/UNIQUE first) |
-| Duplicate Indexes | Multiple indexes covering same columns | Remove redundant index                             |
+| Issue             | Detection Rule                                                     | Action                                                                         |
+| ----------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Unused Indexes    | Non-unique indexes with low usage across a defined workload window | Remove from schema.ts only after validating real query paths and safety checks |
+| Duplicate Indexes | Multiple indexes covering same columns                             | Remove redundant index                                                         |
 
 ### Low Priority (Monitor)
 
-| Issue           | Detection Rule | Action                               |
-| --------------- | -------------- | ------------------------------------ |
-| Cache Hit Ratio | Below 99%      | Consider increasing `shared_buffers` |
+| Issue           | Detection Rule | Action                                                                                                            |
+| --------------- | -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Cache Hit Ratio | Below 99%      | Investigate workload and cache behavior first; escalate `shared_buffers` tuning as optional infra-level follow-up |
 
 ---
 
@@ -83,8 +98,15 @@ Cache Hit Ratio:
 
 **SAFE to remove:**
 
-- Non-unique indexes with <10 uses
+- Non-unique indexes with consistently low usage over a representative workload window (for example 7-30 days, depending on traffic patterns)
 - Redundant indexes (covered by composite indexes)
+
+**Removal guards (required):**
+
+- Validate workload window coverage before deciding an index is unused.
+- Validate query-path usage from real application paths (API endpoints, background jobs, cron flows) before removal.
+- Verify no hidden dependency through constraints, migrations, or operational workflows.
+- Keep recommendation conditional if query-path validation data is missing.
 
 Example of safe removal:
 
@@ -98,57 +120,7 @@ index("oauth_consents_client_id_idx"); // SAFE TO REMOVE
 
 ## Action Plan Template
 
-````markdown
-# Database Performance Analysis
-
-## Critical Issues (Immediate Action Required)
-
-### 1. Bloated Tables (Dead Rows >10%)
-
-- **table_name** (X% dead rows, Y MB)
-  - Action: Run VACUUM via /app/admin/observability UI
-  - Impact: Reclaim ~Z MB disk space, improve query speed
-
-### 2. Missing Indexes (Index Usage <50%)
-
-- **table_name** table (X% index usage, Nk sequential scans)
-  - Action: Add composite index in schema.ts
-  - Code:
-    ```typescript
-    export const tableName = pgTable(
-      "table_name",
-      {
-        /* fields */
-      },
-      (table) => [index("idx_table_lookup").on(table.column1, table.column2)],
-    );
-    ```
-
-## Medium Priority (Plan for Next Sprint)
-
-### 3. Unused Indexes (Remove ONLY if Safe)
-
-- **idx_name** (N uses, X MB) - verify not a PK/UNIQUE first
-  - Action: Remove from schema.ts, generate migration
-  - Impact: Faster INSERT/UPDATE on affected table
-
-## Low Priority (Monitor)
-
-### 4. Cache Hit Ratio (X%)
-
-- Slightly below optimal (target: >99%)
-- Action: Consider increasing `shared_buffers` in PostgreSQL config
-
-## Workflow
-
-1. Add indexes to `packages/db/src/schema.ts`
-2. Generate migration: `bun run db:generate`
-3. Review migration SQL in `packages/db/drizzle/`
-4. Apply: `bun run db:migrate`
-5. Run VACUUM on bloated tables via /app/admin/observability UI
-6. Monitor Sentry for query performance improvements
-7. Re-run report after 24-48h to verify impact
-````
+Load and follow `references/action-plan-template.md` for the full output structure and wording.
 
 ---
 
@@ -159,7 +131,8 @@ index("oauth_consents_client_id_idx"); // SAFE TO REMOVE
 - Prioritize by impact (dead rows > missing indexes > unused indexes)
 - NEVER suggest ad-hoc SQL — schema.ts is source of truth
 - Include workflow steps at the end
-- Estimate disk space/performance improvements
+- Estimate improvements only when the report provides enough data to support a defensible estimate
+- Treat `shared_buffers` tuning as optional and escalation-only infrastructure guidance
 
 ---
 

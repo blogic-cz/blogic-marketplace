@@ -1,6 +1,6 @@
 ---
 name: effect-ts
-description: Review and guide Effect TypeScript best practices based on effect.solutions standards. Use when implementing Effect patterns, services, layers, error handling, data modeling, config, testing, or CLI development.
+description: This skill should be used when implementing, reviewing, or debugging Effect TypeScript code, especially service/layer design, typed error handling, testing strategy, and runtime-boundary integration with frameworks (for example TRPC/HTTP/worker entrypoints).
 compatibility: opencode
 metadata:
   source: https://www.effect.solutions/
@@ -16,13 +16,14 @@ Use this skill when working with Effect services, layers, schema errors, config,
 Load this skill when:
 
 - User mentions `Effect`, `Layer`, `Context.Tag`, `Schema.TaggedError`, `Effect.gen`, or `Effect.fn`
-- You are editing service files in `packages/services/` or `agent-tools/*`
+- You are implementing or reviewing files that define Effect services, layers, or runtime boundaries
+- You are debugging Effect runtime behavior, missing spans, layer wiring, or boundary error mapping
 - You need test strategy for Effect code (`@effect/vitest`, test layers)
 - You need Effect runtime integration (TRPC/server boundaries)
 
 ## First Step (Always)
 
-Before implementing or reviewing, fetch current recommendations:
+Before substantial implementation, refactor, or formal review, fetch current recommendations:
 
 ```bash
 effect-solutions list
@@ -36,7 +37,9 @@ effect-solutions show testing
 effect-solutions show cli
 ```
 
-Effect guidance evolves. Do not rely on stale memory.
+If `effect-solutions` CLI is unavailable, or if the task is trivial (for example a small wording tweak with no Effect design impact), skip the CLI calls and rely on the relevant reference file(s) in this skill.
+
+Treat recommendations as time-sensitive guidance. Do not rely on stale memory.
 
 ## Decision Tree
 
@@ -56,7 +59,7 @@ Effect guidance evolves. Do not rely on stale memory.
 
 ## Output Expectations
 
-When advising or implementing, return:
+For substantial implementation/review/debug tasks, return:
 
 1. Which `effect-solutions show ...` topics were checked
 2. Which reference file(s) were used and why

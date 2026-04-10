@@ -1,7 +1,16 @@
-import { readdirSync, readFileSync, statSync } from "fs";
-import { join, relative } from "path";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 
 const JSON_OUTPUT = Bun.argv.includes("--json");
+
+const REFERENCES_DIR = dirname(new URL(import.meta.url).pathname);
+
+function saveReport(filename: string, data: unknown): string {
+  const outPath = join(REFERENCES_DIR, filename);
+  mkdirSync(dirname(outPath), { recursive: true });
+  writeFileSync(outPath, JSON.stringify(data, null, 2) + "\n");
+  return outPath;
+}
 
 const SKIP_DIRS = new Set([
   ".git",
@@ -459,7 +468,9 @@ const cwd = process.cwd();
 const entries = classifyEntries(collectPins(cwd), parseRootExpectations(cwd));
 
 if (JSON_OUTPUT) {
+  const savedPath = saveReport("runtime-report.json", entries);
   console.log(JSON.stringify(entries, null, 2));
+  console.error(`\nSaved to ${savedPath}`);
 } else if (entries.length === 0) {
   console.log("No runtime pins found.");
 } else {

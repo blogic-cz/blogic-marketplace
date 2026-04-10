@@ -12,7 +12,10 @@
 import { existsSync } from "node:fs";
 
 type SkillEntry = { source: string; sourceType: string };
-type SkillsLock = { version: number; skills: Record<string, SkillEntry> };
+type SkillsLock = {
+  version: number;
+  skills: Record<string, SkillEntry>;
+};
 
 const agentMapping: Array<{ dir: string; agent: string }> = [
   { dir: ".claude", agent: "claude-code" },
@@ -65,7 +68,10 @@ for (const [source, skills] of groups) {
 
   if (dryRun) continue;
 
-  const proc = Bun.spawn(["bunx", ...args], { stdout: "inherit", stderr: "inherit" });
+  const proc = Bun.spawn(["bunx", ...args], {
+    stdout: "inherit",
+    stderr: "inherit",
+  });
   // eslint-disable-next-line no-await-in-loop -- sequential execution required: each skill update must complete before the next
   const code = await proc.exited;
   if (code !== 0) {

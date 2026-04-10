@@ -1,29 +1,33 @@
 ---
 name: scan-effect-solutions
-description: "LOAD THIS SKILL when: auditing Effect TypeScript compliance, user mentions 'effect scan', 'effect audit', 'effect best practices check', 'scan-effect-solutions'. Contains Effect compliance audit checklist covering tsconfig, services, data modeling, error handling, config, testing, runtime usage, and Option/Either anti-patterns."
+description: "This skill should be used when auditing Effect TypeScript compliance, or when users mention effect scan, effect audit, effect best-practices checks, or scan-effect-solutions. It provides a structured compliance checklist for TypeScript configuration, services/layers, data modeling, error handling, config, testing, runtime execution, and Option/Either anti-patterns."
 compatibility: opencode
 ---
 
 # Effect Solutions Compliance Audit
 
-Scan repository against Effect TypeScript best practices from effect.solutions. Use this skill to perform systematic audits of Effect code compliance.
+Audit a repository against Effect TypeScript best practices from effect.solutions. Follow this skill to produce a consistent, evidence-based compliance report.
 
 ## Prerequisites
 
-Before scanning, load current recommendations:
+Load current effect.solutions recommendations:
 
 ```bash
 effect-solutions list
 ```
 
-Read targeted references:
+Load guidance used by this checklist:
 
-```text
-references/error-handling.md
-references/testing-layers.md
+```bash
+effect-solutions show tsconfig
+effect-solutions show services-and-layers
+effect-solutions show data-modeling
+effect-solutions show error-handling
+effect-solutions show config
+effect-solutions show testing
 ```
 
-Load the effect-ts skill for best practices context:
+Load the `effect-ts` skill for Effect-specific implementation patterns:
 
 ```
 skill({ name: "effect-ts" })
@@ -35,96 +39,104 @@ skill({ name: "effect-ts" })
 
 ### 1. TypeScript Configuration
 
-Check `tsconfig.base.json` (or `tsconfig.json`) for:
+Inspect `tsconfig.base.json` (or `tsconfig.json`) and verify:
 
 - `exactOptionalPropertyTypes: true`
 - `strict: true`
 - `noUnusedLocals: true`
 - `declarationMap: true`
 - `sourceMap: true`
-- Effect Language Service plugin configured
-- Correct `module` setting for project type (preserve/bundler for apps, NodeNext for libraries)
+- Confirm Effect Language Service plugin is configured.
+- Confirm `module` setting matches project type (preserve/bundler for apps, NodeNext for libraries).
 
-Run: `effect-solutions show tsconfig`
+Reference: `effect-solutions show tsconfig`
 
 ### 2. Services & Layers Pattern
 
-Search for Effect services and check:
+Search for Effect services and verify:
 
-- Are services defined with `Context.Tag`?
-- Do tag identifiers use `@path/ServiceName` pattern?
-- Are layers defined with `Layer.effect` or `Layer.sync`?
-- Is there a single `Effect.provide` at entry point?
+- Confirm services are defined with `Context.Tag`.
+- Confirm tag identifiers follow `@path/ServiceName` pattern.
+- Confirm layers use `Layer.effect` or `Layer.sync`.
+- Confirm a single `Effect.provide` is applied at the entry point.
 
-Run: `effect-solutions show services-and-layers`
+Reference: `effect-solutions show services-and-layers`
 
 ### 3. Data Modeling
 
-Check for:
+Inspect data modeling and verify:
 
-- Use of `Schema.Class` for records
-- Use of `Schema.TaggedClass` for variants
-- Branded types for primitives (IDs, emails, etc.)
-- Pattern matching with `Match.valueTags`
+- Confirm `Schema.Class` is used for records.
+- Confirm `Schema.TaggedClass` is used for variants.
+- Confirm branded types are used for primitives (IDs, emails, and similar values).
+- Confirm pattern matching uses `Match.valueTags`.
 
-Run: `effect-solutions show data-modeling`
+Reference: `effect-solutions show data-modeling`
 
 ### 4. Error Handling
 
-Check for:
+Inspect error handling and verify:
 
-- Use of `Schema.TaggedError` for domain errors
-- Proper error recovery with `catchTag`/`catchTags`
-- Appropriate use of defects vs typed errors
+- Confirm `Schema.TaggedError` is used for domain errors.
+- Confirm error recovery uses `catchTag`/`catchTags` where appropriate.
+- Confirm defects and typed errors are separated intentionally.
 
-Run: `effect-solutions show error-handling`
+Reference: `effect-solutions show error-handling`
 
 ### 5. Configuration
 
-Check for:
+Inspect configuration patterns and verify:
 
-- Use of `Schema.Config` for validation
-- Config service layer pattern
-- `Config.redacted` for secrets
+- Confirm `Schema.Config` is used for validation.
+- Confirm a config service layer pattern is present.
+- Confirm secrets use `Config.redacted`.
 
-Run: `effect-solutions show config`
+Reference: `effect-solutions show config`
 
 ### 6. Testing
 
-Check for:
+Inspect tests and verify:
 
-- Use of `@effect/vitest`
-- `it.effect()` for Effect tests
-- Test layer composition patterns
+- Confirm tests use `@effect/vitest`.
+- Confirm Effect tests use `it.effect()`.
+- Confirm test layer composition follows Effect layer patterns.
 
-Run: `effect-solutions show testing`
+Reference: `effect-solutions show testing`
 
-### 7. Runtime Usage Anti-Pattern (`Effect.runPromise` in Production)
+### 7. Runtime Execution Anti-Pattern (`Effect.runPromise` / `Effect.runSync` in Application Code)
 
-Search for `Effect.runPromise` in production code (exclude `__tests__/`, `*.test.ts`, `agent-tools/`).
+Search application code for direct `Effect.runPromise` and `Effect.runSync` usage. Exclude test-only files and test helpers (`__tests__/`, `*.test.ts`, `*.spec.ts`, fixture directories).
 
-**`Effect.runPromise` uses the default runtime with NO layers** — no tracer, no config, no observability. Effect spans (`Effect.fn`, `Effect.withSpan`) will be invisible to Sentry/OpenTelemetry.
+Treat bare `Effect.runPromise` / `Effect.runSync` as findings when they bypass the project runtime composition. Bare execution typically uses the default runtime without project-provided layers (for tracing, config, logging, or domain services).
 
-- Production code MUST use `runtime.runPromise` (from `ManagedRuntime` in `effect-runtime.ts`) which includes `AppLayer` with `SentryTracingLive`
-- If `runtime.runPromise` is not possible (circular deps), the code MUST add `Effect.provide(SentryTracingLive)` to the pipe chain
-- Test files are exempt (they provide their own layers)
+Apply project-aware evaluation:
+
+- Prefer the project's runtime entrypoint (for example `runtime.runPromise`) in application code.
+- Accept explicit layer provisioning when runtime usage is not feasible (for example during bootstrap or dependency-cycle constraints).
+- Exempt tests that intentionally provide dedicated test layers.
+
+Template-ts convention example (use only when applicable in the audited repo):
+
+- `ManagedRuntime` in `effect-runtime.ts`
+- `AppLayer` composition
+- `SentryTracingLive` in runtime-provided observability
 
 Search patterns:
 
-- `Effect.runPromise(` in `apps/web-app/src/` (excluding `__tests__/`)
-- `Effect.runSync(` in `apps/web-app/src/` (excluding `__tests__/`)
+- `Effect.runPromise(` under application source directories (for example `src/`, `apps/*/src/`, `packages/*/src/`)
+- `Effect.runSync(` under application source directories (same scope)
 
 Report each occurrence with:
 
 - File path and line
 - Whether it's using `runtime.runPromise` (✅) or bare `Effect.runPromise` (❌)
-- Whether `SentryTracingLive` is provided in the pipe chain (fallback ✅)
+- Whether required observability/config layers are provided by runtime or explicit `Effect.provide` fallback
 
-Run: `effect-solutions show services-and-layers`
+Reference: `effect-solutions show services-and-layers`
 
 ### 8. Option/Either Internal Tag Anti-Patterns
 
-Check for direct `_tag` branching on `Option`/`Either` in production code and tests.
+Inspect direct `_tag` branching on `Option`/`Either` in application code and tests.
 
 - Production code: report all direct `_tag` usage as findings with replacement recommendation
 - Tests: allow `_tag` assertions for domain error identity, but flag control-flow branching patterns that should use helpers
@@ -140,7 +152,7 @@ Search patterns to include:
 - `if (.*\._tag === "None")`
 - `expect\(.*\._tag\)`
 
-Run: `effect-solutions show error-handling`
+Reference: `effect-solutions show error-handling`
 
 ---
 
@@ -148,7 +160,15 @@ Run: `effect-solutions show error-handling`
 
 Provide a structured report with:
 
-1. **Summary**: Overall compliance score (e.g., 7/10)
+1. **Summary**: Overall compliance score using the rubric below.
+
+   **Scoring rubric (0-16 total):**
+   - Evaluate each checklist section (1-8) on a 0-2 scale.
+   - `2`: Fully compliant or only minor cosmetic gaps.
+   - `1`: Partially compliant, meaningful gaps present.
+   - `0`: Non-compliant or pattern missing.
+   - Total score = sum of all section scores.
+   - Provide percentage = `(total / 16) * 100`, rounded to whole number.
 
 2. **What's Working Well**: List patterns that follow best practices
 

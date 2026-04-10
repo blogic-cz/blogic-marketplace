@@ -1,36 +1,31 @@
 ---
 name: tdd
-description: "LOAD THIS SKILL when: implementing new features with TDD, user mentions 'TDD', 'test-first', 'red-green-refactor', 'failing test', or when building Effect services that need thorough testing. Covers TDD methodology, Red-Green-Refactor cycle, Effect service testing with mock layers, and test-first development workflow."
+description: "This skill should be used when a task explicitly asks for TDD, test-first development, or the Red-Green-Refactor cycle. It guides incremental implementation with concrete Red-Green-Refactor examples, including Effect service patterns with mock layers."
 ---
 
 # Test-Driven Development (TDD)
 
-## Philosophy
+Apply this skill to execute strict test-first development: write a failing test, implement the minimum code to pass, then refactor while keeping tests green.
 
-TDD is a development methodology where you write tests BEFORE implementation. This ensures:
+## Decide when to use TDD
 
-- **Clear requirements** - Tests define expected behavior upfront
-- **Better design** - Forces you to think about interfaces first
-- **Confidence** - Every feature has test coverage from day one
-- **Refactoring safety** - Tests catch regressions immediately
+Use this decision table:
 
-## When to Use TDD
-
-| Situation                   | Use TDD? | Reason                                       |
-| --------------------------- | -------- | -------------------------------------------- |
-| New utility function        | **YES**  | Pure functions are perfect for TDD           |
-| New Effect service          | **YES**  | Define interface via tests first             |
-| Complex business logic      | **YES**  | Tests clarify requirements                   |
-| Bug fix                     | **YES**  | Write failing test that reproduces bug first |
-| UI component styling        | No       | Visual changes don't benefit from TDD        |
-| Exploratory prototyping     | No       | Requirements unclear, iterate first          |
-| TRPC endpoint (simple CRUD) | Optional | Ask user preference                          |
+| Situation                     | Use this skill? | Default action                                                                                      |
+| ----------------------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| New utility function          | **Yes**         | Run TDD cycle immediately                                                                           |
+| New Effect service            | **Yes**         | Define behavior through tests first                                                                 |
+| Complex business logic        | **Yes**         | Lock behavior with tests before implementation                                                      |
+| Bug fix                       | **Yes**         | Reproduce bug with failing test first                                                               |
+| UI styling/layout-only change | No              | Use standard implementation flow                                                                    |
+| Exploratory prototyping       | No              | Prototype first, then switch to TDD once behavior stabilizes                                        |
+| TRPC endpoint (simple CRUD)   | Usually no      | Use `testing-patterns` by default; use this skill only when user explicitly requests test-first/RGR |
 
 ---
 
-## Red-Green-Refactor Cycle
+## Execute Red-Green-Refactor
 
-The TDD workflow follows three phases:
+Follow one behavior at a time through three phases.
 
 ### 1. RED - Write Failing Test First
 
@@ -40,7 +35,7 @@ import { calculateDiscount } from "../calculate-discount";
 
 describe("calculateDiscount", () => {
   it("applies 10% discount for orders over 100", () => {
-    // This test will FAIL - function doesn't exist yet
+    // This test fails first: function does not exist yet
     expect(calculateDiscount(150)).toBe(135);
   });
 });
@@ -52,7 +47,7 @@ describe("calculateDiscount", () => {
 bun run vitest run packages/common/src/__tests__/calculate-discount.test.ts
 ```
 
-### 2. GREEN - Minimal Implementation
+### 2. GREEN - Implement Minimum Code
 
 Write the **minimum code** to make the test pass:
 
@@ -72,7 +67,7 @@ export function calculateDiscount(amount: number): number {
 bun run vitest run packages/common/src/__tests__/calculate-discount.test.ts
 ```
 
-### 3. REFACTOR - Improve Without Breaking
+### 3. REFACTOR - Improve Without Breaking Behavior
 
 Improve code quality while keeping tests green:
 
@@ -90,33 +85,35 @@ export function calculateDiscount(amount: number): number {
 
 **Run tests again to verify refactoring didn't break anything.**
 
-See `references/red-green-refactor.md` for detailed workflow examples.
+For extended examples, failure diagnostics, and iterative expansions, read `references/red-green-refactor.md`.
 
 ---
 
-## Test Hierarchy (Prefer Simpler)
+## Keep test scope lean
 
-1. **Unit tests** (preferred) - Pure functions, Effect services with mock layers
-2. **TRPC Integration** (ask first) - Full TRPC stack with PGlite
-3. **E2E** (ask + justify) - Browser automation, slowest
+Prefer lighter tests first and escalate only when needed:
 
-| Situation                        | Test Type             | Action                       |
-| -------------------------------- | --------------------- | ---------------------------- |
-| Pure function, parser, util      | Unit                  | Write immediately            |
-| Effect service with dependencies | Unit with mock layers | Write immediately            |
-| TRPC procedure (DB logic)        | TRPC Integration      | Ask user first               |
-| User-facing flow, UI behavior    | E2E                   | Ask + warn about maintenance |
+1. **Unit tests** (preferred) - Pure functions and Effect services with mock layers.
+2. **TRPC integration tests** - Full TRPC + persistence behavior.
+3. **E2E tests** - Browser-level flows and user journeys.
+
+| Situation                        | Test Type             | Action                                     |
+| -------------------------------- | --------------------- | ------------------------------------------ |
+| Pure function, parser, util      | Unit                  | Write immediately                          |
+| Effect service with dependencies | Unit with mock layers | Write immediately                          |
+| TRPC procedure (DB logic)        | TRPC integration      | Follow `testing-patterns` decision process |
+| User-facing flow, UI behavior    | E2E                   | Follow `testing-patterns` decision process |
 
 ---
 
-## Effect TDD Patterns
+## Apply Effect-specific TDD patterns
 
-### Test-First Service Design
+Use test-first service design with explicit layers.
 
-1. **Define interface via test** - What should the service do?
-2. **Create mock layer** - Isolate dependencies
-3. **Implement service** - Make tests pass
-4. **Refactor** - Improve with confidence
+1. **Define interface via test** - Make behavior explicit before implementation.
+2. **Create mock layer** - Isolate dependencies and keep tests deterministic.
+3. **Implement service** - Satisfy the tests with the minimal behavior.
+4. **Refactor** - Improve readability and structure while preserving behavior.
 
 ```typescript
 import { describe, expect, it } from "@effect/vitest";
@@ -164,11 +161,13 @@ const testLayer = PricingService.layer.pipe(
 );
 ```
 
-See `references/effect-tdd-patterns.md` for comprehensive Effect testing patterns.
+For deeper guidance (error-path testing, layer composition, anti-`vi.mock()` rationale), read `references/effect-tdd-patterns.md`.
 
 ---
 
-## Test File Locations
+## Use project-convention test locations (examples)
+
+Treat these paths as project conventions/examples; adapt if a repository uses different test layout.
 
 | Code Location                                       | Test Location                           |
 | --------------------------------------------------- | --------------------------------------- |
@@ -178,126 +177,12 @@ See `references/effect-tdd-patterns.md` for comprehensive Effect testing pattern
 
 ---
 
-## Commands
+## Use supporting references for depth
 
-### Unit & Integration Tests
+Load targeted references instead of expanding this file during execution:
 
-```bash
-# Run all tests (unit + TRPC integration)
-bun run test
-
-# Watch mode - re-run on file changes
-bun run test:watch
-
-# Run with coverage report
-bun run test:coverage
-
-# Run specific test file (FROM PROJECT ROOT, full path required)
-bun run vitest run packages/common/src/__tests__/pagination.test.ts
-bun run vitest run apps/web-app/src/__tests__/formatters.test.ts
-
-# Run tests matching pattern
-bun run vitest run -t "calculateDiscount"
-```
-
-### E2E Tests
-
-```bash
-# Install Playwright browsers (first time only)
-bun run test:e2e:install
-
-# Run all E2E tests
-bun run test:e2e
-
-# Run E2E with interactive UI
-bun run test:e2e:ui
-```
-
-### WRONG Syntax (DO NOT USE)
-
-```bash
-# These DO NOT work:
-bun run test packages/common/src/__tests__/file.test.ts  # script doesn't accept path
-cd packages/common && bun run vitest run src/__tests__/file.test.ts  # wrong cwd
-```
-
----
-
-## TDD Anti-Patterns
-
-### 1. Writing Implementation First
-
-```typescript
-// ❌ BAD - Implementation before test
-export function formatPrice(amount: number): string {
-  return `$${amount.toFixed(2)}`;
-}
-
-// Then writing test after - defeats TDD purpose
-```
-
-### 2. Skipping the RED Phase
-
-```typescript
-// ❌ BAD - Test passes immediately (you didn't verify it can fail)
-it("returns true", () => {
-  expect(true).toBe(true); // This always passes!
-});
-```
-
-### 3. Too Many Tests at Once
-
-```typescript
-// ❌ BAD - Writing all tests before any implementation
-describe("UserService", () => {
-  it("creates user", () => {
-    /* ... */
-  });
-  it("updates user", () => {
-    /* ... */
-  });
-  it("deletes user", () => {
-    /* ... */
-  });
-  it("lists users", () => {
-    /* ... */
-  });
-  it("validates email", () => {
-    /* ... */
-  });
-  // 10 more tests...
-});
-// Now you have 15 failing tests - overwhelming!
-```
-
-**Correct approach**: One test at a time. RED → GREEN → REFACTOR → next test.
-
-### 4. Skipping Refactor Phase
-
-```typescript
-// ❌ BAD - Test passes, move on without cleanup
-export function calc(a: number, b: number, c: string): number {
-  if (c === "add") return a + b;
-  if (c === "sub") return a - b;
-  if (c === "mul") return a * b;
-  return 0;
-}
-
-// ✅ GOOD - Refactor to cleaner design
-type Operation = "add" | "subtract" | "multiply";
-
-const operations: Record<Operation, (a: number, b: number) => number> = {
-  add: (a, b) => a + b,
-  subtract: (a, b) => a - b,
-  multiply: (a, b) => a * b,
-};
-
-export function calculate(a: number, b: number, op: Operation): number {
-  return operations[op](a, b);
-}
-```
-
----
+- Use `references/commands.md` for runnable command patterns.
+- Use `references/anti-patterns.md` for failure-mode walkthroughs and corrections.
 
 ## Resources
 
@@ -306,6 +191,8 @@ export function calculate(a: number, b: number, op: Operation): number {
 - `red-green-refactor.md` - Detailed TDD cycle workflow with examples
 - `effect-tdd-patterns.md` - Effect service testing, mock layers, error cases
 - `test-first-examples.md` - Step-by-step TDD examples for this codebase
+- `commands.md` - Command catalog and correct/incorrect invocation patterns
+- `anti-patterns.md` - Detailed TDD anti-pattern walkthroughs with fixes
 
 ### Related Skills
 

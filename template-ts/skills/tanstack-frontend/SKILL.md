@@ -1,6 +1,6 @@
 ---
 name: tanstack-frontend
-description: "LOAD THIS SKILL when: creating TanStack Router routes, implementing TRPC data prefetching, building forms with TanStack Form, or optimizing route loading performance."
+description: "This skill should be used when implementing TanStack Router routes, TRPC data loading/prefetching, and frontend typing/form patterns. In this project, 'TanStack Form' means the app wrapper (`useAppForm` + shared form components), not raw TanStack Form hooks."
 compatibility: opencode
 ---
 
@@ -8,455 +8,67 @@ compatibility: opencode
 
 ## Overview
 
-Implement TanStack Router routes with proper TRPC integration, query prefetching, type inference, and form handling following the project's frontend architecture patterns.
-
-## When to Use This Skill
-
-Use this skill when:
-
-- Creating new routes with TanStack Router
-- Implementing data prefetching in loaders
-- Optimizing route loading performance
-- Building forms with TanStack Form and TRPC
-- Need type-safe TRPC patterns
+Implement TanStack Router routes with project-standard TRPC integration, loader strategy, typed inference, and form handling. Follow this document for decision rules, then use `references/` for full examples.
 
 ## Core Patterns
 
-### 1. Route Definition with Loader
-
-Standard pattern for route creation with TRPC data prefetching.
-
-**Pattern:**
-
-```typescript
-export const Route = createFileRoute(
-  "/app/organization/$id/members"
-)({
-  component: RouteComponent,
-  loader: async ({ context, params }) => {
-    // Prefetch data for SSR
-    await context.queryClient.prefetchQuery(
-      context.trpc.organization.getById.queryOptions({
-        id: params.id,
-      })
-    );
-  },
-});
-
-function RouteComponent() {
-  const { id } = Route.useParams(); // Extract route parameters
-  const trpc = useTRPC();
-
-  // Query with Suspense
-  const { data, refetch } = useSuspenseQuery(
-    trpc.organization.getById.queryOptions({ id })
-  );
-
-  // Mutations
-  const updateOrg = useMutation(
-    trpc.organization.update.mutationOptions({
-      onSuccess: () => refetch(),
-      onError: (error) => console.error(error),
-    })
-  );
-
-  return <div>{/* Component JSX */}</div>;
-}
-```
-
-**Rules:**
-
-- ✅ Extract params with `Route.useParams()`
-- ✅ Use `useSuspenseQuery` with `.queryOptions()`
-- ✅ Use `useMutation` with `.mutationOptions()`
-- ❌ Never use `.useQuery` or `.useMutation` directly from TRPC
-
-See `references/router-loader-examples.md` for complete route examples.
-
-### 2. Prefetch Patterns & UX Optimization
-
-**Critical Rule:** Use `await` in loader ONLY for main content that renders immediately. Use `void` for secondary/optimization data.
-
-#### Understanding `prefetchQuery` vs `fetchQuery`
-
-- **`prefetchQuery`**: Loads data into cache, returns `void`, silent errors. Use when you don't need the data immediately in the loader.
-- **`fetchQuery`**: Loads data into cache AND returns it, throws errors. Use when you need the data for logic or to return from loader.
-
-#### Performance Hierarchy (fastest to slowest)
-
-1. **`void prefetchQuery`** - Fire-and-forget, loader doesn't wait (fastest, but component may suspend)
-2. **`await Promise.all`** - Waits for slowest query in parallel (good when all queries are critical)
-3. **`await` sequential** - Waits for each query one by one (slowest, avoid)
-
-**Pattern - Single Critical Query:**
-
-```typescript
-loader: async ({ context, params }) => {
-  // Critical: Main content - await to prevent empty page
-  await context.queryClient.prefetchQuery(
-    context.trpc.organization.getById.queryOptions({ id: params.id })
-  );
-
-  // Secondary: Can load later - void for best performance
-  void context.queryClient.prefetchQuery(
-    context.trpc.organization.getStats.queryOptions({ id: params.id })
-  );
-  void context.queryClient.prefetchQuery(
-    context.trpc.integrations.getAll.queryOptions({ orgId: params.id })
-  );
-},
-```
-
-**Pattern - Multiple Critical Queries:**
-
-```typescript
-loader: async ({ context, params }) => {
-  // All queries critical for initial render
-  // Using Promise.all to fetch in parallel
-  await Promise.all([
-    context.queryClient.prefetchQuery(
-      context.trpc.organization.getById.queryOptions({ id: params.id })
-    ),
-    context.queryClient.prefetchQuery(
-      context.trpc.members.getByOrgId.queryOptions({ orgId: params.id })
-    ),
-    context.queryClient.prefetchQuery(
-      context.trpc.permissions.getAll.queryOptions({ orgId: params.id })
-    ),
-  ]);
+### 1) Define routes with loader-driven data strategy
 
-  // Secondary data - void for optimization
-  void context.queryClient.prefetchQuery(
-    context.trpc.analytics.getOrgStats.queryOptions({ id: params.id })
-  );
-},
-```
+- Define each route with `createFileRoute(...)` and a loader that preloads critical data.
+- Read params/search from route APIs (`Route.useParams()`, `Route.useSearch()`) in components.
+- Keep examples in `references/router-loader-examples.md`.
 
-**Pattern - Using fetchQuery:**
+### 2) Choose loader prefetch strategy intentionally
 
-```typescript
-loader: async ({ context }) => {
-  // Need data in loader for logic or return value
-  const orgsWithProjects = await context.queryClient.fetchQuery(
-    context.trpc.organization.getOrganizationsDetails.queryOptions()
-  );
-
-  return { orgsWithProjects };
-},
-```
-
-**When to use `await` vs `void` vs `Promise.all`:**
-
-- **`await` single query**: 1 critical query needed for main content
-- **`await Promise.all`**: Multiple critical queries needed for main content (faster than sequential)
-- **`void`**: Secondary/optional data (breadcrumbs, stats, analytics) - fastest but component may suspend
+- Use `await prefetchQuery(...)` for data required in first paint.
+- Use `await Promise.all([...])` for multiple critical queries.
+- Use `void prefetchQuery(...)` only for secondary data.
+- Use `fetchQuery(...)` when loader logic needs returned data.
+- Apply the `void` rule together with the Suspense rule below.
 
-**When to use `prefetchQuery` vs `fetchQuery`:**
-
-- **`prefetchQuery`**: Cache data for components, don't need result in loader (most common)
-- **`fetchQuery`**: Need data in loader for logic/return value
-
-See `references/prefetch-patterns.md` for comprehensive prefetch examples and performance analysis.
+See full decision trees and performance tradeoffs in `references/prefetch-patterns.md`.
 
-### ⚠️ CRITICAL: Suspense Boundary Requirements
-
-**When using `void prefetchQuery()` in loader + `useSuspenseQuery()` in component, the component MUST be wrapped in `<Suspense>`!**
+### 3) Enforce Suspense boundaries for void-prefetched data
 
-**Why?** `void prefetchQuery()` is fire-and-forget - the loader doesn't wait for the data. If the data isn't in cache when the component renders, `useSuspenseQuery()` will suspend. Without a `<Suspense>` boundary, this causes hydration errors like `$R[88] is not a function`.
+- Wrap every component that consumes `void prefetchQuery(...)` data via `useSuspenseQuery(...)` in `<Suspense>`.
+- Treat missing boundaries as correctness bugs (hydration risk), not optional optimization.
+- Cross-check any `void` decision against this requirement before finalizing the route.
 
-**Pattern - Component using void-prefetched data:**
+See examples and the loader-pattern decision table in `references/prefetch-patterns.md`.
 
-```typescript
-// In loader:
-loader: async ({ context }) => {
-  // Fire-and-forget - data may not be ready
-  void context.queryClient.prefetchQuery(
-    context.trpc.invitations.getPending.queryOptions()
-  );
-},
+### 4) Apply TRPC v11 TanStack Query pattern
 
-// In component - MUST wrap in Suspense:
-function ParentComponent() {
-  return (
-    <div>
-      <MainContent />
-      {/* ✅ CORRECT - Suspense boundary for void-prefetched data */}
-      <Suspense fallback={null}>
-        <PendingInvitationsModal />
-      </Suspense>
-    </div>
-  );
-}
-
-// ❌ WRONG - No Suspense boundary
-function ParentComponent() {
-  return (
-    <div>
-      <MainContent />
-      <PendingInvitationsModal /> {/* Will cause hydration error! */}
-    </div>
-  );
-}
-```
-
-**Decision Table:**
-
-| Loader Pattern          | Data in cache? | Suspense needed? |
-| ----------------------- | -------------- | ---------------- |
-| `await prefetchQuery()` | ✅ Always      | ❌ No            |
-| `await fetchQuery()`    | ✅ Always      | ❌ No            |
-| `void prefetchQuery()`  | ⚠️ Maybe       | ✅ **YES**       |
-
-**Rule:** If you use `void` prefix on prefetch, always wrap the consuming component in `<Suspense>`.
-
-### 3. TRPC v11 Query Pattern (Critical)
-
-**IMPORTANT:** This template uses TRPC v11's new TanStack Query integration pattern. This is a fundamental pattern change from older TRPC versions.
-
-#### The Pattern
-
-TRPC v11 provides factory methods (`.queryOptions()`, `.mutationOptions()`) that return configuration objects for TanStack Query's native hooks:
-
-```typescript
-import { useTRPC } from "@/infrastructure/trpc/react";
-import { useQuery, useMutation, useSuspenseQuery } from "@tanstack/react-query";
-
-function MyComponent() {
-  const trpc = useTRPC();
-
-  // ✅ CORRECT - v11 pattern with factory methods
-  const { data } = useQuery(trpc.organization.getById.queryOptions({ id: "123" }));
-
-  const { data: suspenseData } = useSuspenseQuery(
-    trpc.organization.getById.queryOptions({ id: "123" }),
-  );
-
-  const updateOrg = useMutation(
-    trpc.organization.update.mutationOptions({
-      onSuccess: () => console.log("Success"),
-    }),
-  );
-
-  // ❌ WRONG - Old pattern (doesn't exist in v11)
-  const { data } = trpc.organization.getById.useQuery({
-    id: "123",
-  });
-  const updateOrg = trpc.organization.update.useMutation();
-}
-```
-
-#### Why This Pattern?
-
-**Benefits:**
-
-1. **Better Type Safety** - Factory methods ensure TypeScript can properly infer all types
-2. **TanStack Query Alignment** - Uses native TanStack hooks, making docs and community solutions directly applicable
-3. **More Flexible** - Can use any TanStack Query hook (useQuery, useSuspenseQuery, useInfiniteQuery, etc.)
-4. **Prefetching Support** - Same `.queryOptions()` works in loaders and components
-5. **Easier Migration** - Aligns with TanStack Query's evolution
-
-**Factory Methods Available:**
-
-- `.queryOptions(input)` - Returns query configuration for useQuery/useSuspenseQuery/prefetchQuery
-- `.mutationOptions(options)` - Returns mutation configuration for useMutation
-- `.queryKey(input?)` - Returns query key for cache invalidation
+Use one rule block consistently:
 
-#### Common Patterns
+- Use TanStack Query hooks (`useQuery`, `useSuspenseQuery`, `useMutation`) with TRPC factory methods.
+- Use `.queryOptions(...)` for queries/prefetch and `.mutationOptions(...)` for mutations.
+- Use `.queryKey(...)` for cache invalidation.
+- Do not call `.useQuery()` or `.useMutation()` on TRPC procedures.
 
-**Basic Query:**
+See concise do/don't examples in `references/trpc-v11-query-pattern.md`.
 
-```typescript
-const { data, isLoading, error } = useQuery(
-  trpc.project.getById.queryOptions({ projectId: "123" }),
-);
-```
+### 5) Prefer RouterInputs/RouterOutputs for inference
 
-**Suspense Query:**
-
-```typescript
-const { data } = useSuspenseQuery(trpc.project.getById.queryOptions({ projectId: "123" }));
-```
-
-**Mutation with Options:**
-
-```typescript
-const createProject = useMutation(
-  trpc.project.create.mutationOptions({
-    onSuccess: (data) => {
-      toast.success("Project created!");
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  }),
-);
-```
-
-**Prefetch in Loader:**
-
-```typescript
-loader: async ({ context, params }) => {
-  await context.queryClient.prefetchQuery(
-    context.trpc.project.getById.queryOptions({ projectId: params.id })
-  );
-},
-```
-
-**Cache Invalidation:**
-
-```typescript
-const queryClient = useQueryClient();
-
-// Invalidate all queries for a router
-await queryClient.invalidateQueries({
-  queryKey: trpc.organization.queryKey(),
-});
-
-// Invalidate specific procedure
-await queryClient.invalidateQueries({
-  queryKey: trpc.organization.getById.queryKey({
-    id: "123",
-  }),
-});
-```
-
-#### Rules
-
-- ✅ Use `useQuery()` from `@tanstack/react-query` with `.queryOptions()`
-- ✅ Use `useSuspenseQuery()` from `@tanstack/react-query` with `.queryOptions()`
-- ✅ Use `useMutation()` from `@tanstack/react-query` with `.mutationOptions()`
-- ✅ Use same `.queryOptions()` in loaders and components
-- ❌ Never try to call `.useQuery()` or `.useMutation()` directly on TRPC procedures (they don't exist in v11)
-- ❌ Don't use old TRPC v10 patterns from outdated examples
-
-### 4. Type Inference from TRPC
-
-Always use `RouterInputs` and `RouterOutputs` for type inference instead of creating manual types.
-
-**Pattern:**
-
-```typescript
-import type { RouterOutputs, RouterInputs } from "@/infrastructure/trpc/router";
-
-type SessionData = RouterOutputs["adminAuthSessions"]["listTokens"]["sessions"][0];
-type CreateUserInput = RouterInputs["users"]["create"];
-
-function MyComponent() {
-  const [session, setSession] = useState<SessionData | null>(null);
-  // Implementation
-}
-```
-
-**Rules:**
-
-- ✅ Use `RouterOutputs["routerName"]["procedureName"]` for response types
-- ✅ Use `RouterInputs["routerName"]["procedureName"]` for input types
-- ✅ Import common types from `@project/common`
-- ✅ Use branded session types (`AuthSessionId`, `McpSessionId`, `ClientSessionId`)
-- ❌ Never create manual types that duplicate TRPC response structure
-
-### 5. Form Handling
-
-Always use `useAppForm` from `@/shared/forms/form-context` instead of raw TanStack Form.
-
-**Pattern:**
-
-```typescript
-import { useAppForm } from "@/shared/forms/form-context";
-import {
-  FormInput,
-  FormTextarea,
-  FormCheckbox,
-} from "@/shared/forms";
-
-type Props = {
-  onSubmit: (data: FormData) => void;
-};
-
-export function MyForm({ onSubmit }: Props) {
-  const form = useAppForm({
-    defaultValues: {
-      name: "",
-      email: "",
-      subscribe: false,
-    },
-    onSubmit: async (values) => {
-      await onSubmit(values);
-    },
-  });
-
-  return (
-    <form onSubmit={form.handleSubmit}>
-      <FormInput field="name" label="Name" form={form} />
-      <FormInput
-        field="email"
-        label="Email"
-        type="email"
-        form={form}
-      />
-      <FormCheckbox
-        field="subscribe"
-        label="Subscribe"
-        form={form}
-      />
-      <button type="submit">Submit</button>
-    </form>
-  );
-}
-```
-
-**Rules:**
-
-- ✅ Use `useAppForm` from `@/shared/forms/form-context`
-- ✅ Use form components (`FormInput`, `FormTextarea`, `FormCheckbox`)
-- ✅ Pass `form` and `field` props to form components
-- ❌ Don't use raw TanStack Form hooks
-
-See `references/form-patterns.md` for complete form examples with validation.
-
-### 6. Component Best Practices
-
-**Props Naming:**
-
-```typescript
-// ✅ Good - Standard Props naming
-type Props = {
-  isOpen: boolean;
-  onClose: () => void;
-  userName: string;
-};
-
-export function DeleteMemberModal({ isOpen, onClose, userName }: Props) {
-  // Implementation
-}
-
-// ❌ Bad - Component-specific props naming
-type DeleteMemberModalProps = {
-  /* ... */
-};
-```
-
-**Import Rules:**
-
-- ✅ Always use absolute imports (`@/path/to/module`)
-- ✅ Use `type` instead of `interface` unless extending
-- ✅ Import types from `@project/common` for shared types
-
-**TRPC Cache Invalidation:**
-
-```typescript
-const queryClient = useQueryClient();
-
-// ✅ Good - Using queryKey helper
-await queryClient.invalidateQueries({
-  queryKey: trpc.organization.queryKey(),
-});
-
-// Also valid - specific procedure
-await queryClient.invalidateQueries({
-  queryKey: trpc.organization.getById.queryKey(),
-});
-```
+- Prefer `RouterInputs`/`RouterOutputs` for input/response typing across route components and helpers.
+- Allow explicit local types when they represent UI-only view models, external library contracts, or deliberate narrowing/aggregation that does not mirror server payloads.
+- Avoid duplicating raw TRPC response shapes as hand-written app types.
+
+See practical inference patterns in `references/type-inference.md`.
+
+### 6) Use the project form wrapper (not raw TanStack Form)
+
+- Treat "TanStack Form" in this template as `useAppForm` + `@/shared/forms/*` field components.
+- Compose forms with shared form components and pass `form`/`field` explicitly.
+- Avoid raw TanStack Form hooks in feature code unless updating the shared form infrastructure itself.
+
+See complete form patterns in `references/form-patterns.md`.
+
+### 7) Follow frontend conventions
+
+- Prefer `type Props = ...` naming for component props.
+- Use absolute imports (`@/...`).
+- Import shared cross-package types from `@project/common`.
+- Invalidate TRPC cache through `queryKey(...)` helpers.
 
 ## Resources
 
@@ -464,5 +76,6 @@ await queryClient.invalidateQueries({
 
 - `router-loader-examples.md` - Complete route definition examples
 - `prefetch-patterns.md` - Performance optimization and prefetch strategies
+- `trpc-v11-query-pattern.md` - Compact TRPC v11 query/mutation/invalidation rules
 - `form-patterns.md` - Form handling with validation examples
 - `type-inference.md` - TRPC type inference patterns and examples

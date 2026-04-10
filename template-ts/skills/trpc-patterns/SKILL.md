@@ -1,6 +1,6 @@
 ---
 name: trpc-patterns
-description: "LOAD THIS SKILL when: creating TRPC routers, adding procedures, building custom middleware, or implementing error handling in TRPC endpoints."
+description: "This skill should be used when creating TRPC routers, selecting procedures, composing middleware, and handling TRPC errors in blogic-template-ts projects."
 compatibility: opencode
 ---
 
@@ -8,274 +8,119 @@ compatibility: opencode
 
 ## Overview
 
-Implement TRPC routers following the project's established patterns for schema definition, custom procedures, middleware, and error handling.
+Implement TRPC routers using established blogic-template-ts patterns for input schemas, procedure selection, middleware composition, and error handling.
 
 ## When to Use This Skill
 
-Use this skill when:
+Use this skill when implementing or refactoring TRPC routers and procedures, especially when selecting base procedures, adding authorization middleware, or standardizing error handling.
 
-- Creating new TRPC routers
-- Adding procedures to existing routers
-- Building custom middleware for authorization
-- Implementing error handling in TRPC endpoints
-- Need examples of proper TRPC patterns
+## Core Rules
 
-## Core Patterns
+### 1) Keep simple schemas inline
 
-### 1. Simple Inline Schemas
+Define simple input schemas directly in the procedure.
 
-For simple validation schemas, define them inline within the procedure. Always use types from `@project/common` instead of hardcoding values.
+Use project enums and shared types instead of hardcoded string literals.
 
-**Pattern:**
-
-```typescript
-import { OrganizationRoles } from "@project/common";
-import { z } from "zod";
-
-export const router = {
-  createInvitation: protectedProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        organizationId: z.string().min(1),
-        role: z.enum([OrganizationRoles.Owner, OrganizationRoles.Admin, OrganizationRoles.Member]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Implementation
-    }),
-} satisfies TRPCRouterRecord;
+```ts
+protectedProcedure.input(z.object({ organizationId: z.string().min(1) }));
 ```
 
-**Rules:**
+Apply these rules:
 
-- ✅ Inline simple schemas directly in procedure definition
-- ✅ Use enum values from `@project/common`
-- ❌ Don't create separate schema constants for simple cases
-- ❌ Don't hardcode enum values like `["owner", "admin", "member"]`
+- Keep straightforward schemas inline.
+- Reuse shared enums/types from project packages.
+- Extract a schema constant only when reuse or complexity justifies it.
 
-See `references/simple-schemas.md` for more examples.
+Read detailed examples in `references/simple-schemas.md`.
 
-### 2. Custom Procedures for Organization Access
+### 2) Select the narrowest valid base procedure
 
-For organization-scoped operations, use `protectedMemberAccessProcedure` instead of manually checking membership.
+Select base procedures in this order:
 
-**Pattern:**
+1. Start from access requirement, not implementation convenience.
+2. Pick `publicProcedure` when no authentication is required.
+3. Pick `protectedProcedure` when any authenticated user can access.
+4. Pick `adminProcedure` when global admin role is required.
+5. Pick `protectedMemberAccessProcedure` when `organizationId`-scoped membership is required.
+6. Build a custom procedure with `.use()` only when none of the existing procedures encode the required access rule.
 
-```typescript
-export const router = {
-  getOrganizationCredentials: protectedMemberAccessProcedure
-    .input(z.object({ organizationId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      // Organization membership already validated
-      const credentials = await ctx.db.select().from(credentialsTable);
-      // Direct implementation
-    }),
-} satisfies TRPCRouterRecord;
+Apply this decision tree:
+
+- No auth needed -> `publicProcedure`
+- Auth needed, no org scope -> `protectedProcedure`
+- Global admin-only action -> `adminProcedure`
+- Org-scoped action with membership check -> `protectedMemberAccessProcedure`
+- Additional role/permission/resource checks -> extend with middleware on top of the closest base procedure
+
+Read full procedure examples and context behavior in `references/custom-procedures.md`.
+
+### 3) Compose middleware with context enhancement
+
+Create reusable middleware with `.use()` and always continue with `opts.next(...)`.
+
+```ts
+const procedure = protectedProcedure.use(async (opts) => opts.next({ ctx: {} }));
 ```
 
-**Available Procedures:**
+Apply these rules:
 
-- `publicProcedure` - No authentication required
-- `protectedProcedure` - Requires authenticated user
-- `adminProcedure` - Requires admin role
-- `protectedMemberAccessProcedure` - Requires organization membership
+- Name middleware functions by responsibility.
+- Enhance context only with values needed by downstream handlers.
+- Build from existing base procedures before introducing new ones.
 
-**Rules:**
+Read advanced middleware patterns in `references/middleware-patterns.md`.
 
-- ✅ Use `protectedMemberAccessProcedure` for org-scoped operations
-- ❌ Don't manually check organization membership in procedures
+### 4) Throw standardized application errors
 
-See `references/custom-procedures.md` for detailed examples and context enhancement patterns.
+Import and throw standardized error helpers from project infrastructure.
 
-### 3. Creating Custom Middleware
-
-Build reusable base procedures using the `.use()` method for middleware logic.
-
-**Pattern:**
-
-```typescript
-export const protectedMemberAccessProcedure = protectedProcedure
-  .input(z.object({ organizationId: z.string().min(1) }))
-  .use(async function isMemberOfOrganization(opts) {
-    const { ctx, input } = opts;
-
-    const memberAccess = await ctx.db
-      .select()
-      .from(membersTable)
-      .where(
-        and(
-          eq(membersTable.organizationId, input.organizationId),
-          eq(membersTable.userId, ctx.session.user.id),
-        ),
-      )
-      .limit(1);
-
-    if (!memberAccess.length) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You are not a member of this organization",
-      });
-    }
-
-    return opts.next({
-      ctx: {
-        member: memberAccess[0],
-      },
-    });
-  });
+```ts
+if (!resource) throw notFoundError("Resource not found");
 ```
 
-**Middleware Rules:**
+Apply these rules:
 
-- ✅ Use `.use()` method to chain middleware functions
-- ✅ Always return `opts.next()` with enhanced context
-- ✅ Name middleware functions descriptively
-- ✅ Build on existing base procedures
-- ❌ Don't create utility function approaches
+- Throw helper-based errors (`badRequestError`, `unauthorizedError`, `forbiddenError`, `notFoundError`).
+- Do not instantiate `TRPCError` manually in route and middleware code when project helpers exist.
+- Keep error messages action-oriented and domain-specific.
 
-See `references/middleware-patterns.md` for advanced middleware examples.
+Read full patterns in `references/error-handling.md`.
 
-### 4. Error Handling
+### 5) Treat imports as project conventions
 
-Always use standardized error helpers from `@/infrastructure/errors.ts`.
+Follow these conventions for blogic-template-ts repositories:
 
-**Pattern:**
+- Import shared domain enums/types from project packages (for example `@project/common`).
+- Import standardized error helpers from project infrastructure modules (for example `@/infrastructure/errors`).
 
-```typescript
-import {
-  badRequestError,
-  unauthorizedError,
-  forbiddenError,
-  notFoundError,
-} from "@/infrastructure/errors";
+When working outside this ecosystem, map these conventions to equivalent modules in the target codebase.
 
-export const router = {
-  deleteProject: protectedProcedure
-    .input(z.object({ projectId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const project = await ctx.db
-        .select()
-        .from(projectsTable)
-        .where(eq(projectsTable.id, input.projectId))
-        .limit(1);
+## Type Inference Guidance
 
-      if (!project.length) {
-        throw notFoundError("Project not found");
-      }
+Rely on static TypeScript inference from backend router definitions.
 
-      if (project[0].ownerId !== ctx.session.user.id) {
-        throw forbiddenError("You don't have permission to delete this project");
-      }
+Apply these rules:
 
-      // Implementation...
-    }),
-} satisfies TRPCRouterRecord;
-```
+- Export root router types consistently.
+- Import router types into frontend TRPC client setup.
+- Avoid manual endpoint response/input types that duplicate inferred TRPC types.
 
-**Available Error Helpers:**
+Read additional examples in `references/custom-procedures.md` and keep router exports consistent.
 
-- `badRequestError(message)` - Invalid input or request
-- `unauthorizedError(message)` - Authentication issues
-- `forbiddenError(message)` - Authorization/permission issues
-- `notFoundError(message)` - Missing resources
+## Scope Boundaries
 
-**Rules:**
+Focus this skill on TRPC router structure, access control, middleware, and errors.
 
-- ✅ Use error helper functions
-- ❌ Don't create TRPCError manually
-
-See `references/error-handling.md` for comprehensive error handling patterns.
-
-## Type Inference
-
-**IMPORTANT:** TRPC types are **automatically inferred** from backend router definitions through TypeScript's static type system. No code generation is needed.
-
-**Pattern:**
-
-```typescript
-// Backend: apps/web-app/src/projects/trpc/project.ts
-export const router = {
-  estimateProjectCreation: protectedProcedure
-    .input(z.object({ organizationId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return {
-        integrationsCount: 10,
-        estimatedSeconds: 5,
-      };
-    }),
-} satisfies TRPCRouterRecord;
-
-// Frontend: Types are automatically inferred via static imports
-const estimate = trpc.project.estimateProjectCreation.useQuery({
-  organizationId: "123",
-});
-// TypeScript knows estimate.data has { integrationsCount: number, estimatedSeconds: number }
-```
-
-**Type Inference Rules:**
-
-- ✅ Types are **statically inferred** from backend router through TypeScript imports
-- ✅ Frontend imports `AppRouter` type and gets full type safety
-- ✅ Server does NOT need to be running for type inference (it's static analysis)
-- ✅ Changes to backend router immediately update frontend types on next TypeScript check
-- ❌ Don't create manual type definitions for TRPC endpoints
-- ❌ Don't expect runtime type generation - it's compile-time only
-
-**How It Works:**
-
-1. Backend exports `AppRouter` type from root router
-2. Frontend imports `AppRouter` and creates typed TRPC client
-3. TypeScript compiler statically analyzes backend code and infers all types
-4. IDE and type checker see changes immediately after file save
-
-**If new endpoint doesn't appear:**
-
-- Check if backend router is properly exported in root router
-- Verify TypeScript can resolve the import path
-- Restart TypeScript language server in IDE if needed
-
-## SQL Query Optimization
-
-Always prefer single SQL queries with JOINs over multiple separate queries.
-
-**Pattern:**
-
-```typescript
-// ✅ Good - Single optimized query with joins
-export const router = {
-  getOrganizationsDetails: protectedProcedure.query(async ({ ctx: { session, db } }) => {
-    const result = await db
-      .select({
-        organization: organizationsTable,
-        project: projectsTable,
-        integration: organizationIntegrationsTable,
-        userRole: membersTable.role,
-      })
-      .from(membersTable)
-      .innerJoin(organizationsTable, eq(membersTable.organizationId, organizationsTable.id))
-      .leftJoin(projectsTable, eq(projectsTable.organizationId, organizationsTable.id))
-      .where(eq(membersTable.userId, session.user.id));
-
-    return groupResults(result);
-  }),
-};
-```
-
-**SQL Optimization Rules:**
-
-- Use single queries with JOINs instead of multiple queries
-- Only fetch data that's actually needed
-- Use LEFT JOIN for optional relationships, INNER JOIN for required
-- Group/aggregate in SQL when possible, otherwise in application code
+Delegate query-level performance tuning (JOIN strategy, batch reads, N+1 reduction, indexing) to the `performance-optimization` skill.
 
 ## Resources
 
-### references/
+Read long-form examples and implementation details in:
 
-Detailed reference documentation for each pattern:
+- `references/simple-schemas.md` - Complete examples of inline schema patterns
+- `references/custom-procedures.md` - Base procedure behavior and context enhancement
+- `references/middleware-patterns.md` - Advanced middleware composition patterns
+- `references/error-handling.md` - Detailed helper-based error patterns
 
-- `simple-schemas.md` - Complete examples of inline schema patterns
-- `custom-procedures.md` - Available procedures and context enhancement
-- `middleware-patterns.md` - Advanced middleware creation patterns
-- `error-handling.md` - Comprehensive error handling guide
+For query and database performance guidance, load the `performance-optimization` skill.
