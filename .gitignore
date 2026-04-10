@@ -5,5 +5,7 @@
 # Claude Code agent-kit
 .claude/.edit-tracker
 .opencode/plugin/debug.log
+.claude/settings.local.json
+
 node_modules/
 .opencode/plugin/session-map.json

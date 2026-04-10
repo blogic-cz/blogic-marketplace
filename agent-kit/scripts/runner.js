@@ -9,7 +9,7 @@ const path = require("path");
 const { execFileSync } = require("child_process");
 const os = require("os");
 
-const scriptName = process.env._AGENT_KIT_SCRIPT;
+const scriptName = process.env._AGENT_KIT_SCRIPT || process.argv[2];
 if (!scriptName) {
   process.exit(0);
 }
@@ -28,9 +28,10 @@ delete env._AGENT_KIT_SCRIPT;
 
 if (isWindows) {
   env.CLAUDE_PLUGIN_ROOT = toUnixPath(env.CLAUDE_PLUGIN_ROOT || pluginRoot);
-  if (env.CLAUDE_PROJECT_DIR) {
-    env.CLAUDE_PROJECT_DIR = toUnixPath(env.CLAUDE_PROJECT_DIR);
-  }
+  env.CLAUDE_PROJECT_DIR = toUnixPath(env.CLAUDE_PROJECT_DIR || process.cwd());
+} else {
+  if (!env.CLAUDE_PLUGIN_ROOT) env.CLAUDE_PLUGIN_ROOT = pluginRoot;
+  if (!env.CLAUDE_PROJECT_DIR) env.CLAUDE_PROJECT_DIR = process.cwd();
 }
 
 const bashScriptPath = isWindows ? toUnixPath(scriptPath) : scriptPath;

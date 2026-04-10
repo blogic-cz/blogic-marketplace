@@ -210,7 +210,7 @@ async function fetchPackageInfo(pkg: string): Promise<{
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return { latest: null, repoUrl: null };
-    const json: NpmRegistryResponse = await res.json();
+    const json = (await res.json()) as NpmRegistryResponse;
 
     let repoUrl: string | null = null;
     if (typeof json.repository === "string") {
@@ -301,13 +301,13 @@ async function fetchReleaseNotes(
 
     for (let page = 0; page < MAX_PAGES && url; page++) {
       // eslint-disable-next-line no-await-in-loop -- sequential pagination: next URL depends on previous response's Link header
-      const res = await fetch(url, {
+      const res: Response = await fetch(url, {
         headers,
         signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) break;
       // eslint-disable-next-line no-await-in-loop
-      const releases: GitHubRelease[] = await res.json();
+      const releases = (await res.json()) as GitHubRelease[];
       if (releases.length === 0) break;
 
       for (const release of releases) {
@@ -435,7 +435,7 @@ const packageInfoResults = await Promise.all(
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(8000),
     }).catch(() => null);
-    const json: { version?: string } = res && res.ok ? await res.json() : {};
+    const json = (res && res.ok ? await res.json() : {}) as { version?: string };
     return {
       name,
       latest: json.version ?? null,
@@ -512,7 +512,8 @@ if (CHANGELOG_MODE) {
           return;
         }
         return fetchReleaseNotes(gh.owner, gh.repo, current, latest).then((fallbackNotes) => {
-          return releaseNoteResults.set(pkg, fallbackNotes);
+          releaseNoteResults.set(pkg, fallbackNotes);
+          return undefined;
         });
       }),
     );

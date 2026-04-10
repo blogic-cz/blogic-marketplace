@@ -1,0 +1,21 @@
+output: false
+
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.{js,jsx,ts,tsx}"
+      run: bunx oxfmt --no-error-on-unmatched-pattern -- {staged_files}
+      stage_fixed: true
+
+    lint:
+      glob: "*.{js,jsx,ts,tsx}"
+      run: bunx oxlint -c ./.oxlintrc.json --fix --fix-suggestions --deny-warnings {staged_files}
+      stage_fixed: true
+
+    typecheck:
+      run: bunx tsc --noEmit
+
+    gitleaks:
+      run: gitleaks protect --staged --verbose --redact
+      fail_text: "Potential secrets detected! Remove them before committing."
