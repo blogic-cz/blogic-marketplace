@@ -1,15 +1,16 @@
 {
-  "extends": ["@blogic-cz/oxc-config/oxlint/ts"],
+  "extends": ["../node_modules/@blogic-cz/oxc-config/.oxlintrc.ts.json"],
   "rules": {
     "import/no-default-export": "error",
     "import/no-unassigned-import": "error"
   },
   "overrides": [
     {
-      "files": [".agents/**"],
+      "files": [".agents/**", "skills/**"],
       "rules": {
         "eslint/no-await-in-loop": "off",
         "eslint/no-shadow": "off",
+        "naming/no-process-env": "off",
         "eslint/require-await": "off",
         "import/no-relative-parent-imports": "off",
         "typescript/no-unsafe-type-assertion": "off",

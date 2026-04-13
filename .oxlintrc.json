@@ -1,5 +1,5 @@
 {
-  "extends": ["@blogic-cz/oxc-config/oxlint/ts"],
+  "extends": ["./node_modules/@blogic-cz/oxc-config/.oxlintrc.ts.json"],
   "ignorePatterns": [".git/**", "bun.lock", "node_modules/**"],
   "rules": {
     "import/no-default-export": "error",
@@ -7,14 +7,21 @@
   },
   "overrides": [
     {
-      "files": [".agents/**"],
+      "files": [".agents/**", "template-ts/skills/**"],
       "rules": {
         "eslint/no-await-in-loop": "off",
         "eslint/no-shadow": "off",
+        "naming/no-process-env": "off",
         "eslint/require-await": "off",
         "import/no-relative-parent-imports": "off",
         "typescript/no-unsafe-type-assertion": "off",
         "unicorn/no-array-sort": "off"
+      }
+    },
+    {
+      "files": ["agent-kit/scripts/**", "agent-kit/skills/**/scripts/**"],
+      "rules": {
+        "naming/no-process-env": "off"
       }
     }
   ]

@@ -69,7 +69,7 @@ function validateSkill(skillPath: string): [boolean, string] {
 // CLI entry point
 const args = process.argv.slice(2);
 if (args.length !== 1) {
-  console.log("Usage: npx tsx quick_validate.ts <skill_directory>");
+  console.log("Usage: npx tsx quick-validate.ts <skill_directory>");
   process.exit(1);
 }
 

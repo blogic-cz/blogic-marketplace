@@ -46,5 +46,5 @@ try {
     process.exit(1);
   }
   // Pass through the exit code from the bash script
-  process.exit(err.status != null ? err.status : 1);
+  process.exit(err.status !== null ? err.status : 1);
 }

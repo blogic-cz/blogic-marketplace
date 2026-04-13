@@ -3,12 +3,12 @@
  * Skill Initializer - Creates a new skill from template
  *
  * Usage:
- *     npx tsx init_skill.ts <skill-name> --path <path>
+ *     npx tsx init-skill.ts <skill-name> --path <path>
  *
  * Examples:
- *     npx tsx init_skill.ts my-new-skill --path skills/public
- *     npx tsx init_skill.ts my-api-helper --path skills/private
- *     npx tsx init_skill.ts custom-skill --path /custom/location
+ *     npx tsx init-skill.ts my-new-skill --path skills/public
+ *     npx tsx init-skill.ts my-api-helper --path skills/private
+ *     npx tsx init-skill.ts custom-skill --path /custom/location
  */
 
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -283,16 +283,16 @@ function initSkill(skillName: string, path: string): string | null {
 const args = process.argv.slice(2);
 
 if (args.length < 3 || args[1] !== "--path") {
-  console.log("Usage: npx tsx init_skill.ts <skill-name> --path <path>");
+  console.log("Usage: npx tsx init-skill.ts <skill-name> --path <path>");
   console.log("\nSkill name requirements:");
   console.log("  - Hyphen-case identifier (e.g., 'data-analyzer')");
   console.log("  - Lowercase letters, digits, and hyphens only");
   console.log("  - Max 40 characters");
   console.log("  - Must match directory name exactly");
   console.log("\nExamples:");
-  console.log("  npx tsx init_skill.ts my-new-skill --path skills/public");
-  console.log("  npx tsx init_skill.ts my-api-helper --path skills/private");
-  console.log("  npx tsx init_skill.ts custom-skill --path /custom/location");
+  console.log("  npx tsx init-skill.ts my-new-skill --path skills/public");
+  console.log("  npx tsx init-skill.ts my-api-helper --path skills/private");
+  console.log("  npx tsx init-skill.ts custom-skill --path /custom/location");
   process.exit(1);
 }
 
