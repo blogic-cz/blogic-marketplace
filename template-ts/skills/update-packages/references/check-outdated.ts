@@ -296,19 +296,21 @@ async function fetchReleaseNotes(
     }
 
     const notes: ReleaseNote[] = [];
-    let foundLatest = false;
-    let url: string | null = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`;
+    const initialUrl = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`;
 
-    for (let page = 0; page < MAX_PAGES && url; page++) {
-      // eslint-disable-next-line no-await-in-loop -- sequential pagination: next URL depends on previous response's Link header
+    const collectPage = async (url: string | null, page: number): Promise<void> => {
+      if (!url || page >= MAX_PAGES) return;
+
       const res: Response = await fetch(url, {
         headers,
         signal: AbortSignal.timeout(10_000),
       });
-      if (!res.ok) break;
-      // eslint-disable-next-line no-await-in-loop
+      if (!res.ok) return;
+
       const releases = (await res.json()) as GitHubRelease[];
-      if (releases.length === 0) break;
+      if (releases.length === 0) return;
+
+      let shouldStop = false;
 
       for (const release of releases) {
         if (release.draft || release.prerelease) continue;
@@ -328,23 +330,25 @@ async function fetchReleaseNotes(
             url: release.html_url,
             body: (release.body ?? "").trim(),
           });
-          if (version === latest) foundLatest = true;
+          if (version === latest) shouldStop = true;
         }
 
         // Stop paginating once we've passed the current version (releases are newest-first)
         if (compareSemver(version, current) <= 0) {
-          foundLatest = true;
+          shouldStop = true;
           break;
         }
       }
 
-      if (foundLatest) break;
+      if (shouldStop) return;
 
       // Parse Link header for next page
       const linkHeader = res.headers.get("link");
       const nextMatch = linkHeader?.match(/<([^>]+)>;\s*rel="next"/);
-      url = nextMatch?.[1] ?? null;
-    }
+      await collectPage(nextMatch?.[1] ?? null, page + 1);
+    };
+
+    await collectPage(initialUrl, 0);
 
     // Sort oldest → newest
     notes.sort((a, b) => compareSemver(a.version, b.version));
