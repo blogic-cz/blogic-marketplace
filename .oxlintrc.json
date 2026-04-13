@@ -3,7 +3,8 @@
   "ignorePatterns": [".git/**", "bun.lock", "node_modules/**"],
   "rules": {
     "import/no-default-export": "error",
-    "import/no-unassigned-import": "error"
+    "import/no-unassigned-import": "error",
+    "unicorn/no-useless-undefined": "error"
   },
   "overrides": [
     {

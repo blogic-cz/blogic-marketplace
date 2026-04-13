@@ -2,7 +2,8 @@
   "extends": ["../node_modules/@blogic-cz/oxc-config/.oxlintrc.ts.json"],
   "rules": {
     "import/no-default-export": "error",
-    "import/no-unassigned-import": "error"
+    "import/no-unassigned-import": "error",
+    "unicorn/no-useless-undefined": "error"
   },
   "overrides": [
     {

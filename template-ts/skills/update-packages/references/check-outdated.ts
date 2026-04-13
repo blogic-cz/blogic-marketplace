@@ -510,16 +510,17 @@ if (CHANGELOG_MODE) {
     }
 
     fetchPromises.push(
-      fetchReleaseNotes(gh.owner, gh.repo, current, latest, `${pkg}@`).then((notes) => {
+      (async () => {
+        const notes = await fetchReleaseNotes(gh.owner, gh.repo, current, latest, `${pkg}@`);
+
         if (notes.length > 0) {
           releaseNoteResults.set(pkg, notes);
           return;
         }
-        return fetchReleaseNotes(gh.owner, gh.repo, current, latest).then((fallbackNotes) => {
-          releaseNoteResults.set(pkg, fallbackNotes);
-          return undefined;
-        });
-      }),
+
+        const fallbackNotes = await fetchReleaseNotes(gh.owner, gh.repo, current, latest);
+        releaseNoteResults.set(pkg, fallbackNotes);
+      })(),
     );
   }
 
