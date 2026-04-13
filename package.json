@@ -11,7 +11,7 @@
     "prepare": "lefthook install"
   },
   "devDependencies": {
-    "@blogic-cz/oxc-config": "1.4.1",
+    "@blogic-cz/oxc-config": "1.5.4",
     "@types/bun": "1.3.10",
     "@types/node": "25.3.3",
     "lefthook": "^2.1.2",
