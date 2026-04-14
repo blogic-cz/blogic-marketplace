@@ -296,10 +296,10 @@ async function fetchReleaseNotes(
     }
 
     const notes: ReleaseNote[] = [];
-    const initialUrl = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`;
+    let foundLatest = false;
 
-    const collectPage = async (url: string | null, page: number): Promise<void> => {
-      if (!url || page >= MAX_PAGES) return;
+    async function fetchReleasePage(url: string, page: number): Promise<void> {
+      if (page >= MAX_PAGES || foundLatest) return;
 
       const res: Response = await fetch(url, {
         headers,
@@ -309,8 +309,6 @@ async function fetchReleaseNotes(
 
       const releases = (await res.json()) as GitHubRelease[];
       if (releases.length === 0) return;
-
-      let shouldStop = false;
 
       for (const release of releases) {
         if (release.draft || release.prerelease) continue;
@@ -330,25 +328,31 @@ async function fetchReleaseNotes(
             url: release.html_url,
             body: (release.body ?? "").trim(),
           });
-          if (version === latest) shouldStop = true;
+          if (version === latest) foundLatest = true;
         }
 
         // Stop paginating once we've passed the current version (releases are newest-first)
         if (compareSemver(version, current) <= 0) {
-          shouldStop = true;
+          foundLatest = true;
           break;
         }
       }
 
-      if (shouldStop) return;
+      if (foundLatest) return;
 
       // Parse Link header for next page
       const linkHeader = res.headers.get("link");
       const nextMatch = linkHeader?.match(/<([^>]+)>;\s*rel="next"/);
-      await collectPage(nextMatch?.[1] ?? null, page + 1);
-    };
+      const nextUrl = nextMatch?.[1] ?? null;
+      if (nextUrl) {
+        await fetchReleasePage(nextUrl, page + 1);
+      }
+    }
 
-    await collectPage(initialUrl, 0);
+    await fetchReleasePage(
+      `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`,
+      0,
+    );
 
     // Sort oldest → newest
     notes.sort((a, b) => compareSemver(a.version, b.version));
