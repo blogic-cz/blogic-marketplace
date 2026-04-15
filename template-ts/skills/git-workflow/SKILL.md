@@ -174,14 +174,13 @@ Use `--visible-open-only` — it includes unresolved threads **and** resolved th
 bun gh-tool pr threads --pr <pr_number> --visible-open-only
 ```
 
-**3.2 AI reviewer issue comments** (Claude bot, Sentry Seer, etc.):
+**3.2 AI reviewer issue comments:**
 
 ```bash
-bun gh-tool pr issue-comments --pr <pr_number> --author claude --body-contains "Claude Code Review"
-bun gh-tool pr issue-comments --pr <pr_number> --author sentry-io --body-contains "Sentry"
+bun gh-tool pr issue-comments --pr <pr_number>
 ```
 
-AI reviewers post findings as general PR comments with severity-tagged items (Critical, Major, Minor), file paths, and line numbers. Parse each comment body to extract actionable items.
+AI reviewers may post findings as general PR comments under different bot/user accounts, so the standard workflow must be **author-agnostic**: inspect **all** PR issue comments together, and do not let the author identity change the default review flow. Parse actionable issue-comment feedback the same way as inline review feedback: extract severity, file paths, and requested changes, then act on anything still relevant.
 
 **3.3 Decision:**
 
