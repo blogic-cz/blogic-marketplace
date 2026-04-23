@@ -78,14 +78,17 @@ Handle catalog packages in one place:
 
 - Find catalog versions in root `package.json` under `catalog` and `catalogs`.
 - Check latest versions manually (`npm view <package> version`) when needed.
-- Update catalog entries manually, then run `bun install`.
+- Respect the repository's Bun install policy in `bunfig.toml`, especially `minimumReleaseAge` and related excludes.
+- Do **not** bypass Bun's age gate with flags like `bun install --minimum-release-age 0` unless the user explicitly requests that override.
+- If a desired version is blocked by `minimumReleaseAge`, choose the newest older compatible version that satisfies the policy and update the manifest to that version instead of forcing the install.
+- Update catalog entries manually, then run plain `bun install`.
 
 **Step 2 — Update + Adopt features IN PARALLEL**
 
 | Track A: Apply Update                                 | Track B: Adopt features from release notes                                                               |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Apply version bumps via `bun upgrade` or catalog edit | Read `outdated-changelog.json` — each entry has `releases[]` with full release notes                     |
-| `bun install` if catalog                              | Classify each new feature by tier (see `references/feature-adoption-tiers.md`)                           |
+| `bun install` if catalog (respecting `bunfig.toml` minimum-release-age policy) | Classify each new feature by tier (see `references/feature-adoption-tiers.md`)                           |
 |                                                       | **T0/T1**: implement config-level changes (target files in `configFiles[]`), verify with `bun run check` |
 |                                                       | **T2**: generate concrete diffs, include in report                                                       |
 |                                                       | Search codebase for usages of changed/deprecated/new APIs                                                |
@@ -132,6 +135,8 @@ Use `references/testing-matrix.md` to choose required tests.
 - Do not update packages with `workspace:*`.
 - Do not skip `@typescript/native-preview` updates.
 - Do not use `bun outdated`; use `check-outdated.ts`.
+- Do not bypass Bun's `minimumReleaseAge` policy unless the user explicitly asks for it.
+- If `bun install` fails due to `minimumReleaseAge`, downgrade the requested package versions to the newest policy-compliant releases and retry with plain `bun install`.
 - Run `bun clean:packages` then `bun install` if install fails.
 
 ## Definition of Done
