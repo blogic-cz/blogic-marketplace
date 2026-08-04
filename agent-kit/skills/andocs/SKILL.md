@@ -1,6 +1,6 @@
 ---
 name: andocs
-description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, and correct syntax."
+ description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, BPMN diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'bpmn', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, BPMN syntax, and correct syntax."
 ---
 
 Write documentation using Andocs rendering capabilities. All features work out of the box.
@@ -120,6 +120,64 @@ pie title Distribution
     "Category C" : 10
 ```
 ````
+
+## BPMN Diagrams
+
+Andocs renders inline BPMN XML or a referenced `.bpmn` file with pan, zoom, and fullscreen controls.
+
+### Inline BPMN XML
+
+Use a `bpmn` fence with valid BPMN 2.0 XML, including diagram layout data:
+
+````markdown
+```bpmn
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_1"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="EndEvent_1">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="EndEvent_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="120" y="100" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="240" y="100" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="156" y="118" />
+        <di:waypoint x="240" y="118" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+```
+````
+
+### Referenced BPMN file
+
+Use the `path` attribute when the diagram is stored as a `.bpmn` asset:
+
+````markdown
+```bpmn path=diagrams/onboarding.bpmn
+
+```
+````
+
+Use inline XML for a small self-contained example. Use a referenced file when the diagram is reused or edited in a BPMN tool.
+
+The XML must be valid and the referenced file must exist. Andocs renders BPMN for viewing; edit the source in a BPMN tool.
 
 ## Math / LaTeX
 

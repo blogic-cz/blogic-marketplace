@@ -1,30 +1,23 @@
 ---
 name: grill-me
-description: This skill should be used when a user wants to stress-test a plan, pressure-test a design, expose hidden assumptions, resolve blockers, or explicitly asks to be "grilled" with rigorous questioning.
+description: This skill runs a portable, evidence-led decision interview when a plan, design, or blocker needs assumptions tested and a clear next decision.
 ---
 
-Run a rigorous decision-clarification loop for the user's plan or design.
+# Grill Me
 
-Use this loop:
+Use to pressure-test a plan or resolve a blocker without turning discovery into an unbounded interrogation.
 
-1. Identify open decisions, assumptions, dependencies, and risks.
-2. Prioritize the single highest-leverage unresolved decision (the one most likely to unblock other choices or prevent rework).
-3. Ask one focused question that resolves that decision.
-4. Summarize current understanding, including what is now decided, what remains open, and why the next question matters.
-5. Repeat until exit criteria are met.
+## Decision Loop
 
-Choose evidence source before asking:
+1. Inspect available code, documentation, prior decisions, and nearest domain terms before asking a factual question.
+2. State evidence, unknowns, and why the highest-leverage open decision matters.
+3. Ask one neutral question for that decision only.
+4. Record a lightweight checkpoint: decided, assumptions, open question, and next action.
+5. Repeat until blockers are resolved, explicitly deferred, or user stops.
 
-- Inspect available artifacts (codebase, docs, specs, prior decisions) first when the answer is factual and recoverable from existing information.
-- Ask the user directly when the answer is preference-, strategy-, risk-tolerance-, or business-priority-dependent.
+Give a recommendation only after enough context exists; distinguish facts, assumptions, and trade-offs. Create an ADR only when the durable-decision threshold in the reference is met.
 
-Separate elicitation from recommendation:
+Read detail only when needed:
 
-- During elicitation, avoid leading phrasing and avoid presenting a preferred answer in the question.
-- After enough context is collected for a decision, provide a recommendation with rationale, tradeoffs, and explicit assumptions.
-
-Exit criteria:
-
-- Stop when all blocker-level decisions are resolved and remaining open items are low impact or explicitly deferred.
-- Stop when the user confirms sufficient clarity to proceed.
-- If unresolved blockers remain, end with a concise blocker list and the minimum next questions needed.
+- [references/evidence-and-questions.md](references/evidence-and-questions.md) — evidence and question discipline
+- [references/checkpoints-and-adrs.md](references/checkpoints-and-adrs.md) — checkpoint and ADR thresholds
