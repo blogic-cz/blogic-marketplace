@@ -11,7 +11,7 @@ Use to deliver a reported defect or narrowly scoped change. Keep each stage evid
 ## Delivery Flow
 
 1. State concrete reproduction: inputs or steps, observed result, expected result, and scope.
-2. Trace relevant code and callers; identify root cause before changing behavior.
+2. Trace relevant code and callers; identify root cause before changing behavior. When available, use the narrowest read-only CI, PR, log, trace, metric, database, or session tool to gather evidence before guessing.
 3. Make smallest fix that resolves reproduced behavior without unrelated refactoring.
 4. Run smallest relevant checks and tests; use `testing-patterns` for test design.
 5. Run bounded changed-scope review with `code-review`; address material findings and recheck affected scope.
@@ -23,4 +23,4 @@ Use to deliver a reported defect or narrowly scoped change. Keep each stage evid
 
 ## Scope
 
-Use specialist skills only when relevant: `frontend-standards`, `backend-standards`, `trpc-patterns`, `drizzle-database`, `testing-patterns`, and `performance-optimization`.
+Use specialist skills only when relevant: `frontend-standards`, `backend-standards`, `trpc-patterns`, `drizzle-database`, `testing-patterns`, `performance-optimization`, and the repository's tool router for CI or live-data debugging.
