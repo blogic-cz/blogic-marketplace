@@ -1,19 +1,33 @@
 ---
 name: frontend-standards
-description: This skill routes frontend changes to the right existing guidance when a task involves visual UX, TanStack routes/forms/query state, TRPC APIs, testing, or relevant performance work.
+description: Guides portable frontend ownership, completion, interaction, boundary, and module-composition standards; routes framework-specific work to existing specialist skills.
 compatibility: opencode
 ---
 
 # Frontend Standards
 
-Use for frontend changes that span concerns or need help selecting the owning skill. Inspect nearby code and follow its established conventions; this router does not replace specialist guidance.
+Use for any frontend change. Inspect nearest comparable route, feature, component, and test first; copy its ownership and naming shape before creating structure. These rules own portable behavior. Keep React, TanStack Router/Query, TRPC, form, and test mechanics in their specialist skills.
 
-## Route by Concern
+## Load by Change
 
-- Visual UI, layout, styling, accessibility, or interaction design: load `frontend-design`.
-- TanStack Router, forms, query state, loaders, or prefetching: load `tanstack-frontend`.
-- API contracts, TRPC routers, procedures, middleware, or errors: load `trpc-patterns`.
-- Test selection or implementation: load `testing-patterns`.
-- Measured or clearly identified latency, rendering, data-loading, or bundle bottlenecks: load `performance-optimization`.
+| Change                                                   | Read                                                                                       | Completion                                    |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| Every frontend change                                    | [references/coding-conventions.md](references/coding-conventions.md)                       | Local conventions and public boundaries hold. |
+| Route, feature, page, modal, form, or shared component   | [references/module-composition.md](references/module-composition.md)                       | Ownership, co-location, and seams are clear.  |
+| UI, layout, feedback, accessibility, responsive behavior | [references/interaction-and-accessibility.md](references/interaction-and-accessibility.md) | All user states are usable.                   |
+| Query, mutation, cache, invalidation, or API error       | [references/data-boundaries.md](references/data-boundaries.md)                             | Server state and errors remain coherent.      |
+| User-visible text or locale-sensitive behavior           | [references/localization.md](references/localization.md)                                   | Text and formatting are localizable.          |
 
-Load only skills relevant to changed behavior. Keep implementation details in their owning skill.
+## Specialist Routing
+
+- Visual design system and styling: `frontend-design`.
+- React/TanStack Router, forms, loaders, query state, prefetching: `tanstack-frontend`.
+- TRPC contracts, procedure errors, middleware: `trpc-patterns`.
+- Tests and stories: `testing-patterns`.
+- Measured rendering, loading, or bundle issue: `performance-optimization`.
+
+Load only relevant skills. A route or component wrapper stays thin: compose feature behavior there; do not move domain state, data orchestration, or reusable UI internals into it for convenience.
+
+## Completion
+
+Account for each affected reference, run smallest relevant checks, and call out API-contract or user-visible behavior changes. Do not call work complete while loading, empty, error, permission, mutation-pending, or success feedback behavior is unspecified.

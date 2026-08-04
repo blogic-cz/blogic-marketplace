@@ -1,11 +1,20 @@
 # Backend Boundaries
 
-Apply these rules at a request, RPC, job, or message entrypoint.
+Apply at every HTTP, RPC, job, message, webhook, or CLI entrypoint.
 
-1. Parse untrusted input into a validated shape before use.
-2. Authenticate and authorize before reading or changing protected data.
-3. Convert expected domain failures to stable client-facing errors in one boundary layer.
-4. Keep error responses useful without exposing secrets, tokens, stack traces, or infrastructure details.
-5. Reuse local error, validation, and identity helpers before adding new ones.
+1. Parse and validate untrusted input before use; bound sizes, lists, pagination, and resource consumption.
+2. Authenticate and authorize before protected reads or writes. UI checks are not authorization.
+3. Convert expected domain failures into stable boundary errors in one place. Keep messages useful without leaking stack traces, topology, credentials, tokens, or sensitive data.
+4. Pass typed values and explicit dependencies into application logic; do not let transport request objects spread inward.
+5. Return stable contract shapes and intentional status/error semantics. Make cancellation propagate from caller where platform supports it.
 
-Keep business rules in functions that receive typed values and explicit dependencies. Do not make a generic abstraction for a single caller.
+Validation is not one layer only: validate shape at trust boundary, invariants at domain owner, and constraints at durable storage. Do not use generic catch-and-return-success handling. Log correlation/context needed to diagnose failures, redacting secrets and sensitive payloads.
+
+Reuse local identity, validation, and error helpers before adding another boundary convention. For TRPC mechanics load `trpc-patterns`; for Effect runtime mapping load `effect-ts`.
+
+## Completion
+
+- [ ] Input, authorization, and limits happen before use.
+- [ ] Expected vs unexpected failures map separately.
+- [ ] Transport details do not leak inward or to clients.
+- [ ] Logs have diagnostic context without secrets.

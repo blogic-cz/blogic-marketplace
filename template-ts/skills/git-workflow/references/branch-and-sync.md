@@ -1,10 +1,16 @@
-# Branch and Sync
+# Branch and Current-State Safety
 
-Before any state-changing command, inspect `git status --short`, current branch, and whether intent is to create or update a branch. Preserve unrelated work and ask when intent is ambiguous.
+Start with `git status --short --branch`, current branch, remotes, configured default branch, and target/base supplied by user. Do not assume a branch name or remote exists.
 
-Resolve target explicitly: use repository convention, then confirm whether it is a local branch or a remote branch such as `origin/<target>`. Do not assume a remote branch exists.
+For a new topical branch, first fetch intended base, then create from its remote tracking ref:
 
-- **New branch:** after target is resolved, create it from that local or remote target.
-- **Existing branch:** switch to it only after confirming it is intended; fetch and merge the resolved target only when synchronization is requested.
+```bash
+git fetch <remote> <base>
+git switch --no-track -c <topic-kebab-case> <remote>/<base>
+```
 
-Use repository naming and target-branch conventions when they exist. Resolve conflicts by understanding both changes; ask when intent is ambiguous. Verify the resulting branch with the repository's relevant checks. Do not use force push, reset, clean, or history rewriting unless user explicitly requests it.
+Use task-derived, non-generic branch name. If local changes would be overwritten or branch ownership is unclear, stop and ask where they belong; never stash/reset/clean.
+
+Before push, inspect divergence (`git log --left-right --count <remote>/<branch>...HEAD` when upstream exists). Publish only intended commits. Use normal push (`git push -u <remote> HEAD` initially; `git push <remote> HEAD` afterward), never force push.
+
+If commit succeeds but push/PR mutation fails, report local commit SHA, remote state, command/error, and safe next action. Do not retry mutations blindly or rewrite history. Completion: intended remote branch points to intended local SHA, or partial state is explicitly reported.

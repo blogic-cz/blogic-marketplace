@@ -1,23 +1,38 @@
 ---
 name: grill-me
-description: This skill runs a portable, evidence-led decision interview when a plan, design, or blocker needs assumptions tested and a clear next decision.
+description: "Evidence-led, checkpointed design interview for high-risk decisions and an approval-gated implementation plan."
 ---
 
 # Grill Me
 
-Use to pressure-test a plan or resolve a blocker without turning discovery into an unbounded interrogation.
+Use before consequential implementation, architecture, integration, data, security, or workflow decisions. This is interview and planning, not implementation.
 
-## Decision Loop
+Load [evidence and questions](references/evidence-and-questions.md) first. Use nearest applicable domain context, glossary, architecture docs, decision records, and code. Do not invent domain vocabulary or private path assumptions.
 
-1. Inspect available code, documentation, prior decisions, and nearest domain terms before asking a factual question.
-2. State evidence, unknowns, and why the highest-leverage open decision matters.
-3. Ask one neutral question for that decision only.
-4. Record a lightweight checkpoint: decided, assumptions, open question, and next action.
-5. Repeat until blockers are resolved, explicitly deferred, or user stops.
+## State machine
 
-Give a recommendation only after enough context exists; distinguish facts, assumptions, and trade-offs. Create an ADR only when the durable-decision threshold in the reference is met.
+`prepare → question → checkpoint → next-question | output-plan → waiting:user-approval → complete`
 
-Read detail only when needed:
+Ask exactly one highest-risk unresolved question per turn. Do not batch questions or smuggle recommendation into question. Before each question, state evidence source, remaining unknown, and consequence. Ask user only for preference, priority, risk tolerance, ownership, or fact unavailable in artifacts.
 
-- [references/evidence-and-questions.md](references/evidence-and-questions.md) — evidence and question discipline
-- [references/checkpoints-and-adrs.md](references/checkpoints-and-adrs.md) — checkpoint and ADR thresholds
+## Coverage
+
+Progress through relevant topics, skipping only with evidence: goal and success metrics; users/domain terms; current behavior and constraints; boundaries and failure modes; authorization/privacy/data lifecycle; contracts and compatibility; state/concurrency/idempotency; migration/rollback; observability/support; testing/acceptance; ownership and rollout risk.
+
+Call out conflict between user wording and authoritative terminology immediately. Propose canonical term and record resolution. Probe concrete edge cases rather than abstract concerns.
+
+## Checkpoint
+
+After every answer, update a concise checkpoint using [`checkpoints-and-adrs.md`](references/checkpoints-and-adrs.md): decided/deferred item, evidence, assumptions, and exactly one next action/question. Confirm checkpoint with user before moving on when answer changes scope, contract, risk, or terminology. End only when material decisions are resolved or explicitly deferred, blockers are named, and acceptance/verification is testable.
+
+## Output plan and approval
+
+Present exact plan: goal/non-goals; decisions and deferrals; affected surfaces/files; ordered implementation steps; contracts/data changes; risks and mitigations; acceptance scenarios; deterministic/manual validation; rollback or stop conditions; optional documentation outputs. Ask for explicit approval before editing, creating tickets, publishing, or making external mutations. Recommendation is not approval.
+
+## ADR and domain context
+
+Offer ADR only when decision is hard to reverse, surprising without context, and based on real trade-off affecting durable architecture. Offer domain-context update only for established module language missing from broader glossary. Do not write either during interview; include selected output only after plan approval.
+
+## Completion
+
+Complete when user confirms final checkpoint and explicitly approves or declines output plan. If key evidence, owner, product intent, or approval remains unavailable, stop as blocked with exact missing item.
