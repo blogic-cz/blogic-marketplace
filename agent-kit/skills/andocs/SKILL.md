@@ -325,6 +325,26 @@ If a `prototype.json` exists but has no `shared.css`, that level is simply skipp
 
 **IMPORTANT — Tailwind v4 CDN:** The injected CDN is `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4` (NOT `cdn.tailwindcss.com` which only supports v3). All Tailwind v4 utility classes work out of the box.
 
+### Standalone links to HTML files
+
+A prototype HTML file can also be linked directly instead of embedded. Use a normal
+relative markdown link — the file opens as a standalone page in a new tab, with its
+own shareable URL:
+
+```markdown
+[Quarterly Summary](html-outputs/reports/quarterly-summary.html)
+```
+
+Opens `/app/<org>/<project>/<repo>/html-outputs/reports/quarterly-summary.html`.
+
+Use this for index pages that list many generated HTML outputs. Use a `prototype`
+block when the output belongs inline in the surrounding text. Both read the same
+file, and both apply the injected Tailwind/Alpine/design tokens plus the
+`shared.css` and `shared.js` cascade.
+
+The file must still live under a `prototype.json` root — that marker is what makes
+Andocs sync `.html` files from the repository.
+
 ### Live reference endpoint
 
 For current design tokens (CSS custom properties with exact values), CDN library URLs, shared.css utility classes, sandbox restrictions, iframe dimensions, and supported file types — fetch:
@@ -508,6 +528,7 @@ Standard markdown with alignment:
 - External: `[GitHub](https://github.com)` — opens new tab
 - Relative: `[Auth docs](./auth.md)` — in-app navigation
 - Anchor: `[Section](#heading-id)` — smooth scroll
+- Prototype HTML: `[Report](outputs/report.html)` — opens the file standalone in a new tab
 
 ## Frontmatter
 
