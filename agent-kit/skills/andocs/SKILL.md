@@ -332,10 +332,14 @@ relative markdown link — the file opens as a standalone page in a new tab, wit
 own shareable URL:
 
 ```markdown
-[Quarterly Summary](html-outputs/reports/quarterly-summary.html)
+[Quarterly Summary](./html-outputs/reports/quarterly-summary.html)
 ```
 
 Opens `/app/<org>/<project>/<repo>/html-outputs/reports/quarterly-summary.html`.
+
+Paths resolve exactly like `.md` links — `./`, `../`, a bare relative path, or a
+repo-root path all work, and relative ones resolve against the linking document's
+directory.
 
 Use this for index pages that list many generated HTML outputs. Use a `prototype`
 block when the output belongs inline in the surrounding text. Both read the same
