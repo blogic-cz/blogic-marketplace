@@ -85,13 +85,13 @@ Handle catalog packages in one place:
 
 **Step 2 — Update + Adopt features IN PARALLEL**
 
-| Track A: Apply Update                                 | Track B: Adopt features from release notes                                                               |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Apply version bumps via `bun upgrade` or catalog edit | Read `outdated-changelog.json` — each entry has `releases[]` with full release notes                     |
+| Track A: Apply Update                                                          | Track B: Adopt features from release notes                                                               |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Apply version bumps via `bun upgrade` or catalog edit                          | Read `outdated-changelog.json` — each entry has `releases[]` with full release notes                     |
 | `bun install` if catalog (respecting `bunfig.toml` minimum-release-age policy) | Classify each new feature by tier (see `references/feature-adoption-tiers.md`)                           |
-|                                                       | **T0/T1**: implement config-level changes (target files in `configFiles[]`), verify with `bun run check` |
-|                                                       | **T2**: generate concrete diffs, include in report                                                       |
-|                                                       | Search codebase for usages of changed/deprecated/new APIs                                                |
+|                                                                                | **T0/T1**: implement config-level changes (target files in `configFiles[]`), verify with `bun run check` |
+|                                                                                | **T2**: generate concrete diffs, include in report                                                       |
+|                                                                                | Search codebase for usages of changed/deprecated/new APIs                                                |
 
 Delegate release-note research to a subagent/librarian when available. If delegation is unavailable, process package groups sequentially in the main agent with the same rubric.
 
