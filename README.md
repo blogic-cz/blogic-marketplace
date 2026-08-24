@@ -1,95 +1,71 @@
 # Blogic Marketplace
 
-Agent skills and plugins for Blogic TypeScript fullstack projects.
+Reference repository for Claude Code plugins and reusable agent skills used in Blogic projects.
 
-## agent-kit Plugin
+This repository is primarily a collection of working examples. Read, copy, and adapt the parts you need. The examples are maintained for Blogic workflows and are not a supported, one-click product for every project.
 
-Plugin with MCP servers, hooks, and commands for Claude Code.
+## What to explore
 
-### Claude Code
+| Area                 | Path                                                                 | What it demonstrates                                                               |
+| -------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Claude Code plugin   | [`agent-kit/`](agent-kit/)                                           | Plugin manifest, lifecycle hooks, commands, skills, scripts, and an MCP server     |
+| Shared skills        | [`template-ts/skills/`](template-ts/skills/)                         | Standalone skills with focused `SKILL.md` files and optional references or scripts |
+| Marketplace manifest | [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) | Publishing a local plugin through a Claude Code marketplace                        |
+| Repository checks    | [`check.ts`](check.ts)                                               | Running format, lint, and TypeScript checks together                               |
+
+## agent-kit reference plugin
+
+[`agent-kit/`](agent-kit/) is a complete Claude Code plugin example. It includes:
+
+- lifecycle hooks for session start, edits, stop, and approval notifications;
+- commands for manual checks, code review, requirements, and parallel work;
+- skills ranging from a small standalone skill to skills with references, examples, and scripts;
+- an HTTP MCP server configuration;
+- a Node runner that dispatches hook scripts from the plugin manifest.
+
+See [`agent-kit/README.md`](agent-kit/README.md) for a guided tour.
+
+## template-ts skill library
+
+[`template-ts/skills/`](template-ts/skills/) contains reusable development workflows for TypeScript applications. The examples cover small reference skills, multi-file skills, review loops, Git workflows, frontend and backend conventions, testing, databases, and operations.
+
+See [`template-ts/README.md`](template-ts/README.md) for usage and structure.
+
+## Try the examples locally
+
+You do not need to install the marketplace to inspect or adapt anything in this repository.
+
+Load the plugin directly while developing:
 
 ```bash
-claude
+claude --plugin-dir ./agent-kit
+```
+
+Install it through the marketplace only when you want to test that flow:
+
+```text
 /plugin marketplace add https://github.com/blogic-cz/blogic-marketplace
 /plugin install agent-kit@blogic-marketplace
 ```
 
-### Gemini CLI
-
-Available in a separate repository:
-
-```bash
-gemini extensions install https://github.com/blogic-cz/agent-kit-gemini --auto-update
-```
-
-### What's included
-
-- **MCP Servers**: Chrome DevTools, Sentry Spotlight, Sentry Cloud, Agentsfera
-- **Automated Hooks**: Post-edit checks, post-stop quality gates
-
-### Available skills
-
-| Skill           | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `andocs`        | Andocs markdown rendering and documentation        |
-| `process-spec`  | Structured business process specification creation |
-| `skill-creator` | Guide for creating new agent skills                |
-
-## template-ts Skills
-
-Shared skills for all apps built on [blogic-template-ts](https://github.com/blogic-cz/blogic-template-ts). Works with Claude Code, OpenCode, Cursor, Cline, Copilot, Windsurf, and other agents.
-
-### Install all skills
-
-```bash
-npx skills add blogic-cz/blogic-marketplace/template-ts --all
-```
-
-### Install specific skills
-
-```bash
-npx skills add blogic-cz/blogic-marketplace/template-ts --skill drizzle-database --skill trpc-patterns --skill tanstack-frontend
-```
-
-### Interactive selection
+Install standalone `template-ts` skills with the Agent Skills CLI:
 
 ```bash
 npx skills add blogic-cz/blogic-marketplace/template-ts
 ```
 
-### Update
+These examples may assume Blogic project conventions, local tools, or external services. Review each file before copying it into another project.
+
+## Validate changes
 
 ```bash
-npx skills update
+bun install
+bun run check
 ```
 
-### Available skills
+## Related repository
 
-| Skill                        | Description                                                |
-| ---------------------------- | ---------------------------------------------------------- |
-| `better-auth`                | Authentication and authorization with Better Auth          |
-| `code-review`                | Pre-PR code review checklist                               |
-| `debugging-with-opensrc`     | Debug libraries by reading their source code               |
-| `drizzle-database`           | Database schemas, queries, and migrations with Drizzle ORM |
-| `effect-ts`                  | Effect TypeScript services, layers, and error handling     |
-| `frontend-design`            | UI components, styling, and layouts                        |
-| `git-workflow`               | PR lifecycle, branch management, and CI monitoring         |
-| `github-triage`              | GitHub triage — resolve issues and review PRs              |
-| `kubernetes-helm`            | Kubernetes deployments with Helm charts                    |
-| `marketing-expert`           | Marketing copy and landing pages                           |
-| `performance-optimization`   | N+1 fixes, batch operations, and query optimization        |
-| `process-db-report`          | PostgreSQL performance report analysis                     |
-| `production-troubleshooting` | Debug production/test performance issues                   |
-| `react-doctor`               | React codebase health diagnostics                          |
-| `requirements`               | Structured 5-phase requirements gathering                  |
-| `scan-effect-solutions`      | Effect TypeScript compliance audit                         |
-| `sentry-integration`         | Error tracking and tracing with Sentry                     |
-| `sync-template`              | Sync project with blogic-template-ts upstream              |
-| `tanstack-frontend`          | TanStack Router routes, TRPC prefetching, and forms        |
-| `tdd`                        | Test-driven development with Red-Green-Refactor            |
-| `testing-patterns`           | Unit tests, TRPC integration tests, and E2E tests          |
-| `trpc-patterns`              | TRPC routers, procedures, and middleware                   |
-| `update-packages`            | npm package updates with breaking change handling          |
+Gemini CLI examples live in [`blogic-cz/agent-kit-gemini`](https://github.com/blogic-cz/agent-kit-gemini).
 
 ## License
 

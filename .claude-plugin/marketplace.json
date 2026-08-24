@@ -8,7 +8,7 @@
     {
       "name": "agent-kit",
       "source": "./agent-kit",
-      "description": "Base plugin by blogic",
+      "description": "Reference Claude Code plugin with example skills, commands, hooks, and MCP configuration",
       "skills": ["./skills/andocs"]
     }
   ]
