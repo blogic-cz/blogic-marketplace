@@ -1,50 +1,43 @@
-# agent-kit reference plugin
+# agent-kit examples
 
-`agent-kit` is a working Claude Code plugin used here as a reference. It shows how plugin components fit together. Treat it as source material to adapt, not as a universal project setup.
+`agent-kit` is a reference collection of skills, commands, MCP configuration, and lifecycle automation from an earlier Claude Code plugin.
+
+The plugin and marketplace manifests have been removed. Default plugin component directories are nested under `examples/`, so Claude Code does not discover this directory as a plugin. Read and adapt individual examples for Claude Code or another coding agent.
 
 ## Map
 
-| Component       | Path                                                       | Example                                             |
-| --------------- | ---------------------------------------------------------- | --------------------------------------------------- |
-| Plugin manifest | [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) | Metadata, MCP registration, and hook wiring         |
-| MCP connection  | [`.mcp.json`](.mcp.json)                                   | Configuration for an external HTTP MCP server       |
-| Hooks           | [`scripts/`](scripts/)                                     | Session, post-edit, stop, and notification handlers |
-| Commands        | [`commands/`](commands/)                                   | User-invoked Markdown commands                      |
-| Skills          | [`skills/`](skills/)                                       | Standalone and multi-file skill layouts             |
+| Component      | Path                                       | Example                                               |
+| -------------- | ------------------------------------------ | ----------------------------------------------------- |
+| MCP connection | [`examples/.mcp.json`](examples/.mcp.json) | Configuration for an external HTTP MCP service        |
+| Hook handlers  | [`examples/scripts/`](examples/scripts/)   | Session, post-edit, stop, and notification automation |
+| Commands       | [`examples/commands/`](examples/commands/) | User-invoked Markdown workflows                       |
+| Skills         | [`examples/skills/`](examples/skills/)     | Single-file and multi-file skill layouts              |
 
 ## Hook flow
 
-The manifest registers four lifecycle events:
+The scripts preserve handlers for four Claude Code lifecycle events:
 
-- `SessionStart` runs [`scripts/session-start-dynamic.sh`](scripts/session-start-dynamic.sh) through [`scripts/runner.js`](scripts/runner.js).
-- `PostToolUse` marks edits and runs project checks after `Edit` or `Write`.
-- `Stop` runs final checks only when edit tracking reports changes.
-- `Notification` calls the approval notification script.
+- `SessionStart` uses [`examples/scripts/session-start-dynamic.sh`](examples/scripts/session-start-dynamic.sh) to discover skills.
+- `PostToolUse` uses [`examples/scripts/check-after-edit.sh`](examples/scripts/check-after-edit.sh) to track edits and run project checks.
+- `Stop` uses [`examples/scripts/check-after-stop.sh`](examples/scripts/check-after-stop.sh) to run final checks after edited sessions.
+- `Notification` uses [`examples/scripts/notify-approval.sh`](examples/scripts/notify-approval.sh) for approval notifications.
 
-[`scripts/runner.js`](scripts/runner.js) keeps manifest commands portable by resolving scripts from `CLAUDE_PLUGIN_ROOT`. [`scripts/edit-tracker.sh`](scripts/edit-tracker.sh) demonstrates file-based state shared by multiple hooks.
+[`examples/scripts/runner.js`](examples/scripts/runner.js) demonstrates cross-platform dispatch from an agent lifecycle event to a shell script. [`examples/scripts/edit-tracker.sh`](examples/scripts/edit-tracker.sh) demonstrates file-based state shared by multiple handlers.
 
-Projects opt into checks through `.claude/check-after-edit.sh` and `.claude/check-after-stop.sh`. See the examples at the repository root.
+These scripts still use Claude Code environment variables such as `CLAUDE_PLUGIN_ROOT` and `CLAUDE_PROJECT_DIR`. Replace them or provide equivalent values when adapting the scripts to another agent.
 
 ## Skill layouts
 
-- [`skills/andocs/SKILL.md`](skills/andocs/SKILL.md) is a single-file reference skill.
-- [`skills/process-spec/`](skills/process-spec/) adds separate `examples/` and `references/` files.
-- [`skills/skill-creator/`](skills/skill-creator/) adds references and executable helper scripts.
+- [`examples/skills/andocs/SKILL.md`](examples/skills/andocs/SKILL.md) is a single-file reference skill.
+- [`examples/skills/process-spec/`](examples/skills/process-spec/) adds separate `examples/` and `references/` files.
+- [`examples/skills/skill-creator/`](examples/skills/skill-creator/) adds references and executable helper scripts.
 
-Claude Code exposes plugin skills under the plugin namespace, for example `/agent-kit:process-spec`.
+The `SKILL.md` layout follows the Agent Skills convention. Copy a chosen skill directory out of `examples/` into the location expected by the target agent.
 
 ## Commands
 
-[`commands/`](commands/) contains examples for manual hook checks, requirements workflows, code review, skill scanning, and parallel execution. Commands are retained as examples of the legacy command layout. Prefer `skills/<name>/SKILL.md` for new reusable workflows.
+[`examples/commands/`](examples/commands/) contains examples for manual checks, requirements workflows, code review, skill scanning, and parallel execution. Some commands refer to Claude Code paths and tools. Treat them as workflow examples rather than drop-in commands for every agent.
 
 ## MCP
 
-[`.mcp.json`](.mcp.json) configures a connection to an external HTTP MCP service. Claude Code connects to plugin-provided remote server configurations when the plugin is enabled. Check service ownership, authentication, and data handling before reusing this configuration.
-
-## Test locally
-
-```bash
-claude --plugin-dir ./agent-kit
-```
-
-From Claude Code, run `/reload-plugins` after edits. Use marketplace installation only when testing marketplace behavior.
+[`examples/.mcp.json`](examples/.mcp.json) configures a connection to an external HTTP MCP service. Check whether the target agent supports the same MCP configuration shape, then review service ownership, authentication, and data handling before reuse.

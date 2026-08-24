@@ -2,101 +2,55 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository Overview
+## Repository overview
 
-This is the **Blogic Marketplace** - a Claude Code plugin marketplace containing enterprise-grade plugins developed by Blogic. The primary plugin is **agent-kit**, which provides development workflow automation, MCP server integrations, and quality gate hooks.
+Blogic Marketplace is a reference collection of reusable skills and automation patterns for coding agents. It is not an installable Claude Code marketplace or plugin.
 
-## Repository Structure
+`agent-kit/` preserves examples from an earlier Claude Code plugin. `template-ts/skills/` contains portable Agent Skills used by Blogic TypeScript projects.
+
+## Repository structure
 
 ```
 blogic-marketplace/
-├── .claude-plugin/
-│   └── marketplace.json       # Marketplace configuration
-├── agent-kit/                 # Main plugin
-│   ├── .claude-plugin/
-│   │   └── plugin.json        # Plugin manifest with hooks
-│   ├── .mcp.json              # MCP server configurations
-│   ├── commands/              # Slash commands
-│   ├── scripts/               # Hook scripts and utilities
-│   │   ├── check-runner.sh    # Hook execution helper
-│   │   ├── edit-tracker.sh    # Edit tracking for conditional hooks
-│   │   ├── check-after-edit.sh
-│   │   ├── check-after-stop.sh
-│   │   ├── celebrate.sh
-│   │   └── notify-approval.sh
-│   └── install-agent-kit.sh   # Installation script
+├── agent-kit/                 # Historical agent automation examples
+│   └── examples/              # Nested to prevent plugin auto-discovery
+│       ├── .mcp.json          # Example external MCP connection
+│       ├── commands/          # Markdown workflow examples
+│       ├── scripts/           # Lifecycle handlers and utilities
+│       └── skills/            # Agent Skills examples
+├── template-ts/
+│   └── skills/                # Reusable TypeScript project skills
+├── check.ts                   # Repository checks
+└── README.md                  # Human-facing reference index
 ```
 
-## Development Commands
-
-### Testing Plugin Locally
+## Development commands
 
 ```bash
-# Start Claude Code
-claude
-
-# Add marketplace locally
-/plugin marketplace add /path/to/blogic-marketplace
-
-# Install plugin
-/plugin install agent-kit@blogic-marketplace
-
-# After changes, reinstall
-/plugin uninstall agent-kit@blogic-marketplace
-/plugin install agent-kit@blogic-marketplace
-```
-
-### Manual Hook Testing
-
-```bash
-# Test post-edit checks
-/agent-kit:check-after-edit
-
-# Test post-stop checks
-/agent-kit:check-after-stop
+bun install
+bun run check
 ```
 
 ## Architecture
 
-### Hook System
+### Hook examples
 
-The agent-kit plugin uses **file-based edit tracking** to conditionally run hooks:
+The scripts under `agent-kit/examples/scripts/` preserve a file-based edit tracking pattern:
 
-1. **PostToolUse Hook** (`check-after-edit.sh`):
-   - Triggers after Edit/Write tool calls
-   - Calls `mark_edit_made()` to track that edits occurred
-   - Runs user-configured linting/formatting checks
-   - Uses `check-runner.sh` helper for standardized execution
+1. `check-after-edit.sh` marks that an edit occurred and runs configured checks.
+2. `check-after-stop.sh` skips untouched sessions and runs final quality gates after edits.
+3. `edit-tracker.sh` stores the shared state in `.claude/.edit-tracker`.
+4. `check-runner.sh` standardizes command execution and hook output.
 
-2. **Stop Hook** (`check-after-stop.sh`):
-   - Triggers when conversation ends
-   - Checks `has_edits()` - **only runs if edits were made**
-   - Skips execution during pure analysis sessions
-   - Runs user-configured quality gates (builds, tests)
-   - Calls `clear_edit_tracking()` on success
-   - Executes `celebrate.sh` after successful checks
+The scripts originated in Claude Code and use variables such as `CLAUDE_PLUGIN_ROOT`. Adapt those paths and lifecycle bindings before using them with another agent.
 
-3. **Edit Tracking** (`edit-tracker.sh`):
-   - Uses `.claude/.edit-tracker` file (gitignored)
-   - Functions: `mark_edit_made()`, `has_edits()`, `clear_edit_tracking()`
-   - Ensures Stop hook only runs when code was modified
+### MCP example
 
-### MCP Servers
+`agent-kit/examples/.mcp.json` contains one example connection to the external Agentsfera HTTP MCP service. Verify compatibility, authentication, and service ownership before reuse.
 
-Integrated MCP servers in `.mcp.json`:
+### Project check examples
 
-- **chrome-dev-tools** - Chrome DevTools automation
-- **sentry-spotlight** - Local error debugging
-- **sentry** - Error tracking integration
-- **agentsfera** - Extended API capabilities
-
-### User Configuration
-
-Users configure checks in their project's `.claude/` directory:
-
-- `.claude/check-after-edit.sh` - Post-edit checks (linting, formatting)
-- `.claude/check-after-stop.sh` - Post-stop checks (builds, tests)
-- Scripts use `run_check_hook` helper from `check-runner.sh`
+The root `.claude/check-after-edit.sh` and `.claude/check-after-stop.sh` files show how a project can configure post-edit and final checks around `check-runner.sh`.
 
 ---
 
@@ -110,7 +64,7 @@ Users configure checks in their project's `.claude/` directory:
 
 **For EVERY domain analysis step involving Claude Code features:**
 
-1. ✅ **Read official documentation FIRST** - https://code.claude.com/docs
+1. ✅ **Read official documentation FIRST** - <https://code.claude.com/docs>
 2. ✅ **Use Exa for real-world patterns** - `exa-get_code_context_exa`
 3. ✅ **Analyze existing codebase patterns**
 4. ✅ **Then design and implement**
@@ -119,15 +73,15 @@ Users configure checks in their project's `.claude/` directory:
 
 ### 1. Official Documentation First
 
-**Primary Source:** https://code.claude.com/docs
+**Primary Source:** <https://code.claude.com/docs>
 
 Before implementing ANY Claude Code feature, consult the official documentation:
 
-- **Hooks:** https://code.claude.com/docs/en/hooks
-- **Slash Commands:** https://code.claude.com/docs/en/slash-commands
-- **Skills:** https://code.claude.com/docs/en/skills
-- **MCPs:** https://code.claude.com/docs/en/mcp
-- **Plugins:** https://code.claude.com/docs/en/plugins
+- **Hooks:** <https://code.claude.com/docs/en/hooks>
+- **Slash Commands:** <https://code.claude.com/docs/en/slash-commands>
+- **Skills:** <https://code.claude.com/docs/en/skills>
+- **MCPs:** <https://code.claude.com/docs/en/mcp>
+- **Plugins:** <https://code.claude.com/docs/en/plugins>
 
 **How to access:**
 
@@ -177,7 +131,7 @@ Step 2: 🔍 Research with Exa (MANDATORY)
          └─ exa-get_code_context_exa(query: "Claude Code [feature] patterns")
   ↓
 Step 3: 🔬 Analyze Existing Codebase
-         └─ Check agent-kit/scripts/, commands/, plugin.json
+         └─ Check agent-kit/examples/ scripts, commands, skills, and .mcp.json
   ↓
 Step 4: 🎯 Design Solution
          └─ Based on docs + Exa findings + codebase patterns
@@ -197,31 +151,31 @@ Step 7: 📝 Document (if new patterns discovered)
 
 #### 🪝 Hooks
 
-1. **📖 Read Docs:** https://code.claude.com/docs/en/hooks
+1. **📖 Read Docs:** <https://code.claude.com/docs/en/hooks>
 2. **🔍 Exa Research:** Hook lifecycle, error handling, environment variables (CLAUDE_PLUGIN_ROOT, CLAUDE_PROJECT_DIR)
 3. **📋 Key Topics:** PostToolUse, Stop, Notification hooks, hook chaining, exit codes, conditional execution
 
 #### ⚡ Slash Commands
 
-1. **📖 Read Docs:** https://code.claude.com/docs/en/slash-commands
+1. **📖 Read Docs:** <https://code.claude.com/docs/en/slash-commands>
 2. **🔍 Exa Research:** Command patterns, allowed-tools restrictions, natural language instruction approaches
 3. **📋 Key Topics:** Markdown frontmatter YAML, tool permissions, command arguments, KISS principles
 
 #### 🎯 Skills
 
-1. **📖 Read Docs:** https://code.claude.com/docs/en/skills
+1. **📖 Read Docs:** <https://code.claude.com/docs/en/skills>
 2. **🔍 Exa Research:** Skill definitions, tool access patterns, reusable skill composition
 3. **📋 Key Topics:** Skill scope, tool permissions, skill inheritance, skill libraries
 
 #### 🔌 MCPs (Model Context Protocol)
 
-1. **📖 Read Docs:** https://code.claude.com/docs/en/mcp
+1. **📖 Read Docs:** <https://code.claude.com/docs/en/mcp>
 2. **🔍 Exa Research:** MCP server setup, tool definitions, resource management, transport protocols
 3. **📋 Key Topics:** Server configuration (.mcp.json), tool registration, resource URIs, HTTP vs stdio
 
 #### 📦 Plugins
 
-1. **📖 Read Docs:** https://code.claude.com/docs/en/plugins
+1. **📖 Read Docs:** <https://code.claude.com/docs/en/plugins>
 2. **🔍 Exa Research:** plugin.json structure, marketplace publishing workflows, semantic versioning
 3. **📋 Key Topics:** Plugin manifest, hook registration, installation scripts, marketplace.json
 
@@ -248,7 +202,7 @@ When encountering errors with Claude Code features:
 
 ### 7. Complete Documentation Index
 
-Main documentation: https://code.claude.com/docs
+Main documentation: <https://code.claude.com/docs>
 
 This provides access to all Claude Code documentation including quickstarts, guides, and references.
 
@@ -256,12 +210,12 @@ This provides access to all Claude Code documentation including quickstarts, gui
 
 ## ⚠️ CRITICAL REMINDERS
 
-### For ANY work on Hooks, Commands, Skills, or MCPs:
+### For ANY work on Hooks, Commands, Skills, or MCPs
 
 1. **📖 ALWAYS read official documentation FIRST**
    - Don't assume you know how it works
    - Don't skip the docs "to save time"
-   - Documentation: https://code.claude.com/docs
+   - Documentation: <https://code.claude.com/docs>
 
 2. **🔍 ALWAYS use Exa for domain analysis**
    - Use `exa-get_code_context_exa` for EVERY feature

@@ -20,7 +20,7 @@
       }
     },
     {
-      "files": ["agent-kit/scripts/**", "agent-kit/skills/**/scripts/**"],
+      "files": ["agent-kit/examples/scripts/**", "agent-kit/examples/skills/**/scripts/**"],
       "rules": {
         "naming/no-process-env": "off"
       }
