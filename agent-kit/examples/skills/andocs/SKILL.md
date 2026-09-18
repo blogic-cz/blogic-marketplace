@@ -1,6 +1,6 @@
 ---
 name: andocs
- description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, BPMN diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'bpmn', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, BPMN syntax, and correct syntax."
+description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, BPMN diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'bpmn', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, BPMN syntax, and correct syntax."
 ---
 
 Write documentation using Andocs rendering capabilities. All features work out of the box.
@@ -251,17 +251,39 @@ Use `$schema` for editor validation:
 ```text
 prototypes/
   prototype.json          # Root marker (required)
-  shared.css               # Optional shared styles (auto-discovered, cascades down)
-  shared.js                # Optional shared scripts (auto-discovered)
+  index.html              # Entry page — for prototypes of ~10+ screens (see below)
+  shared.css              # Optional shared styles (auto-discovered, cascades down)
+  shared.js               # Optional shared scripts (auto-discovered)
   pages/
-    counter.html
+    counter.html          # Screens live here as subpages, linked from index.html
     dashboard.html
   sub-app/
-    prototype.json         # Sub-prototype marker
-    shared.css              # Overrides/extends parent shared.css
+    prototype.json        # Sub-prototype marker
+    index.html            # Sub-prototype gets its own entry page once it is that big
+    shared.css            # Overrides/extends parent shared.css
     pages/
-      detail.html          # Gets BOTH shared.css files (root first, sub-app second)
+      detail.html         # Gets BOTH shared.css files (root first, sub-app second)
 ```
+
+### Entry page — `index.html` (for larger prototypes)
+
+Once a prototype root passes roughly ten screens, or spans several functional areas, add an
+`index.html` next to its `prototype.json`. It is the front door — the page someone opens
+to see what is here and what to click — and without it the only way to find a screen is the
+raw folder listing. A prototype of a few screens needs none: the doc that embeds them is
+already the index.
+
+- The index lives in the root, never in `pages/`; screens stay in `pages/` as subpages.
+- It lists every page, grouped by area, each with a one-line description of what it shows.
+  Links are relative (`pages/dashboard.html`); a sub-prototype is linked through its own
+  index (`sub-app/index.html`), not through its pages.
+- Keep it dumb — plain links, no Alpine state, no shared components — so it still renders
+  when a screen is broken.
+- Adding, renaming, or deleting a page means updating the index in the same change,
+  including the change that first takes the prototype past ten screens.
+Docs link the index, not individual screens — with a plain markdown link, so it opens as
+its own page. Inside a `prototype` block the sandbox kills every link (see gotchas), so
+embed single screens there, never the index.
 
 ### Markdown syntax
 
@@ -508,7 +530,9 @@ For components with state changes (toggles, tabs, accordions), build the DOM **o
 
 4. **Click listeners on Shadow DOM** — Attach event listeners to the shadow root (`this.#shadow.addEventListener`), not to child elements. Child element listeners are lost when `innerHTML` is re-rendered.
 
-5. **`</script>` inside template literals** — If your JavaScript contains the string `</script>` (e.g., in a template literal), it terminates the script block early. Escape it as `<\/script>` or split: `'</' + 'script>'`.
+5. **Index page embedded in a `prototype` block** — links and popups are blocked by the sandbox, so the index renders but clicks do nothing. Link `index.html` with a plain markdown link instead; embed only individual screens.
+
+6. **`</script>` inside template literals** — If your JavaScript contains the string `</script>` (e.g., in a template literal), it terminates the script block early. Escape it as `<\/script>` or split: `'</' + 'script>'`.
 
 ## Tables
 
@@ -554,6 +578,7 @@ description: Summary
 - Use `html-preview` for interactive content, not raw HTML
 - One topic per document — prefer focused docs over giant files
 - Use relative `.md` links between docs for in-app navigation
+- A prototype of ~10+ screens has an `index.html` entry page listing them — link that from docs, not individual pages
 
 ## Anti-Patterns
 
