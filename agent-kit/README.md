@@ -22,6 +22,8 @@ The scripts preserve handlers for four Claude Code lifecycle events:
 - `Stop` uses [`examples/scripts/check-after-stop.sh`](examples/scripts/check-after-stop.sh) to run final checks after edited sessions.
 - `Notification` uses [`examples/scripts/notify-approval.sh`](examples/scripts/notify-approval.sh) for approval notifications.
 
+`notify-approval.sh` only plays a sound and writes the message to stdout on Windows; it never opens a dialog, because a modal window would steal focus and block the hook until dismissed. Set `AGENT_KIT_NOTIFY=0` to silence the notifications on any platform.
+
 [`examples/scripts/runner.js`](examples/scripts/runner.js) demonstrates cross-platform dispatch from an agent lifecycle event to a shell script. [`examples/scripts/edit-tracker.sh`](examples/scripts/edit-tracker.sh) demonstrates file-based state shared by multiple handlers.
 
 These scripts still use Claude Code environment variables such as `CLAUDE_PLUGIN_ROOT` and `CLAUDE_PROJECT_DIR`. Replace them or provide equivalent values when adapting the scripts to another agent.
