@@ -1,6 +1,6 @@
 ---
 name: andocs
-description: Author Andocs documentation and HTML prototypes. Use for Andocs markdown rendering, diagrams, math, html-preview, prototype.json, shared assets, and browser-local prototype state.
+description: This skill should be used when authoring Andocs documentation or HTML prototypes, including markdown rendering, diagrams, math, html-preview, prototype.json, shared assets, and browser-local prototype state.
 ---
 
 # Andocs authoring
