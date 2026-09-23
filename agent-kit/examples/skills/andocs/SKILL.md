@@ -1,6 +1,6 @@
 ---
 name: andocs
- description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, BPMN diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'bpmn', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, BPMN syntax, and correct syntax."
+description: "LOAD THIS SKILL when: writing documentation, creating markdown files, diagrams, BPMN diagrams, math formulas, HTML prototypes, prototypes, web components, or user mentions 'docs', 'documentation', 'diagram', 'mermaid', 'bpmn', 'math', 'formula', 'HTML preview', 'prototype', 'web component'. Covers all Andocs rendering features, prototype parameters (title, height), Web Components patterns, BPMN syntax, and correct syntax."
 ---
 
 Write documentation using Andocs rendering capabilities. All features work out of the box.
@@ -299,7 +299,62 @@ With title and height:
 - `shared.js` is auto-discovered from the nearest parent `prototype.json` root and injected as `<script data-andocs-shared-js>` in `<head>` — ideal for Web Component class definitions shared across pages
 - Shared JS executes before the HTML body renders (injected in `<head>`, before Tailwind/Alpine CDN scripts)
 - Iframe runs in sandbox mode (`allow-scripts` only)
-- "Open in new tab" uses a resolvable server URL (`/api/prototype-preview`) instead of fragile blob URLs (web-app only; CLI falls back to blob)
+- In the web app, "Open in new tab" uses the authenticated `/app/prototype` host wrapper; CLI falls back to a blob URL.
+
+### Browser-local prototype state
+
+Prototype JavaScript can opt in to browser-local state through `window.andocsState`. The host bridge
+uses `postMessage`; `load()` resolves to a JSON value or `null`, and `save(value)` resolves when the
+JSON value is saved. State is scoped to the authenticated user, project, repository, and prototype
+path. It is browser-local: it is not shared across devices, users, projects, repositories, or
+prototype paths. The authenticated web host provides the bridge; standalone and CLI previews without
+that host lose their state on refresh.
+
+```html
+<p>Count: <output id="count">0</output></p>
+<button id="increment">Add one</button>
+<p id="save-status"></p>
+<script>
+  (async () => {
+    const bridge = window.andocsState;
+    const output = document.querySelector("#count");
+    const status = document.querySelector("#save-status");
+    let saved = null;
+    let canSave = Boolean(bridge);
+    if (bridge) {
+      try {
+        saved = await bridge.load();
+      } catch {
+        canSave = false;
+        status.textContent = "Could not load state; changes will not be saved.";
+      }
+    }
+    const state = { count: Number.isInteger(saved?.count) ? saved.count : 0 };
+    const render = () => {
+      output.textContent = String(state.count);
+    };
+    render();
+    if (!bridge) status.textContent = "Page only: state bridge unavailable.";
+
+    document.querySelector("#increment").addEventListener("click", async () => {
+      state.count += 1;
+      render();
+      if (!canSave) return;
+      try {
+        await bridge.save(state);
+        status.textContent = "Saved in this browser.";
+      } catch {
+        canSave = false;
+        status.textContent = "Could not save state.";
+      }
+    });
+  })();
+</script>
+```
+
+The API is available only to prototype JavaScript; the sandbox still limits direct access to host
+storage and authenticated app data. Use the bridge for persistence, handle rejected calls, and store
+only JSON values.
 
 ### CSS cascade for shared styles
 
