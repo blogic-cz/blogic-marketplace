@@ -28,7 +28,7 @@ These scripts still use Claude Code environment variables such as `CLAUDE_PLUGIN
 
 ## Skill layouts
 
-- [`examples/skills/andocs/SKILL.md`](examples/skills/andocs/SKILL.md) is a single-file reference skill.
+- The installable [Andocs skill](../template-ts/skills/andocs/SKILL.md) covers documentation and prototypes.
 - [`examples/skills/process-spec/`](examples/skills/process-spec/) adds separate `examples/` and `references/` files.
 - [`examples/skills/skill-creator/`](examples/skills/skill-creator/) adds references and executable helper scripts.
 
