@@ -1,13 +1,13 @@
 # Browser-local prototype state
 
-Use `window.andocsState` when a prototype should restore JSON data after refresh in the same browser profile. The authenticated Andocs web host provides this API to embedded, fullscreen, and New Tab prototype views:
+Use `window.andocsState` when a prototype should restore JSON data after refresh in the same browser profile. The authenticated Andocs web host and local Andocs CLI provide this API to embedded, fullscreen, and New Tab prototype views:
 
 ```js
 const saved = await window.andocsState.load(); // JSON value or null
 await window.andocsState.save({ selectedTab: "overview" });
 ```
 
-The host stores data under the authenticated user, project, repository, and resolved prototype path. Prototype code does not choose the storage key. This is browser-local storage: it does not sync to other browsers or devices. CLI and standalone previews without the authenticated host have no bridge, so their state resets on refresh.
+The web host keys data by authenticated user, project, repository, and resolved prototype path. The CLI keys data by local documentation root and resolved prototype path in the current browser profile. Prototype code does not choose the storage key. State survives refresh and CLI restarts in the same browser profile and local origin; it does not sync to other browsers or devices. Opening a raw HTML file outside Andocs has no state bridge.
 
 Save after each state-changing action when changes must survive refresh without a separate Save button. Show a saved status only after `await api.save(value)` resolves. The iframe allows scripts but not native form submission: use a `type="button"` control with a click handler for form actions.
 
