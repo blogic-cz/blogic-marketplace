@@ -48,6 +48,8 @@ Install standalone `template-ts` skills with the Agent Skills CLI when appropria
 npx skills add blogic-cz/blogic-marketplace/template-ts
 ```
 
+The [Andocs skill](template-ts/skills/andocs/SKILL.md) includes browser-local prototype state and can be installed with `--skill andocs`.
+
 ## Validate repository changes
 
 ```bash
