@@ -51,7 +51,7 @@ To list HTML outputs without embedding them, use a relative Markdown link such a
 
 For current CDN URLs, exact design tokens, dimensions, and file types, fetch the [live reference](https://andocs.blogic.cz/llms-andocs-skill). The Tailwind browser build is v4 (`@tailwindcss/browser`), so use v4 utilities.
 
-If the page needs data after refresh, read [browser-local state](prototype-state.md). For Custom Elements or Shadow DOM, read [Web Components](web-components.md). For screen review badges and release variants in `<nexus-shell>` prototypes, read [review status and releases](prototype-releases.md).
+If the page needs data after refresh, read [browser-local state](prototype-state.md). For Custom Elements or Shadow DOM, read [Web Components](web-components.md). For screen review badges and release variants, read [review status and releases](prototype-releases.md).
 
 ## Page patterns
 

@@ -1,20 +1,16 @@
 # Review status and releases in prototypes
 
-Use these rules for prototypes whose screens are wrapped in the `<nexus-shell>` layout shell. The shell renders the review badge and the release switcher; pages only declare attributes.
+Use these rules for prototypes whose screens are wrapped in a shared layout shell: the root Custom Element that every screen places around its content. The shell renders the review badge and the release switcher; pages only declare attributes on it.
 
 ## Review status (required)
 
-Every screen sets `review` on `<nexus-shell>`:
+Every screen sets `review` on its shell element:
 
 | Value       | Badge     | Meaning                              |
 | ----------- | --------- | ------------------------------------ |
 | `draft`     | Draft     | Work in progress, waiting for review |
 | `draft-ok`  | Draft OK  | Passed review, waiting for approval  |
 | `schvaleno` | Schváleno | Approved                             |
-
-```html
-<nexus-shell review="draft"> ... </nexus-shell>
-```
 
 - A new screen starts as `draft`.
 - Change the status only when the user asks for it.
@@ -44,7 +40,7 @@ Every screen sets `review` on `<nexus-shell>`:
 - **A screen's release variant** is the sibling file `pages/<id>@<release>.html`, such as `smlouvy@20261007.html`:
   - Create it only where the release differs from the target state.
   - Keep the same `<title>` as the target screen.
-  - Set `version="<release>"` and its own `review` on `<nexus-shell>`.
+  - Set `version="<release>"` and its own `review` on the shell element.
   - It may reuse the target screen's function names.
   - The release must exist in `releases.json`.
 
@@ -55,10 +51,10 @@ Every screen sets `review` on `<nexus-shell>`:
 
 - **Switching versions** is handled by the version badge in the bottom-left corner. Do not build a custom control for it.
 
-- **Embedding in `nexus.md`:** a `prototype path=…/smlouvy@20261007.html` block opens the frame directly in that release.
+- **Embedding in documentation:** a `prototype path=…/smlouvy@20261007.html` block opens the frame directly in that release.
 
   ````markdown
-  ```prototype path=prototypes-final/pages/smlouvy@20261007.html
+  ```prototype path=prototypes/pages/smlouvy@20261007.html
 
   ```
   ````
@@ -67,7 +63,7 @@ Every screen sets `review` on `<nexus-shell>`:
 
 - **Change a screen for a specific release:** copy the target file to `<id>@<release>.html`, add `version`, and edit only the copy. Leave the target state unchanged.
 - **New release:** add an entry to `releases.json` and list its screens in `screens`.
-- **After every change**, run in `prototypes-final/`:
+- **After every change**, run in the prototype root:
 
   ```bash
   node scripts/build-shared-css.mjs && node scripts/build-shared-js.mjs

@@ -11,7 +11,7 @@ Read the reference that matches the work:
 
 - [Markdown rendering](references/markdown.md) — read when writing diagrams, math, interactive `html-preview` blocks, or Andocs-specific links.
 - [Prototypes](references/prototypes.md) — read when creating or editing `prototype.json`, HTML pages, shared assets, or `prototype` blocks.
-- [Review status and releases](references/prototype-releases.md) — read when a prototype uses `<nexus-shell>`, `releases.json`, or `<id>@<release>.html` screen variants.
+- [Review status and releases](references/prototype-releases.md) — read when a prototype uses screen review badges, `releases.json`, or `<id>@<release>.html` screen variants.
 - [Browser-local state](references/prototype-state.md) — read when prototype data must survive refresh in the same browser.
 - [Web Components](references/web-components.md) — read when a prototype uses Custom Elements or Shadow DOM.
 
