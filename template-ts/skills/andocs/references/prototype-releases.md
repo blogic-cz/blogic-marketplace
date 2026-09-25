@@ -63,17 +63,17 @@ Every screen sets `review` on its shell element:
 
 - **Change a screen for a specific release:** copy the target file to `<id>@<release>.html`, add `version`, and edit only the copy. Leave the target state unchanged.
 - **New release:** add an entry to `releases.json` and list its screens in `screens`.
-- **After every change**, run in the prototype root:
+- **After every change**, if the prototype root has these scripts, run the ones that exist there:
 
   ```bash
   node scripts/build-shared-css.mjs && node scripts/build-shared-js.mjs
   node scripts/check-links.mjs
   ```
 
-  `check-links.mjs` reports:
-  - a missing or unknown `review`,
-  - a variant without a target screen,
-  - a variant whose release is not in `releases.json` or whose `version` does not match,
-  - an unknown id in `screens`.
+  Andocs does not provide them; they belong to the project. Without `check-links.mjs`, check the same rules by hand:
+  - every screen and variant has a known `review`,
+  - every variant has a target screen,
+  - every variant's release exists in `releases.json` and matches its `version`,
+  - every id in `screens` exists.
 
-  Fix every reported issue before finishing.
+  Fix every issue found before finishing.
