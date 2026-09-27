@@ -1,13 +1,19 @@
-# Browser-local prototype state
+# Prototype state
 
-Use `window.andocsState` when a prototype should restore JSON data after refresh in the same browser profile. The authenticated Andocs web host and local Andocs CLI provide this API to embedded, fullscreen, and New Tab prototype views:
+Use `window.andocsState` when a prototype should restore JSON data after refresh. The authenticated Andocs web app and local Andocs CLI provide this API to embedded, fullscreen, and New Tab prototype views:
 
 ```js
 const saved = await window.andocsState.load(); // JSON value or null
 await window.andocsState.save({ selectedTab: "overview" });
 ```
 
-The web host keys data by authenticated user, project, repository, and resolved prototype path. The CLI keys data by local documentation root and resolved prototype path in the current browser profile. Prototype code does not choose the storage key. State survives refresh and CLI restarts in the same browser profile and local origin; it does not sync to other browsers or devices. Opening a raw HTML file outside Andocs has no state bridge.
+The cloud web app keeps state in browser `localStorage`, scoped by authenticated user, project, repository, and resolved prototype path. It survives reloads in that browser; it does not sync to another browser. A loopback local CLI preview stores state durably by the running Andocs server outside the documentation and Git trees. Its key combines the canonical documentation root with the resolved repository-relative HTML path. During a live loopback handoff, Andocs and OpenDesign use that same identity. A CLI server accessed over a nonloopback network address keeps browser-local `localStorage` state instead. Prototype code does not choose either storage key. Cloud and CLI state remain separate.
+
+Only a live handoff from a running Andocs server provides the shared Andocs/OpenDesign state bridge. A standalone `andocs edit-prototype` launch has no bridge; state cannot be read or persisted there. If the server restarts, reopen the live handoff so Andocs refreshes OpenDesign's runtime capability; the stored data remains durable. OpenDesign receives an ignored generated JavaScript sidecar in its project runtime directory. The canonical HTML contains only a relative script reference in Andocs' managed bootstrap, not the per-server, per-prototype capability. Treat the sidecar as exposed to anyone who can read the OpenDesign project source. Data requests require that prototype capability and a loopback peer.
+
+When the loopback CLI's durable store has no value for a prototype, it may import that browser's existing localStorage value once. Only a missing server record permits this import; an existing record is authoritative even when its value is JSON `null`. A failed state API request remains an error and must not trigger a localStorage fallback. Later browser-local values never overwrite durable CLI state. Do not assume CLI state is available while its server is stopped.
+
+Opening a raw HTML file directly, outside Andocs or the managed OpenDesign handoff, has no state bridge.
 
 Save after each state-changing action when changes must survive refresh without a separate Save button. Show a saved status only after `await api.save(value)` resolves. The iframe allows scripts but not native form submission: use a `type="button"` control with a click handler for form actions.
 
@@ -44,7 +50,7 @@ Check for the API and handle rejected calls. Loading can fail if storage is unav
       if (!canSave) return;
       try {
         await api.save({ count });
-        status.textContent = "Saved in this browser.";
+        status.textContent = "Saved.";
       } catch {
         canSave = false;
         status.textContent = "Could not save state.";
@@ -54,4 +60,4 @@ Check for the API and handle rejected calls. Loading can fail if storage is unav
 </script>
 ```
 
-The iframe remains sandboxed. Use this API for JSON persistence, and keep sensitive or shared data in an authenticated server API when that is actually required.
+The iframe remains sandboxed. Use this API for prototype JSON persistence; keep sensitive or production data in an authenticated server API.
