@@ -1,6 +1,6 @@
 ---
 name: andocs
-description: This skill should be used when authoring Andocs documentation or HTML prototypes, including markdown rendering, diagrams, math, html-preview, prototype.json, shared assets, browser-local prototype state, and screen review status and release versions.
+description: This skill should be used when authoring Andocs documentation or HTML prototypes, including markdown rendering, diagrams, math, html-preview, prototype.json, shared assets, browser-local prototype state, screen review status and release versions, or editing a prototype through OpenDesign.
 ---
 
 # Andocs authoring
@@ -14,6 +14,7 @@ Read the reference that matches the work:
 - [Review status and releases](references/prototype-releases.md) — read when a prototype uses screen review badges, `releases.json`, or `<id>@<release>.html` screen variants.
 - [Browser-local state](references/prototype-state.md) — read when prototype data must survive refresh in the same browser.
 - [Web Components](references/web-components.md) — read when a prototype uses Custom Elements or Shadow DOM.
+- [OpenDesign handoff](references/opendesign.md) — read when the user asks to edit an Andocs prototype in OpenDesign.
 
 For a requested local preview, first identify the documentation root and check that Bun is available. Use `bunx andocs@latest --path <docs-root>` only when starting a server is authorized by the user and the repository instructions. The CLI help is `bunx andocs@latest -h`.
 
