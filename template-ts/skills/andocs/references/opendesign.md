@@ -14,6 +14,16 @@ For CLI use, run `andocs edit-prototype <markdown-file> --prototype <prototype-h
 
 On handoff, Andocs prepares discovered Andocs prototype pages for OpenDesign, including pages reached through in-app file navigation. It adds an idempotent, marked bootstrap to the canonical HTML and uses the original shared CSS/JS assets, the same Tailwind and Alpine CDN URLs as Andocs, and Andocs' light-theme tokens. Andocs removes only this marked block before its own preview injection. Preserve the block and shared files. The Andocs CLI watcher reloads prototypes after HTML, CSS, JavaScript, or `prototype.json` changes; use that live preview to review the saved result.
 
-Read [prototype state](prototype-state.md) for the live-handoff and standalone state behavior, server restarts, storage scope, and migration.
+Read [prototype state](prototype-state.md) for data-backed prototypes and migration. For a host that still provides only `window.andocsState`, read [legacy prototype state](prototype-state-legacy.md) for its live-handoff and standalone behavior.
+
+## Data-backed OpenDesign handoff from the CLI
+
+This CLI integration is not released. Use it only when the installed Andocs CLI's `serve --help` or `edit-prototype --help` exposes the options below; do not assume `andocs@latest` or an arbitrary OpenDesign release supports it. Confirm the running preview exposes every capability the prototype needs. For a migration, check that `window.andocsData.registerMigration` is a function before enabling it; otherwise keep writes gated and preserve the legacy value.
+
+Both CLI commands accept `--opendesign-cli`, `--opendesign-daemon-url`, `--opendesign-url`, `--opendesign-data-port`, and `--evolu-relay-url`. Declared data requires an explicit validated relay URL (`wss:` or loopback-only `ws:`); never derive it from HTML, `prototype.json`, or a prototype request. The data host uses fixed loopback `127.0.0.1:7457` by default. An occupied port fails; there is no fallback port. Keep one foreground CLI process alive while using the handoff: `edit-prototype` remains active until Ctrl+C, and `serve` owns the host for its server lifetime. Shutdown revokes the host.
+
+The selected OpenDesign CLI must be the trusted local `apps/daemon/bin/od.mjs` from Git HEAD `89e64d813bb1c7a11519b3f668f011f7017637d7`, with clean tracked source except generated `apps/web/next-env.d.ts`. This source pin does not verify ignored build output, dependencies, or a separately running daemon; do not claim an arbitrary newer release is supported. If the selected source or required runtime capabilities cannot be verified, keep the page static and report that the data handoff is unavailable.
+
+The data host grants only the selected page and pages discovered through Markdown with a valid contained `prototype.json`. A configless page stays static; invalid config fails closed instead of falling back to stateless. Config, Markdown registration, or root changes revoke the current registrations; start a fresh handoff after those changes.
 
 Do not duplicate shared assets into the HTML, change unrelated files, or push/sync a separate deployed OpenDesign project as part of this local workflow. Follow [prototype authoring](prototypes.md) and [prototype state](prototype-state.md) when those details apply.

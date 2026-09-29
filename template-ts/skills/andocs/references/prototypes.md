@@ -53,6 +53,8 @@ For current CDN URLs, exact design tokens, dimensions, and file types, fetch the
 
 If the page needs data after refresh, read [prototype state](prototype-state.md). For Custom Elements or Shadow DOM, read [Web Components](web-components.md). For screen review badges and release variants, read [review status and releases](prototype-releases.md).
 
+Stateless prototypes need no data declaration. A data-backed prototype declares its identity and allowed collections in the nearest `prototype.json`; read [prototype state](prototype-state.md) for the runtime API, scope rules, and migrations. Data support depends on the installed Andocs host version.
+
 ## Page patterns
 
 Use Alpine.js state for navigation inside a page, for example `x-data="{ page: 'list' }"` with `<template x-if="page === 'list'">`. For a minimal page:
@@ -65,4 +67,4 @@ Use Alpine.js state for navigation inside a page, for example `x-data="{ page: '
 </div>
 ```
 
-This counter resets on refresh. Use `window.andocsState` when it must persist.
+This counter resets on refresh. Use [persistent prototype data](prototype-state.md) when records must survive refresh.
