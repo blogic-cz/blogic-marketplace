@@ -1,6 +1,6 @@
 # Persistent prototype data
 
-Use this for prototypes that keep structured records after refresh. The host injects `window.andocsData` only when that host supports the API. The CLI integration is unreleased: do not assume an installed CLI or an arbitrary `latest` build supports it. Confirm the installed `serve --help` or `edit-prototype --help` exposes the required options and the actual preview exposes the needed API. Authored HTML must not import Evolu, load an Evolu CDN script, or configure a relay.
+Use this for prototypes that keep structured records after refresh. The host injects `window.andocsData` only when that host supports the API. For CLI use, confirm the installed `serve --help` or `edit-prototype --help` exposes the required options and the actual preview exposes the needed API. Authored HTML must not import Evolu, load an Evolu CDN script, or configure a relay.
 
 ## Declare data
 
