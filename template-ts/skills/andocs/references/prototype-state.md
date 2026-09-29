@@ -1,63 +1,109 @@
-# Prototype state
+# Persistent prototype data
 
-Use `window.andocsState` when a prototype should restore JSON data after refresh. The authenticated Andocs web app and local Andocs CLI provide this API to embedded, fullscreen, and New Tab prototype views:
+Use this for prototypes that keep structured records after refresh. The host injects `window.andocsData` only when that host supports the API. The CLI integration is unreleased: do not assume an installed CLI or an arbitrary `latest` build supports it. Confirm the installed `serve --help` or `edit-prototype --help` exposes the required options and the actual preview exposes the needed API. Authored HTML must not import Evolu, load an Evolu CDN script, or configure a relay.
 
-```js
-const saved = await window.andocsState.load(); // JSON value or null
-await window.andocsState.save({ selectedTab: "overview" });
+## Declare data
+
+Add a `data` declaration to the nearest `prototype.json`. Leave it out for stateless prototypes.
+
+```json
+{
+  "version": 1,
+  "data": {
+    "prototypeId": "client-database",
+    "collections": [{ "name": "clients" }, { "name": "catalog", "scope": "project" }]
+  }
+}
 ```
 
-The cloud web app keeps state in browser `localStorage`, scoped by authenticated user, project, repository, and resolved prototype path. It survives reloads in that browser; it does not sync to another browser. A loopback local CLI preview stores state durably by the running Andocs server outside the documentation and Git trees. Its key combines the canonical documentation root with the resolved repository-relative HTML path. During a live loopback handoff, Andocs and OpenDesign use that same identity. A CLI server accessed over a nonloopback network address keeps browser-local `localStorage` state instead. Prototype code does not choose either storage key. Cloud and CLI state remain separate.
+Keep `prototypeId` stable for this prototype's data identity. Declare 1–20 unique collection names. The default `prototype` scope is private to this prototype within its trusted project and repository/config root. Use `scope: "project"` only when prototypes in the same project should share that collection; other projects remain isolated. Scope and identity are host-derived, never supplied by prototype code.
 
-Only a live handoff from a running Andocs server provides the shared Andocs/OpenDesign state bridge. A standalone `andocs edit-prototype` launch has no bridge; state cannot be read or persisted there. If the server restarts, reopen the live handoff so Andocs refreshes OpenDesign's runtime capability; the stored data remains durable. OpenDesign receives an ignored generated JavaScript sidecar in its project runtime directory. The canonical HTML contains only a relative script reference in Andocs' managed bootstrap, not the per-server, per-prototype capability. Treat the sidecar as exposed to anyone who can read the OpenDesign project source. Data requests require that prototype capability and a loopback peer.
+The Evolu owner is scoped to the browser profile and origin. A different profile or origin has a separate identity.
 
-When the loopback CLI's durable store has no value for a prototype, it may import that browser's existing localStorage value once. Only a missing server record permits this import; an existing record is authoritative even when its value is JSON `null`. A failed state API request remains an error and must not trigger a localStorage fallback. Later browser-local values never overwrite durable CLI state. Do not assume CLI state is available while its server is stopped.
+## Use the injected API
 
-Opening a raw HTML file directly, outside Andocs or the managed OpenDesign handoff, has no state bridge.
-
-Save after each state-changing action when changes must survive refresh without a separate Save button. Show a saved status only after `await api.save(value)` resolves. The iframe allows scripts but not native form submission: use a `type="button"` control with a click handler for form actions.
-
-Check for the API and handle rejected calls. Loading can fail if storage is unavailable or contains invalid JSON; saving can fail for unavailable storage, quota limits, or a non-JSON value. Both calls can also time out if the host does not respond. Keep the prototype usable when persistence is unavailable:
+Wait for `ready` before enabling CRUD. Initialization errors reject `ready` and are available as `data.error`; failed operations reject. `create`, `get`, `list`, `update`, and `delete` accept only declared collection names. Records are `{ id, value }`; IDs come from the API, and `value` must be a plain JSON object. `subscribe` emits the current matching records and returns an unsubscribe function; add an `.error(error)` handler to its callback when the page must surface subscription failures. Release subscriptions when the page is done; the host closes the data bridge when the page unloads.
 
 ```html
-<p>Count: <output id="count">0</output></p>
-<button id="increment">Add one</button>
-<p id="status"></p>
 <script>
   (async () => {
-    const api = window.andocsState;
-    const output = document.querySelector("#count");
+    const data = window.andocsData;
     const status = document.querySelector("#status");
-    let count = 0;
-    let canSave = Boolean(api);
-
-    if (api) {
-      try {
-        const saved = await api.load();
-        if (Number.isInteger(saved?.count)) count = saved.count;
-      } catch {
-        canSave = false;
-        status.textContent = "Could not load saved state.";
-      }
-    } else {
-      status.textContent = "Changes last until this page closes.";
+    if (!data) {
+      status.textContent = "Persistent data is unavailable.";
+      return;
     }
-    output.textContent = String(count);
 
-    document.querySelector("#increment").addEventListener("click", async () => {
-      count += 1;
-      output.textContent = String(count);
-      if (!canSave) return;
-      try {
-        await api.save({ count });
-        status.textContent = "Saved.";
-      } catch {
-        canSave = false;
-        status.textContent = "Could not save state.";
-      }
-    });
+    try {
+      await data.ready;
+      const unsubscribe = data.subscribe("clients", (records) => {
+        renderClients(records);
+      });
+      document.querySelector("#add").addEventListener("click", async () => {
+        try {
+          const result = await data.create("clients", { name: "Ada" });
+          status.textContent =
+            result.local === "stored"
+              ? "Saved in this browser."
+              : "Could not confirm the local save.";
+        } catch {
+          status.textContent = "Could not save this record.";
+        }
+      });
+      window.addEventListener("pagehide", unsubscribe, { once: true });
+    } catch {
+      status.textContent = "Persistent data could not be opened.";
+    }
   })();
 </script>
 ```
 
-The iframe remains sandboxed. Use this API for prototype JSON persistence; keep sensitive or production data in an authenticated server API.
+A write result's `local: "stored"` confirms local storage only. Its `sync` field is not a receipt for that write's remote delivery. Use `syncStatus()` and `subscribeSyncStatus()` for the owner's current transport state, and `requestSync()` to ask the host to retry. Do not show a particular record as remotely synced based on either signal. Initialization, validation, storage, subscription, and migration failures may reject or report `error`; keep the page usable where possible and show success only after local acknowledgment.
+
+## Migrate an existing stateful prototype
+
+`window.andocsState` is deprecated for data-backed prototypes. When moving an existing prototype to `data`, preserve its HTML path and inspect the actual old save shape and every field before writing a versioned mapper. Never guess a schema, seed over the existing records, or overwrite user edits or deletes. The original legacy value is retained by the host.
+
+Set `migrationVersion` in the data declaration, then synchronously register a pure mapper before reading or awaiting `ready`. The mapper receives the exact old value and returns rows with `collection`, stable `legacyId`, and JSON-object `value`:
+
+```json
+{
+  "version": 1,
+  "data": {
+    "prototypeId": "client-database",
+    "migrationVersion": 1,
+    "collections": [{ "name": "clients" }]
+  }
+}
+```
+
+```html
+<script>
+  (async () => {
+    const data = window.andocsData;
+    data.registerMigration(1, (oldValue) =>
+      oldValue.clients.map((client) => ({
+        collection: "clients",
+        legacyId: client.id,
+        value: {
+          name: client.name,
+          company: client.company,
+          email: client.email,
+          status: client.status,
+          notes: client.notes,
+        },
+      })),
+    );
+    // Only after registering the mapper may initialization begin.
+    await data.ready;
+  })();
+</script>
+```
+
+This example is valid only for a legacy value confirmed to have that exact `clients` shape. Write the mapper for the prototype's verified source. If the old shape cannot be established, stop and ask for the source details. A missing or incorrect mapper, corrupt source, or failed host migration rejects `ready` and keeps writes gated. After a completed migration, later loads preserve edits and tombstones instead of replaying the old snapshot.
+
+`registerMigration` maps a value; it cannot read `andocsState` or select the old source. The trusted host must supply a matching legacy source. Prototype code cannot choose a storage key, owner, project, source, or destination ID. CLI hosts with the trusted migration adapter use an existing server value, including `null`, and check the exact browser key only when that server value is absent. OpenDesign explicitly uses `no-legacy-source` and a separate origin identity, so it does not automatically copy Andocs state. Keep the existing **Send** action and automatic context handoff unchanged. V1 has no data import, export, or cross-profile sharing flow.
+
+The host manages Evolu identity and recovery. Never put a mnemonic in HTML, repository files, prompts, or logs; recovery details are revealed only through trusted settings. Do not expose migration or relay credentials to the sandbox.
+
+For a host release that provides only the deprecated `andocsState` API, use [legacy prototype state](prototype-state-legacy.md). Do not infer CLI commands or options for the new API from that older workflow.
