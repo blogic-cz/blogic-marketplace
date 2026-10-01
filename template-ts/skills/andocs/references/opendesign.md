@@ -10,6 +10,8 @@ Use this workflow only when the user asks to continue prototype editing in OpenD
 - Before editing, read the canonical Andocs skill at the absolute path supplied in OpenDesign's custom instructions, then load its relevant references.
 - Edit and save the existing repository files. The original HTML remains canonical. Keep its `prototype.json` entry and shared CSS/JavaScript dependencies in view and reuse them.
 
+The hosted web application does not support direct source-file handoff of account-managed prototype datasets to OpenDesign. For a data-backed OpenDesign handoff, use the supported CLI flow below, which uses the CLI's anonymous local dataset catalog.
+
 For CLI use, run `andocs edit-prototype <markdown-file> --prototype <prototype-html> [--prompt <original-task>]`. `--prompt` is optional; pass the original task when it is already available. Build `--context <decisions-and-next-steps>` from relevant explicit information already in the current conversation; use `--session-ref <existing-session-reference>` only when it is known and readable. Both this command and `andocs serve` accept `--opendesign-cli <path>`, `--opendesign-daemon-url <loopback-url>`, and `--opendesign-url <loopback-url>` for local OpenDesign configuration.
 
 On handoff, Andocs prepares discovered Andocs prototype pages for OpenDesign, including pages reached through in-app file navigation. It adds an idempotent, marked bootstrap to the canonical HTML and uses the original shared CSS/JS assets, the same Tailwind and Alpine CDN URLs as Andocs, and Andocs' light-theme tokens. Andocs removes only this marked block before its own preview injection. Preserve the block and shared files. The Andocs CLI watcher reloads prototypes after HTML, CSS, JavaScript, or `prototype.json` changes; use that live preview to review the saved result.
@@ -17,6 +19,12 @@ On handoff, Andocs prepares discovered Andocs prototype pages for OpenDesign, in
 Read [prototype state](prototype-state.md) for data-backed prototypes and migration. For a host that still provides only `window.andocsState`, read [legacy prototype state](prototype-state-legacy.md) for its live-handoff and standalone behavior.
 
 ## Data-backed OpenDesign handoff from the CLI
+
+The CLI dataset catalog is local to that machine and does not require an Andocs account. It is separate from the hosted account catalog and is not synchronized or merged with hosted, browser-origin, or historical OpenDesign identities. In the CLI prototype host, choose an existing local dataset, create a named empty one, fork the current dataset, or rename the selected dataset. These actions change the CLI's local catalog only.
+
+For a data-backed page, **Edit in OpenDesign** requires a selected CLI dataset. The explicit handoff captures that dataset ID; the trusted CLI host resolves it from its local catalog and binds the OpenDesign data host to the same identity. Dataset keys stay in trusted host processes and never enter prototype HTML, Git, or the handoff prompt.
+
+OpenDesign keeps the dataset captured by that handoff even if the selection changes in the CLI view. A new explicit handoff replaces the OpenDesign binding with the newly selected dataset. Saving native source files does not change the selected dataset. If the handoff binding cannot be resolved, stop and reopen from the CLI; do not substitute an origin default or create an empty replacement.
 
 Use this flow only when the installed Andocs CLI's `serve --help` or `edit-prototype --help` exposes the options below. Confirm the running preview exposes every capability the prototype needs. For a migration, check that `window.andocsData.registerMigration` is a function before enabling it; otherwise keep writes gated and preserve the legacy value.
 
