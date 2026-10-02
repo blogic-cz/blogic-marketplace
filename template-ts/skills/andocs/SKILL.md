@@ -10,7 +10,7 @@ Find the documentation root from the request or repository before editing. If mu
 Read the reference that matches the work:
 
 - [Markdown rendering](references/markdown.md) — read when writing diagrams, math, interactive `html-preview` blocks, or Andocs-specific links.
-- [Prototypes](references/prototypes.md) — read when creating or editing `prototype.json`, HTML pages, shared assets, or `prototype` blocks.
+- [Prototypes](references/prototypes.md) — read when creating or editing `prototype.json`, HTML pages, navigation between pages, relative static files, shared assets, or `prototype` blocks.
 - [Review status and releases](references/prototype-releases.md) — read when a prototype uses screen review badges, `releases.json`, or `<id>@<release>.html` screen variants.
 - [Prototype state](references/prototype-state.md) — read when prototype data must survive refresh or an existing stateful prototype needs migration.
 - [Web Components](references/web-components.md) — read when a prototype uses Custom Elements or Shadow DOM.

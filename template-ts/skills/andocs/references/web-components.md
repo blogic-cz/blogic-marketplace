@@ -1,6 +1,6 @@
 # Web Components in prototypes
 
-Custom Elements and Shadow DOM work without a build step. Define them in a plain `<script>` block or in the nearest prototype root's `shared.js`; sandboxed prototype pages cannot rely on module imports or relative script URLs.
+Custom Elements and Shadow DOM work without a build step. Define them in a plain `<script>` block or in the nearest prototype root's `shared.js`; relative scripts and local module imports use the asset URLs described in [prototype navigation and static files](prototypes.md#navigation-and-relative-static-files). Bare package imports still need a browser-compatible URL or a build step.
 
 ```html
 <title>Status badges</title>
