@@ -1,6 +1,6 @@
 ---
 name: andocs
-description: This skill should be used when authoring Andocs documentation or HTML prototypes, including markdown rendering, diagrams, math, html-preview, prototype.json, shared assets, persistent prototype data, local CLI state, screen review status and release versions, or editing a prototype through OpenDesign.
+description: This skill should be used when authoring Andocs documentation or HTML prototypes, including markdown rendering, diagrams, math, html-preview, prototype.json, shared assets, managed prototype datasets and persistent data, local CLI state, screen review status and release versions, or editing a prototype through OpenDesign.
 ---
 
 # Andocs authoring
