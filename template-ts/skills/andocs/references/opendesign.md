@@ -2,9 +2,17 @@
 
 Use this workflow only when the user asks to continue prototype editing in OpenDesign. Keep Andocs as the source of truth: OpenDesign must open the prototype in its actual Git repository, and edits must land in the existing source files.
 
+## Prepare OpenDesign from source
+
+Install dependencies and start services only with the user's authorization. Use a separate worktree at the selected source pin; do not move or modify the user's checkout. Read that checkout's `package.json` `engines` field and the launcher's error and help text before you choose commands. The CLI build runs as part of `pnpm install`; you can also build it with `pnpm --filter @open-design/daemon build`.
+
+Start the daemon and web app with `pnpm exec tools-dev run web --namespace <name> --daemon-port <p> --web-port <p>`. Confirm the daemon with `node <checkout>/apps/daemon/bin/od.mjs project list --json --daemon-url <url>`. Probe the web root and daemon `/api/health` with a per-request time limit, such as `curl --max-time <seconds> <web-url>/` and `curl --max-time <seconds> <daemon-url>/api/health`. The first web request compiles the app on demand.
+
+Before you tell the user that OpenDesign works, open a data-backed prototype in an available browser, choose **OpenDesign**, and confirm that the editor opens. If no browser tool is available, say that this check was not verified.
+
 ## Handoff
 
-- Identify the documentation root and exact HTML page selected by the `prototype` block. Start the local Andocs preview for that root when the user requests the handoff. Confirm OpenDesign's local web app and daemon are running; Andocs does not install OpenDesign for you. macOS `/usr/bin/od` is an unrelated system utility.
+- Identify the documentation root and exact HTML page selected by the `prototype` block. Start the local preview with `bunx andocs@latest serve --path <docs-root>` when the user requests the handoff. Confirm OpenDesign's local web app and daemon are running; Andocs does not install OpenDesign for you. macOS `/usr/bin/od` is an unrelated system utility.
 - In the prototype toolbar, choose **OpenDesign**. Andocs opens the matching project and file with its custom instructions; it does not ask for a task prompt. If the current conversation already contains an explicit original prompt or relevant decisions and next steps, pass them through the CLI options below. Without a new prompt, Andocs preserves any existing pending draft and opens the selected file. An explicit new prompt does not overwrite another unsent prompt. Andocs selects the enclosing Git repository as the project, reuses an existing project and conversation for that repository, and selects the HTML page. If there is no Git root, the configured documents folder is used.
 - Review the handoff in OpenDesign and send it when ready. Andocs does not read an earlier agent transcript or submit the model run for you. Add a session reference only when it is known and readable; do not invent one, assume transcript access, or scrape unrelated history. Keep unrelated transcripts and secrets out of the handoff.
 - Before editing, read the canonical Andocs skill at the absolute path supplied in OpenDesign's custom instructions, then load its relevant references.
@@ -22,7 +30,7 @@ Read [prototype state](prototype-state.md) for data-backed prototypes and migrat
 
 The CLI dataset catalog is local to that machine and does not require an Andocs account. It is separate from the hosted account catalog and is not synchronized or merged with hosted, browser-origin, or historical OpenDesign identities. In the CLI prototype host, choose an existing local dataset, create a named empty one, fork the current dataset, or rename the selected dataset. These actions change the CLI's local catalog only.
 
-The **OpenDesign** toolbar action requires a selected CLI dataset before opening a data-backed page. The explicit handoff captures that dataset ID; the trusted CLI host resolves it from its local catalog and binds the OpenDesign data host to the same identity. Dataset keys stay in trusted host processes and never enter prototype HTML, Git, or the handoff prompt.
+If no CLI dataset is selected, the **OpenDesign** toolbar action creates and selects a named empty dataset. The explicit handoff captures that dataset ID; the trusted CLI host resolves it from its local catalog and binds the OpenDesign data host to the same identity. Dataset keys stay in trusted host processes and never enter prototype HTML, Git, or the handoff prompt.
 
 The CLI handoff captures the selected local dataset when **OpenDesign** is launched. A later change to the CLI selection does not change the open OpenDesign view, and saving native source files does not change its dataset. A new explicit CLI handoff replaces the current OpenDesign binding with the newly selected CLI dataset.
 
@@ -30,7 +38,7 @@ OpenDesign's header has a **Manage dataset** control: its button shows the selec
 
 Use this flow only when the installed Andocs CLI's `serve --help` or `edit-prototype --help` exposes the options below. Confirm the running preview exposes every capability the prototype needs. For a migration, check that `window.andocsData.registerMigration` is a function before enabling it; otherwise keep writes gated and preserve the legacy value.
 
-Both CLI commands accept `--opendesign-cli`, `--opendesign-daemon-url`, `--opendesign-url`, `--opendesign-data-port`, and `--evolu-relay-url`. Declared data requires an explicit validated relay URL (`wss:` or loopback-only `ws:`); never derive it from HTML, `prototype.json`, or a prototype request. The data host uses fixed loopback `127.0.0.1:7457` by default. An occupied port fails; there is no fallback port. Keep one foreground CLI process alive while using the handoff: `edit-prototype` remains active until Ctrl+C, and `serve` owns the host for its server lifetime. Shutdown revokes the host.
+Both CLI commands accept `--opendesign-cli`, `--opendesign-daemon-url`, `--opendesign-url`, `--opendesign-data-port`, and `--evolu-relay-url`. The relay defaults to `wss://andocs.blogic.cz/evolu`; use `--evolu-relay-url` to override it. Validate the URL: allow `wss:` or loopback-only `ws:`. Never derive it from HTML, `prototype.json`, or a prototype request. The data host uses fixed loopback `127.0.0.1:7457` by default. An occupied port fails; there is no fallback port. Keep one foreground CLI process alive while using the handoff: `edit-prototype` remains active until Ctrl+C, and `serve` owns the host for its server lifetime. Shutdown revokes the host.
 
 The selected OpenDesign CLI must be the trusted local `apps/daemon/bin/od.mjs` from Git HEAD `89e64d813bb1c7a11519b3f668f011f7017637d7`, with clean tracked source except generated `apps/web/next-env.d.ts`. This source pin does not verify ignored build output, dependencies, or a separately running daemon. If the selected source or required runtime capabilities cannot be verified, keep the page static and report that the data handoff is unavailable.
 
