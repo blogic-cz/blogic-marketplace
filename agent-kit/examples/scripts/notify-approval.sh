@@ -3,6 +3,11 @@
 # Multiplatform notification script for Claude Code approval/action requests
 # Detects OS and shows appropriate notification based on message type
 
+# Opt-out: set AGENT_KIT_NOTIFY=0 to silence these notifications entirely
+if [ "${AGENT_KIT_NOTIFY:-1}" = "0" ]; then
+  exit 0
+fi
+
 # Read JSON input from stdin
 INPUT=$(cat)
 
@@ -37,13 +42,11 @@ case "$OS_TYPE" in
 
   MINGW*|MSYS*|CYGWIN*)
     # Windows (Git Bash, MSYS2, Cygwin)
-    powershell.exe -c "[System.Media.SystemSounds]::Exclamation.Play()" 2>/dev/null
+    # Sound only, no dialog: a modal MessageBox stole focus on every
+    # permission prompt and blocked the hook until it was dismissed.
+    powershell.exe -NoProfile -c "[System.Media.SystemSounds]::Exclamation.Play()" 2>/dev/null
 
-    # Escape quotes for PowerShell
-    TITLE_ESC=$(echo "$TITLE" | sed "s/'/\\'/g")
-    BODY_ESC=$(echo "$BODY" | sed "s/'/\\'/g")
-
-    powershell.exe -c "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$BODY_ESC', '$TITLE_ESC', 'OK', 'Information')" 2>/dev/null
+    echo "$TITLE: $BODY"
     ;;
 
   Linux*)
