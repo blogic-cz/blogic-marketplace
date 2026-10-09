@@ -57,4 +57,4 @@ Treat updates to example content and OpenDesign setup as separate steps. Never u
 
 ## Prepare OpenDesign when the user reaches that step
 
-Prepare OpenDesign after the preview works, when the user accepts the recommendation to edit the example. If OpenDesign is not installed, say so and lead the installation. Do not send a non-programmer to a download page. Read [the OpenDesign guide](opendesign.md) before preparing it from source. Install dependencies or start services only when the user has authorized those actions. Follow the guide's browser check before you say OpenDesign works.
+Prepare OpenDesign after the preview works, when the user accepts the recommendation to edit the example. Read [the OpenDesign guide](opendesign.md), check the required tools, then ask once in plain words before you install any missing tools and OpenDesign. Do not send a non-programmer to a download page. Follow the guide's browser check before you say OpenDesign works.
