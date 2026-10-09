@@ -33,7 +33,7 @@ Ask which part the user wants to try first. Use this order as the default. If th
 
 ## Check tools before starting a preview
 
-Before you start a preview, run `git --version` and `bun --version` to check that Git and Bun are available. If either tool is missing, name it in one sentence, ask permission to install it, and wait for the answer. After the user agrees, use the official command for their operating system:
+Before you start a preview, check that the required tools are available. If they are ready, say that the tools needed for the preview are ready. Do not name them. If a required tool is missing and must be installed, name it and explain in one sentence that the preview needs it. Ask permission to install it, and wait for the answer. After the user agrees, use the official command for their operating system:
 
 **macOS**
 
@@ -47,7 +47,7 @@ Before you start a preview, run `git --version` and `bun --version` to check tha
 
 Tell the user the next steps in a short list, then start with the first step. For example: "I’ll open a working example, show how it goes from a need to a clickable example, then help you make one change."
 
-1. Use the separate [`andocs-demo` project](https://github.com/blogic-cz/andocs-demo) for the public example. Do not use a development copy of the Andocs app as demo content.
+1. Use the separate [`andocs-demo` project](https://github.com/blogic-cz/andocs-demo) for the public example. Do not use a development copy of the Andocs app as demo content. When you point to a demo page, describe what it shows in the user's language. Do not quote its English title.
 2. Start the preview with the published command: `bunx andocs@latest serve --path <docs-root>`. Check the command help with `bunx andocs@latest -h` when needed.
 3. If the user asks to update the example, check its upstream status and find which process serves the preview before you change anything.
 4. Keep the working preview open while preparing optional services. Replace it only after the new services pass their checks.
