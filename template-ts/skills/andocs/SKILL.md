@@ -7,7 +7,7 @@ description: This skill should be used when starting a local Andocs demo or prev
 
 For an Andocs introduction or a local demo, follow [the introduction flow](references/introduction.md). Start a local preview with the published CLI command in that guide.
 
-Find the documentation root from the request or repository before editing. If multiple roots remain plausible, ask which one to use. Follow the repository's language and preview rules.
+For other editing tasks, find the documentation root from the request or repository before editing. If multiple roots remain plausible, ask which one to use. Follow the repository's language and preview rules.
 
 Read the reference that matches the work:
 
