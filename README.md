@@ -50,6 +50,20 @@ npx skills add blogic-cz/blogic-marketplace/template-ts
 
 The [Andocs skill](template-ts/skills/andocs/SKILL.md) covers prototype state for the cloud app and local CLI/OpenDesign handoff, and can be installed with `--skill andocs`.
 
+### Start with Andocs in one prompt
+
+You do not need to install anything by hand.
+
+1. Open an empty folder in VS Code.
+2. Open Claude Code.
+3. Paste this prompt:
+
+```text
+Nainstaluj mi skill https://github.com/blogic-cz/blogic-marketplace/tree/main/template-ts/skills/andocs a udělej mi představení Andocs.
+```
+
+The agent installs the skill, asks where to work, and guides you from there.
+
 ## Validate repository changes
 
 ```bash
