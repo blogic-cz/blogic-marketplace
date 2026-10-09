@@ -1,39 +1,60 @@
 # Introduce Andocs
 
-Use this guide when a user asks to introduce or present Andocs, onboard a new user, or start a local Andocs demo or preview. Speak the user's language. Keep each step short, explain a needed term in one sentence, and ask one question at a time.
+Use this guide when a user asks to introduce Andocs, onboard a new user, or start a local preview. Speak the user's language. Use plain everyday words. Ask one question at a time.
 
-## Locate the project
+## Ask about the project first
 
-1. Check the current folder and its enclosing Git repository. Tell the user both in plain words. If there is no Git repository, say so.
-2. Explain that OpenDesign treats the enclosing Git repository as the project. A new folder inside that repository is still part of the same project.
-3. Ask: "Do you want to continue in this project, or create a new project?" Do not ask another question until the user answers.
+In your first reply, give the current folder path and, if present, the Git project folder path. Then ask: "Do you want to continue in this project, or create a new project?" Wait for the answer before you create files or run `git init`, even when the folder is empty.
 
-If the user chooses the current project, continue there. If the user asks for a new project, create its own folder outside all other repositories and run `git init` there, unless the user chooses another location or repository setup. Ask where to create the folder before creating it. Then show the work path below.
+If the user chooses the current project, continue there. If the user wants a new project, ask where to create its folder. Create it outside other Git projects, unless the user chooses another location or setup. Run `git init` only after the user answers. Then show the work path below.
 
-## Show the work path, not a feature list
+## Use plain words
 
-Present Andocs as one path from a need to a working app. Teach the path first; the user learns each tool when the path reaches it.
+Use a technical name only when the user asks for it or when you give a command that needs it. Explain the idea in plain words first. Adapt these examples to the user's language.
 
-1. **Write down the need.** A customer need or an assignment becomes a Markdown document in Andocs.
-2. **Make a clickable prototype.** The document gets an HTML prototype in a `prototype` block. Add diagrams where they explain the flow.
-3. **Edit the prototype in OpenDesign.** Recommend OpenDesign here even when the user did not name it. It is the visual editor for the prototype.
-4. **Simulate the data.** A prototype with state keeps its data after refresh, so it behaves like a working app without a backend.
-5. **Hand it to development.** A developer, or an agent, builds the real app from the prototype with the project template.
+| Technical name  | Plain words for a Czech user            |
+| --------------- | --------------------------------------- |
+| repository      | složka projektu, kterou si pamatuje Git |
+| backend         | server s daty                           |
+| prototype block | klikací ukázka v dokumentu              |
+| Mermaid or BPMN | diagram                                 |
 
-Ask which part to try first, with the path as the default order. If the user has already named what they want, start there. Explain a term only when needed. For example: "State is data that stays saved when you refresh the page."
+## Show the path from need to app
 
-## Start with a working preview
+Explain Andocs through one path.
 
-Tell the user the next steps in a short list, then start with the first step. For example: "I’ll open a working example, walk you through the path from a need to a prototype, then help you make one change." Guide the user from the first step and pause for their answer when a choice is needed.
+1. **Write down the need.** Turn a customer need or an assignment into a document.
+2. **Make a clickable example.** Add a web page to the document so the user can try the idea.
+3. **Edit the example in OpenDesign.** Recommend OpenDesign as the visual editor for the example.
+4. **Try sample data.** The example can keep its data after a page refresh, so it acts like an app.
+5. **Hand it to development.** A developer or an agent can build the real app from the example and the project template.
 
-1. Identify the documentation folder to show. For the public demo, use the separate [`andocs-demo` repository](https://github.com/blogic-cz/andocs-demo). Do not use a development checkout of the Andocs app as demo content.
-2. Start the local preview with the published CLI: `bunx andocs@latest serve --path <docs-root>`. Check the CLI help with `bunx andocs@latest -h` when needed.
-3. If the user asks to update demo content, check the content repository's upstream status and identify which process serves the preview port before you change anything.
+Ask which part the user wants to try first. Use this order as the default. If the user has already named a part, start there.
+
+## Check tools before starting a preview
+
+Before you start a preview, run `git --version` and `bun --version` to check that Git and Bun are available. If either tool is missing, name it in one sentence, ask permission to install it, and wait for the answer. After the user agrees, use the official command for their operating system:
+
+**macOS**
+
+- Git: `xcode-select --install` ([official instructions](https://git-scm.com/install/mac))
+- Bun: `curl -fsSL https://bun.com/install | bash` ([official instructions](https://bun.sh/docs/installation))
+
+**Windows**
+
+- Git: `winget install --id Git.Git -e --source winget` ([official instructions](https://git-scm.com/install/windows))
+- Bun: `powershell -c "irm bun.sh/install.ps1|iex"` ([official instructions](https://bun.sh/docs/installation))
+
+Tell the user the next steps in a short list, then start with the first step. For example: "I’ll open a working example, show how it goes from a need to a clickable example, then help you make one change."
+
+1. Use the separate [`andocs-demo` project](https://github.com/blogic-cz/andocs-demo) for the public example. Do not use a development copy of the Andocs app as demo content.
+2. Start the preview with the published command: `bunx andocs@latest serve --path <docs-root>`. Check the command help with `bunx andocs@latest -h` when needed.
+3. If the user asks to update the example, check its upstream status and find which process serves the preview before you change anything.
 4. Keep the working preview open while preparing optional services. Replace it only after the new services pass their checks.
-5. Walk the work path on the example. Point out math and `html-preview` briefly when the path did not reach them.
+5. Walk through the path on the example. Mention math and clickable examples briefly if the path did not reach them.
 
-Treat demo content updates and OpenDesign setup as separate steps. Never update a development checkout of the Andocs app to fix demo content.
+Treat updates to example content and OpenDesign setup as separate steps. Never update a development copy of the Andocs app to fix example content.
 
-## Prepare OpenDesign when the path reaches it
+## Prepare OpenDesign when the user reaches that step
 
-Prepare OpenDesign after the preview works, when the user accepts the recommendation at step 3 of the path. If it is not installed, say so and lead the installation yourself; do not send a non-programmer to a download page. Read [the OpenDesign guide](opendesign.md) before preparing it from source. Install dependencies or start services only when the user has authorized those actions. Keep the working preview up until the new services pass their checks. Follow the guide's browser acceptance check before you say OpenDesign works.
+Prepare OpenDesign after the preview works, when the user accepts the recommendation to edit the example. If OpenDesign is not installed, say so and lead the installation. Do not send a non-programmer to a download page. Read [the OpenDesign guide](opendesign.md) before preparing it from source. Install dependencies or start services only when the user has authorized those actions. Follow the guide's browser check before you say OpenDesign works.
