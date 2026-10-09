@@ -68,7 +68,7 @@ pnpm -C $source install
 
 Let Andocs find and start OpenDesign. Continue with the requested task, then check `andocs opendesign status`. Andocs also finds OpenDesign at the managed source folder when it starts. Do not start the daemon or web app by hand unless Andocs cannot start them.
 
-If you need to run OpenDesign's `od.mjs` client on Windows, invoke it through `bun <path-to-od.mjs>` or `node <path-to-od.mjs>`. Never run `od.mjs` as a direct executable. Use Bun for the client when it is installed. If Bun reports a runtime error, retry once through Node.js 24. Treat every nonzero exit as a failure, even if the command printed output. Keep Node.js 24 for the daemon and web app because native modules build for Node.js.
+On Windows, invoke OpenDesign's `od.mjs` client through `bun <path-to-od.mjs>` or `node <path-to-od.mjs>`. Never run `od.mjs` as a direct executable. Use Bun for the client when it is installed. If Bun reports a runtime error, retry once through Node.js 24. Treat every nonzero exit as a failure, even if the command printed output. Keep Node.js 24 for the daemon and web app because native modules build for Node.js.
 
 If a step fails, name the failed step, state the likely cause, and give one next action. Keep the user's requested prototype work in view. If `pnpm install` reports a native-module build failure, install the missing platform build tools, then run `pnpm install` again. If the managed folder contains a different source revision, stop and ask before replacing it.
 
