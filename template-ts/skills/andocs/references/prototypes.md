@@ -14,16 +14,30 @@ Use a `prototype` block for a repository HTML page embedded in a document. Put t
 ```text
 prototypes/
   prototype.json
+  index.html            # Entry page for larger prototypes
   shared.css            # Optional styles
   shared.js             # Optional scripts
   pages/
     dashboard.html
   crm/
     prototype.json      # Optional nested prototype
+    index.html          # Entry page for a larger nested prototype
     shared.css
     pages/
       detail.html
 ```
+
+### Entry pages for larger prototypes
+
+For a prototype with about ten screens or several functional areas, add an
+`index.html` beside `prototype.json`. Keep the screens in `pages/`. List every
+page in the index, grouped by area, with a one-line description for each page.
+Link to a nested prototype through its own `index.html`.
+
+Update the index in the same change that adds, renames, or removes a page. For a
+small prototype, use the document's `prototype` blocks as the entry point. Link
+to a larger prototype's index from documentation with a relative Markdown link.
+That link opens the index as a standalone page, as described below.
 
 Reference an HTML page by repository-relative path. `title=` and `height=` are optional:
 
@@ -43,7 +57,8 @@ To list HTML outputs without embedding them, use a relative Markdown link such a
 
 ## Runtime and shared assets
 
-- The iframe uses `sandbox="allow-scripts"`; prototype code cannot directly access host storage, cookies, or DOM.
+- Prototype iframes use `sandbox="allow-scripts"`. The sandbox blocks popups and top-level navigation, but HTML anchors can navigate within the iframe. A Markdown link to `index.html` opens the entry page outside the iframe. See [Navigation and relative static files](#navigation-and-relative-static-files) for page-link behavior.
+- Prototype code cannot directly access host storage, cookies, or DOM.
 - Andocs injects Alpine.js, Tailwind CSS v4, and light-theme design tokens. Use classic scripts or local module scripts loaded through the prototype asset URLs. Bare package imports still need a browser-compatible URL or a build step.
 - `shared.css` files cascade from the outermost `prototype.json` root to the nearest nested root. A nested root can add or override parent styles.
 - The nearest root's `shared.js` is injected in `<head>` before the page body. Put reusable Custom Element definitions there.
