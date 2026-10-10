@@ -7,7 +7,7 @@ description: This skill should be used when starting a local Andocs demo or prev
 
 For an Andocs introduction or a local demo, follow [the introduction flow](references/introduction.md). Start a local preview with the published CLI command in that guide.
 
-When the user asks to install this skill, ask once: "Should I install it for this project only (the default), or for the whole computer?" Do not write outside the project before the user chooses. Check the install command's exit code and report a nonzero result as a failure.
+When the user asks to install this skill, ask once in plain words, naming folders rather than projects: "Should I install it only in this folder (the default), or for all folders on this computer?" Do not write outside the current folder before the user chooses. Check the install command's exit code and report a nonzero result as a failure.
 
 For other editing tasks, find the documentation root from the request or repository before editing. If multiple roots remain plausible, ask which one to use. Follow the repository's language and preview rules.
 
