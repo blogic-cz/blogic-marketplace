@@ -2,9 +2,15 @@
 
 Use this guide when a user asks to introduce Andocs, onboard a new user, or start a local preview. Speak the user's language. Use plain everyday words. Ask one question at a time.
 
+## Start Andocs
+
+When the user asks to start Andocs, run `bunx andocs@latest --path .` from the current folder. Do not create files or folders first. An empty folder opens the idea screen. A folder with documents opens those documents.
+
+Tell the user in one plain sentence to type their idea in the screen that opens. If the user named an idea, tell them to paste that exact idea there. Keep the idea from the conversation for them when you can enter it in the screen.
+
 ## Ask about the project first
 
-In your first reply, give the current folder path and, if present, the Git project folder path. Then ask: "Do you want to continue in this project, or create a new project?" Wait for the answer before you create files or run `git init`, even when the folder is empty.
+When the user asks for an Andocs introduction, give the current folder path and, if present, the Git project folder path in your first reply. Then ask: "Do you want to continue in this project, or create a new project?" Wait for the answer before you create files or run `git init`, even when the folder is empty. For a request to start Andocs, follow [Start Andocs](#start-andocs) instead.
 
 If the user chooses the current project, continue there. If the user wants a new project, ask where to create its folder. Create it outside other Git projects, unless the user chooses another location or setup. Run `git init` only after the user answers. Then show the work path below.
 
@@ -48,7 +54,7 @@ Before you start a preview, check that the required tools are available. If they
 Tell the user the next steps in a short list, then start with the first step. For example: "I’ll open a working example, show how it goes from a need to a clickable example, then help you make one change."
 
 1. Use the separate [`andocs-demo` project](https://github.com/blogic-cz/andocs-demo) for the public example. Do not use a development copy of the Andocs app as demo content. When you point to a demo page, describe what it shows in the user's language. Do not quote its English title.
-2. Start the preview with the published command: `bunx andocs@latest serve --path <docs-root>`. Check the command help with `bunx andocs@latest -h` when needed.
+2. Start Andocs from the selected folder with `bunx andocs@latest --path .`. In an empty folder, this opens the idea screen without creating files or folders. In a folder with documents, this opens the documents. Check the command help with `bunx andocs@latest -h` when needed.
 3. If the user asks to update the example, check its upstream status and find which process serves the preview before you change anything.
 4. Keep the working preview open while preparing optional services. Replace it only after the new services pass their checks.
 5. Walk through the path on the example. Mention math and clickable examples briefly if the path did not reach them.
@@ -57,4 +63,4 @@ Treat updates to example content and OpenDesign setup as separate steps. Never u
 
 ## Prepare OpenDesign when the user reaches that step
 
-Prepare OpenDesign after the preview works, when the user accepts the recommendation to edit the example. If OpenDesign is not installed, say so and lead the installation. Do not send a non-programmer to a download page. Read [the OpenDesign guide](opendesign.md) before preparing it from source. Install dependencies or start services only when the user has authorized those actions. Follow the guide's browser check before you say OpenDesign works.
+Prepare OpenDesign after the preview works, when the user accepts the recommendation to edit the example. Read [the OpenDesign guide](opendesign.md), check the required tools, then ask once in plain words before you install any missing tools and OpenDesign. Do not send a non-programmer to a download page. Follow the guide's browser check before you say OpenDesign works.

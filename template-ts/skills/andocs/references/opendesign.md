@@ -4,15 +4,79 @@ Use this workflow only when the user asks to continue prototype editing in OpenD
 
 ## Prepare OpenDesign from source
 
-Install dependencies and start services only with the user's authorization. Use a separate worktree at the selected source pin; do not move or modify the user's checkout. Read that checkout's `package.json` `engines` field and the launcher's error and help text before you choose commands. The CLI build runs as part of `pnpm install`; you can also build it with `pnpm --filter @open-design/daemon build`.
+Ask the user once before you install missing tools or OpenDesign. First check Git, Node.js 24, pnpm 10.33, and the platform's build tools. OpenDesign needs Node.js `~24` and pnpm `>=10.33.2 <11`. Its install script builds the daemon and rebuilds native modules when needed.
 
-Start the daemon and web app with `pnpm exec tools-dev run web --namespace <name> --daemon-port <p> --web-port <p>`. Confirm the daemon with `node <checkout>/apps/daemon/bin/od.mjs project list --json --daemon-url <url>`. Probe the web root and daemon `/api/health` with a per-request time limit, such as `curl --max-time <seconds> <web-url>/` and `curl --max-time <seconds> <daemon-url>/api/health`. The first web request compiles the app on demand.
+Ask in plain words. On Windows, say that Visual Studio Build Tools with the C++ workload and Python may use several gigabytes of disk space and can take an hour or more to download and install. For example: "I can set up OpenDesign for Andocs. I need to install any missing tools and build OpenDesign from source. On Windows, the C++ tools and Python may use several gigabytes and take an hour or more to install. May I install the missing tools and OpenDesign in Andocs' app folder?" Do not ask again for each tool. Do not use administrator access unless an installer requires it. If an installer requires administrator access, tell the user before you continue.
+
+Check the tools for the current operating system. Confirm that Node.js reports version `24.x` and pnpm reports version `10.33.2` or newer in the `10.x` series.
+
+**macOS**
+
+```sh
+command -v git
+git --version
+node --version
+corepack --version
+pnpm --version
+xcode-select -p
+```
+
+If a tool is missing, install Git and the C++ tools with `xcode-select --install`. Install Node.js 24 from the [official Node.js downloads](https://nodejs.org/en/download). Enable Corepack and activate the required pnpm version with `corepack enable` and `corepack prepare pnpm@10.33.2 --activate`.
+
+**Windows**
+
+```powershell
+Get-Command git, node, corepack, pnpm, python, py -ErrorAction SilentlyContinue
+node --version
+corepack --version
+pnpm --version
+& "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+```
+
+If a tool is missing, install Git with `winget install --id Git.Git -e --source winget`. Install Node.js 24 from the [official Node.js downloads](https://nodejs.org/en/download). Install Python from [python.org](https://www.python.org/downloads/windows/). Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) and select the **Desktop development with C++** workload with a Windows SDK. Enable Corepack and activate pnpm with `corepack enable` and `corepack prepare pnpm@10.33.2 --activate`.
+
+Use the managed source folder for this pinned OpenDesign checkout.
+
+| Operating system | Managed source folder                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| macOS            | `~/Library/Application Support/andocs/opendesign/89e64d813bb1c7a11519b3f668f011f7017637d7/source` |
+| Windows          | `%LOCALAPPDATA%\andocs\opendesign\89e64d813bb1c7a11519b3f668f011f7017637d7\source`                |
+
+For a new install, use the commands below. If the managed source folder already exists, check that `git rev-parse HEAD` returns `89e64d813bb1c7a11519b3f668f011f7017637d7` and that `git status --short` shows no tracked source changes. Reuse that checkout and run `pnpm install`. Do not overwrite a different checkout.
+
+On macOS, use these commands after you check that the source folder does not already exist.
+
+```sh
+source="$HOME/Library/Application Support/andocs/opendesign/89e64d813bb1c7a11519b3f668f011f7017637d7/source"
+mkdir -p "$(dirname "$source")"
+git clone https://github.com/nexu-io/open-design.git "$source"
+git -C "$source" fetch --depth 1 origin 89e64d813bb1c7a11519b3f668f011f7017637d7
+git -C "$source" checkout --detach 89e64d813bb1c7a11519b3f668f011f7017637d7
+pnpm -C "$source" install
+```
+
+On Windows, use these commands after you check that the source folder does not already exist.
+
+```powershell
+$source = Join-Path $env:LOCALAPPDATA 'andocs\opendesign\89e64d813bb1c7a11519b3f668f011f7017637d7\source'
+New-Item -ItemType Directory -Force -Path (Split-Path $source) | Out-Null
+git clone https://github.com/nexu-io/open-design.git $source
+git -C $source fetch --depth 1 origin 89e64d813bb1c7a11519b3f668f011f7017637d7
+git -C $source checkout --detach 89e64d813bb1c7a11519b3f668f011f7017637d7
+pnpm -C $source install
+```
+
+Let Andocs find and start OpenDesign. Continue with the requested task, then check `andocs opendesign status`. Andocs also finds OpenDesign at the managed source folder when it starts. Do not start the daemon or web app by hand unless Andocs cannot start them.
+
+On Windows, invoke OpenDesign's `od.mjs` client through `bun <path-to-od.mjs>` or `node <path-to-od.mjs>`. Never run `od.mjs` as a direct executable. Use Bun for the client when it is installed. If Bun reports a runtime error, retry once through Node.js 24. Treat every nonzero exit as a failure, even if the command printed output. Keep Node.js 24 for the daemon and web app because native modules build for Node.js.
+
+If a step fails, name the failed step, state the likely cause, and give one next action. Keep the user's requested prototype work in view. If `pnpm install` reports a native-module build failure, install the missing platform build tools, then run `pnpm install` again. If the managed folder contains a different source revision, stop and ask before replacing it.
 
 Before you tell the user that OpenDesign works, open a data-backed prototype in an available browser, choose **OpenDesign**, and confirm that the editor opens. If no browser tool is available, say that this check was not verified.
 
 ## Handoff
 
-- Identify the documentation root and exact HTML page selected by the `prototype` block. Start the local preview with `bunx andocs@latest serve --path <docs-root>` when the user requests the handoff. Confirm OpenDesign's local web app and daemon are running; Andocs does not install OpenDesign for you. macOS `/usr/bin/od` is an unrelated system utility.
+- Identify the documentation root and exact HTML page selected by the `prototype` block. Start the local preview from the documentation root with `bunx andocs@latest --path .` when the user requests the handoff. Andocs finds and starts OpenDesign from its managed source folder. macOS `/usr/bin/od` is an unrelated system utility.
 - In the prototype toolbar, choose **OpenDesign**. Andocs opens the matching project and file with its custom instructions; it does not ask for a task prompt. If the current conversation already contains an explicit original prompt or relevant decisions and next steps, pass them through the CLI options below. Without a new prompt, Andocs preserves any existing pending draft and opens the selected file. An explicit new prompt does not overwrite another unsent prompt. Andocs selects the enclosing Git repository as the project, reuses an existing project and conversation for that repository, and selects the HTML page. If there is no Git root, the configured documents folder is used.
 - Review the handoff in OpenDesign and send it when ready. Andocs does not read an earlier agent transcript or submit the model run for you. Add a session reference only when it is known and readable; do not invent one, assume transcript access, or scrape unrelated history. Keep unrelated transcripts and secrets out of the handoff.
 - Before editing, read the canonical Andocs skill at the absolute path supplied in OpenDesign's custom instructions, then load its relevant references.

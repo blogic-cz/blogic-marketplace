@@ -7,6 +7,8 @@ description: This skill should be used when starting a local Andocs demo or prev
 
 For an Andocs introduction or a local demo, follow [the introduction flow](references/introduction.md). Start a local preview with the published CLI command in that guide.
 
+When the user asks to install this skill, ask once: "Should I install it for this project only (the default), or for the whole computer?" Do not write outside the project before the user chooses. Check the install command's exit code and report a nonzero result as a failure.
+
 For other editing tasks, find the documentation root from the request or repository before editing. If multiple roots remain plausible, ask which one to use. Follow the repository's language and preview rules.
 
 Read the reference that matches the work:
@@ -18,6 +20,6 @@ Read the reference that matches the work:
 - [Web Components](references/web-components.md) — read when a prototype uses Custom Elements or Shadow DOM.
 - [OpenDesign handoff](references/opendesign.md) — read when the user asks to edit an Andocs prototype in OpenDesign or asks to prepare OpenDesign from source.
 
-For a requested local preview, identify the documentation root and check that Bun is available. Use `bunx andocs@latest serve --path <docs-root>` only when starting a server is authorized by the user and the repository instructions. The CLI help is `bunx andocs@latest -h`.
+For a requested local preview, identify the folder and check that Bun is available. Run `bunx andocs@latest --path .` from that folder. This opens the idea screen in an empty folder and opens documents when the folder contains them. Do not create files or folders before starting Andocs. The CLI help is `bunx andocs@latest -h`.
 
 Before finishing, check that referenced files exist, fenced blocks use the right language, and any prototype state handles unavailable storage. The public [Andocs demo](https://github.com/blogic-cz/andocs-demo) shows a complete prototype repository.
