@@ -16,7 +16,7 @@ Read the reference that matches the work:
 - [Markdown rendering](references/markdown.md) — read when writing diagrams, math, interactive `html-preview` blocks, or Andocs-specific links.
 - [Prototypes](references/prototypes.md) — read when creating or editing `prototype.json`, HTML pages, navigation between pages, relative static files, shared assets, or `prototype` blocks.
 - [Review status and releases](references/prototype-releases.md) — read when a prototype uses screen review badges, `releases.json`, or `<id>@<release>.html` screen variants.
-- [Prototype state](references/prototype-state.md) — read when prototype data must survive refresh or an existing stateful prototype needs migration.
+- [Prototype state](references/prototype-state.md) — read whenever a prototype has records the user adds, edits, or deletes (lists, forms, CRUD screens, trackers, dashboards with entries), or an existing stateful prototype needs migration. Andocs data is the default home for such records; use in-memory arrays only for screens that display data the user never changes.
 - [Web Components](references/web-components.md) — read when a prototype uses Custom Elements or Shadow DOM.
 - [OpenDesign handoff](references/opendesign.md) — read when the user asks to edit an Andocs prototype in OpenDesign or asks to prepare OpenDesign from source.
 

@@ -1,6 +1,8 @@
 # Persistent prototype data
 
-Use this for prototypes that keep structured records after refresh. The host injects `window.andocsData` only when that host supports the API. For CLI use, confirm the installed `serve --help` or `edit-prototype --help` exposes the required options and the actual preview exposes the needed API. Authored HTML must not import Evolu, load an Evolu CDN script, or configure a relay.
+Andocs data is the default for every prototype with records the user adds, edits, or deletes. Build it in from the first version: declare the collections in `prototype.json` and read and write them through `window.andocsData`, without asking first. Keep example records in memory only for screens that display data the user never changes. When the user asks for sample data in a records prototype, show it as an empty-state preview and offer one action that creates those records through `window.andocsData`.
+
+The host injects `window.andocsData` only when that host supports the API. For CLI use, confirm the installed `serve --help` or `edit-prototype --help` exposes the required options and the actual preview exposes the needed API. Authored HTML must not import Evolu, load an Evolu CDN script, or configure a relay.
 
 ## Managed datasets
 
