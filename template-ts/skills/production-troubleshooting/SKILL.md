@@ -1,6 +1,6 @@
 ---
 name: production-troubleshooting
-description: "This skill should be used when troubleshooting production/test incidents such as slow endpoints, high latency, OOMKilled pod restarts, pod crashes/throttling, slow queries, or Sentry-reported errors and traces."
+description: "This skill should be used when troubleshooting production/test incidents such as slow endpoints, high latency, OOMKilled pod restarts, pod crashes/throttling, slow queries, Sentry-reported errors and traces, post-deploy watches, before/after deployment metrics, or 503 responses during or after a rollout."
 compatibility: opencode
 ---
 

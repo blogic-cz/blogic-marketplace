@@ -20,11 +20,17 @@ When runtime report shows drift, align all Bun-related pins before completion, i
 - `node-version:` in workflows
 - Playwright package and image alignment
 
+After every merge of the base branch, regenerate the runtime report and search the merged tree for old Bun pins. Check `setup-bun` versions in Windows jobs and the Bun version in the self-hosted ARC runner image.
+
 Manual search fallback:
 
 ```bash
 grep -R "bun-version:\|BUN_VERSION=\|bun@1\.\|oven/bun:1\." .
 ```
+
+## Effect Updates
+
+Keep `ignoreEffectWarningsInTscExitCode` set to `false`. Add only the unstable APIs reported by TypeScript as TS377136 to `allowedUnstableApis`, using the exact module and export names from the diagnostics. Keep the entries sorted, then prove the gate by temporarily using an unstable API that is not listed and confirming that typecheck fails with TS377136. Remove the probe after the check.
 
 ## Playwright Updates
 

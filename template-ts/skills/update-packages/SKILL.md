@@ -80,7 +80,7 @@ Handle catalog packages in one place:
 - Check latest versions manually (`npm view <package> version`) when needed.
 - Respect the repository's Bun install policy in `bunfig.toml`, especially `minimumReleaseAge` and related excludes.
 - Do **not** bypass Bun's age gate with flags like `bun install --minimum-release-age 0` unless the user explicitly requests that override.
-- If a desired version is blocked by `minimumReleaseAge`, choose the newest older compatible version that satisfies the policy and update the manifest to that version instead of forcing the install.
+- Choose the newest compatible version that satisfies `minimumReleaseAge` for the whole package group. If a requested version appears blocked, reproduce it with `bun install <package>@<version> --dry-run --no-save` before recording the refusal; then use the newest eligible version.
 - Update catalog entries manually, then run plain `bun install`.
 
 **Step 2 — Update + Adopt features IN PARALLEL**
@@ -92,6 +92,8 @@ Handle catalog packages in one place:
 |                                                                                | **T0/T1**: implement config-level changes (target files in `configFiles[]`), verify with `bun run check` |
 |                                                                                | **T2**: generate concrete diffs, include in report                                                       |
 |                                                                                | Search codebase for usages of changed/deprecated/new APIs                                                |
+
+For SDK upgrades, compare the full initialization options object before and after the upgrade. Check upstream migration notes for every removed or changed option.
 
 Delegate release-note research to a subagent/librarian when available. If delegation is unavailable, process package groups sequentially in the main agent with the same rubric.
 
@@ -110,6 +112,12 @@ Use separate commits for version bumps and feature adoptions:
 - `chore: update <package> to vX.Y.Z` — version bump only
 - `feat: adopt <package> vX.Y improvements (<feature list>)` — config/code changes from new features
 
+Put behavior or security fixes found during an update in a separate PR from the dependency bump.
+
+### Internal library releases
+
+Pin peer dependencies to the exact compatible family version. Do not start a peer range at a prerelease. Before release, install the library into a clean consumer for each supported family version and package manager, then verify the lockfile contains one copy of each family package.
+
 ### Release Notes Report
 
 Generate the release report using `references/report-formats.md`.
@@ -125,6 +133,8 @@ Fetch missing release notes with a librarian only when needed.
 ## Special Cases
 
 Apply Bun and Playwright update checklists from `references/runtime-checklists.md`.
+
+After deployment, check Sentry for new issues in each project and environment. Request `/` and the liveness route; a successful liveness response alone does not verify server rendering.
 
 ## Testing Requirements
 

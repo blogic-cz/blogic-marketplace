@@ -26,6 +26,8 @@ This authorization never covers force push, merge/deploy, production mutation, p
 
 A watcher is read-only: it may collect SHA-stable snapshots, inspect feedback, wait on running checks, and report state. Coordinator owns diagnosis, edits, validation, commits, pushes, reruns, replies, and resolutions. Stop every active watcher before coordinator mutation. After mutation completes, restart monitoring only from a fresh SHA-stable snapshot; never act on watcher state for an older head.
 
+For a failed `claude-review` job, read its logs and capture the finding from `STRUCTURED_OUTPUT`. Report missing credentials and workflow differences from the default branch as configuration defects.
+
 ## Completion
 
 PR is ready only after latest published head has required checks passing, no actionable automated feedback, and all human feedback is either absent or processed through its approval gates. After readiness, completed human review, or observed merge, optionally start non-blocking [`reflection`](references/reflection.md). It never changes delivery verdict or blocks delivery; any resulting mutation requires separate approval. Stop with evidence when user stops, required intent/approval is missing, remote operation partially succeeds, CI cannot be diagnosed, feedback cannot be inspected, or bounded loop ends without readiness.
