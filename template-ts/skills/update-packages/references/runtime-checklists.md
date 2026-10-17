@@ -32,6 +32,10 @@ grep -R "bun-version:\|BUN_VERSION=\|bun@1\.\|oven/bun:1\." .
 
 Keep `ignoreEffectWarningsInTscExitCode` set to `false`. Add only the unstable APIs reported by TypeScript as TS377136 to `allowedUnstableApis`, using the exact module and export names from the diagnostics. Keep the entries sorted, then prove the gate by temporarily using an unstable API that is not listed and confirming that typecheck fails with TS377136. Remove the probe after the check.
 
+## SDK Updates
+
+For each SDK upgrade, compare the complete initialization options object on the old and new versions. Check each removed or changed option against upstream migration notes. Require the reviewer brief to request the complete old and new options comparison and a migration-note check for every removal or change.
+
 ## Playwright Updates
 
 Apply all steps when bumping Playwright:

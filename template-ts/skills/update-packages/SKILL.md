@@ -20,7 +20,7 @@ Use these references during execution:
 - `references/feature-adoption-tiers.md` — T0-T3 adoption rubric
 - `references/report-formats.md` — release report and "What's New" output formats
 - `references/testing-matrix.md` — required tests by update type
-- `references/runtime-checklists.md` — Bun and Playwright update checklists
+- `references/runtime-checklists.md` — Bun and Playwright checklists; read the Effect Updates section for Effect or compiler updates and the SDK Updates section for SDK upgrades
 
 ## Step 0: Prepare Session (Execution mode only)
 
@@ -93,7 +93,7 @@ Handle catalog packages in one place:
 |                                                                                | **T2**: generate concrete diffs, include in report                                                       |
 |                                                                                | Search codebase for usages of changed/deprecated/new APIs                                                |
 
-For SDK upgrades, compare the full initialization options object before and after the upgrade. Check upstream migration notes for every removed or changed option.
+For SDK upgrades, follow the SDK Updates checklist in `references/runtime-checklists.md`.
 
 Delegate release-note research to a subagent/librarian when available. If delegation is unavailable, process package groups sequentially in the main agent with the same rubric.
 
@@ -132,7 +132,7 @@ Fetch missing release notes with a librarian only when needed.
 
 ## Special Cases
 
-Apply Bun and Playwright update checklists from `references/runtime-checklists.md`.
+Apply the Bun and Playwright checklists from `references/runtime-checklists.md`. For Effect or compiler updates, follow its Effect Updates section. For SDK upgrades, follow its SDK Updates section.
 
 After deployment, check Sentry for new issues in each project and environment. Request `/` and the liveness route; a successful liveness response alone does not verify server rendering.
 
