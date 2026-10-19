@@ -1,22 +1,34 @@
 # Introduce Andocs
 
-Use this guide when a user asks to introduce Andocs, onboard a new user, or start a local preview. Speak the user's language. Use plain everyday words. Ask one question at a time.
+Use this guide for an introduction, onboarding, a new project, or a question about what Andocs can do. Speak the user's language and use plain words.
 
-## Start Andocs
+## Follow the onboarding instructions
 
-When the user asks to start Andocs, run `bunx andocs@latest --path .` from the current folder. Do not create files or folders first. An empty folder opens the idea screen. A folder with documents opens those documents.
+Before `agent`, run `git --version` and `bun --version`. If Git is missing, follow the [official Git installation steps](https://git-scm.com/install/). If Bun is missing, use the [official Bun installer](https://bun.sh/get): run `curl -fsSL https://bun.sh/install | bash` on macOS or Linux, or `powershell -c "irm bun.sh/install.ps1 | iex"` on Windows. Run both checks again.
 
-Tell the user in one plain sentence to type their idea in the screen that opens. If the user named an idea, tell them to paste that exact idea there. Keep the idea from the conversation for them when you can enter it in the screen.
+Read [the Andocs skill](../SKILL.md) for the first CLI step. The CLI's JSON instructions own the questions, folder choice, commands, and their order.
 
-## Ask about the project first
+## Create files for the user's idea
 
-When the user asks for an Andocs introduction, give the current folder path and, if present, the Git project folder path in your first reply. Then ask: "Do you want to continue in this project, or create a new project?" Wait for the answer before you create files or run `git init`, even when the folder is empty. For a request to start Andocs, follow [Start Andocs](#start-andocs) instead.
+Wait until the user describes what they want to build. An introduction alone does not authorize sample documents or a prototype.
 
-If the user chooses the current project, continue there. If the user wants a new project, ask where to create its folder. Create it outside other Git projects, unless the user chooses another location or setup. Run `git init` only after the user answers. Then show the work path below.
+For a new project, use `docs/` as the documentation root inside the selected project folder. Match the layout that `andocs hello` creates:
+
+```text
+<project-folder>/
+  docs/
+    index.md
+    prototypes/
+      prototype.json
+      pages/
+        index.html
+```
+
+Write the user's need in `docs/index.md`. If the project needs a README document, put it in `docs/` too. Keep its prototype pages and assets under `docs/prototypes/`. Preview with `bunx andocs@latest serve --path <project-folder>/docs`. Publish with `--root <project-folder> --documents-root docs`. Keep an existing project's documentation root when you continue its work.
 
 ## Use plain words
 
-Use a technical name only when the user asks for it or when you give a command that needs it. Explain the idea in plain words first. Adapt these examples to the user's language.
+Use a technical name only when the user asks for it or when a command needs it. Explain the idea first.
 
 | Technical name  | Plain words for a Czech user            |
 | --------------- | --------------------------------------- |
@@ -25,42 +37,35 @@ Use a technical name only when the user asks for it or when you give a command t
 | prototype block | klikací ukázka v dokumentu              |
 | Mermaid or BPMN | diagram                                 |
 
-## Show the path from need to app
+## Explain the path from need to app
 
-Explain Andocs through one path.
+Present one path:
 
-1. **Write down the need.** Turn a customer need or an assignment into a document.
-2. **Make a clickable example.** Add a web page to the document so the user can try the idea.
-3. **Edit the example in OpenDesign.** Recommend OpenDesign as the visual editor for the example.
-4. **Try sample data.** The example can keep its data after a page refresh, so it acts like an app.
-5. **Hand it to development.** A developer or an agent can build the real app from the example and the project template.
+1. Write the need as a document.
+2. Add a clickable example to the document.
+3. Use OpenDesign to edit the example.
+4. Add sample data so the example can act like an app and keep its data after a page refresh.
+5. Give the example to a developer or agent to build the real app.
 
-Ask which part the user wants to try first. Use this order as the default. If the user has already named a part, start there.
+Ask which part the user wants to try first. Start with the part they named.
 
-## Check tools before starting a preview
+## Check the tools
 
-Before you start a preview, check that the required tools are available. If they are ready, say that the tools needed for the preview are ready. Do not name them. If a required tool is missing and must be installed, name it and explain in one sentence that the preview needs it. Ask permission to install it, and wait for the answer. After the user agrees, use the official command for their operating system:
+Use the onboarding result to check which tools the selected step needs. Follow its next instruction when a tool is missing. Say the tools are ready after the result confirms it.
 
-**macOS**
+For a direct preview request for an existing docs folder, reuse its open preview. Otherwise run `bunx andocs@latest serve --path <docs-root>`. Use the URL printed by the CLI, which preserves the saved address even when another port is requested. Keep any earlier `--local-data-directory` option. Read [local preview continuity](prototype-state.md#keep-local-preview-data-reachable) for `--local-data-origin` recovery and catalog rules.
 
-- Git: `xcode-select --install` ([official instructions](https://git-scm.com/install/mac))
-- Bun: `curl -fsSL https://bun.com/install | bash` ([official instructions](https://bun.sh/docs/installation))
+## Use account commands
 
-**Windows**
+Sign in with `bunx andocs@latest login` when the user wants to share or publish. Then use these commands as needed:
 
-- Git: `winget install --id Git.Git -e --source winget` ([official instructions](https://git-scm.com/install/windows))
-- Bun: `powershell -c "irm bun.sh/install.ps1|iex"` ([official instructions](https://bun.sh/docs/installation))
+- `bunx andocs@latest whoami` shows the signed-in account.
+- `bunx andocs@latest organizations list` lists accessible organizations.
+- `bunx andocs@latest projects list` lists projects.
+- `bunx andocs@latest sync status` shows a project's sync status.
 
-Tell the user the next steps in a short list, then start with the first step. For example: "I’ll open a working example, show how it goes from a need to a clickable example, then help you make one change."
+Publishing to GitHub comes later.
 
-1. Use the separate [`andocs-demo` project](https://github.com/blogic-cz/andocs-demo) for the public example. Do not use a development copy of the Andocs app as demo content. When you point to a demo page, describe what it shows in the user's language. Do not quote its English title.
-2. Start Andocs from the selected folder with `bunx andocs@latest --path .`. In an empty folder, this opens the idea screen without creating files or folders. In a folder with documents, this opens the documents. Check the command help with `bunx andocs@latest -h` when needed.
-3. If the user asks to update the example, check its upstream status and find which process serves the preview before you change anything.
-4. Keep the working preview open while preparing optional services. Replace it only after the new services pass their checks.
-5. Walk through the path on the example. Mention math and clickable examples briefly if the path did not reach them.
+## See a public example
 
-Treat updates to example content and OpenDesign setup as separate steps. Never update a development copy of the Andocs app to fix example content.
-
-## Prepare OpenDesign when the user reaches that step
-
-Prepare OpenDesign after the preview works, when the user accepts the recommendation to edit the example. Read [the OpenDesign guide](opendesign.md), check the required tools, then ask once in plain words before you install any missing tools and OpenDesign. Do not send a non-programmer to a download page. Follow the guide's browser check before you say OpenDesign works.
+For an optional public example, open the [Andocs demo](https://github.com/blogic-cz/andocs-demo). Describe the example in the user's language.

@@ -1,5 +1,7 @@
 # Andocs prototypes
 
+`andocs hello` opens "What should we build?" in both new and existing projects. In an existing documentation root, each new idea gets a separate folder named from the idea, such as `boogl/` or `boogl-2/`. The folder contains an index document and the same prototype layout as a new project. Andocs keeps the documentation root, first prototype, and existing files in place. Moving existing files is left to the user or their agent. A retry of the same request reuses its folder. Concurrent submissions of that request share one folder and one handoff. The CLI stores the target before scaffold writes and serializes submission across processes. An interrupted request resumes its stored target.
+
 Use a `prototype` block for a repository HTML page embedded in a document. Put the page under a `prototype.json` root; that marker makes Andocs sync the HTML files. Use the [published schema](https://andocs.blogic.cz/schemas/prototype-schema.json) for editor validation:
 
 ```json
@@ -10,6 +12,8 @@ Use a `prototype` block for a repository HTML page embedded in a document. Put t
 ```
 
 ## Files and embedding
+
+For a new project, use the `docs/` layout in [the introduction guide](introduction.md). The paths below are relative to that documentation root. Wait for the user's idea before creating these files.
 
 ```text
 prototypes/
@@ -39,7 +43,7 @@ small prototype, use the document's `prototype` blocks as the entry point. Link
 to a larger prototype's index from documentation with a relative Markdown link.
 That link opens the index as a standalone page, as described below.
 
-Reference an HTML page by repository-relative path. `title=` and `height=` are optional:
+Reference an HTML page relative to the documentation root. For `docs/index.md` and `docs/prototypes/pages/dashboard.html`, use the example below in local previews and in published projects. Do not add a `docs/` prefix. `title=` and `height=` are optional:
 
 ````markdown
 ```prototype path=prototypes/pages/dashboard.html title="Dashboard" height=800
@@ -49,7 +53,7 @@ Reference an HTML page by repository-relative path. `title=` and `height=` are o
 
 | Parameter | Behavior                                                    |
 | --------- | ----------------------------------------------------------- |
-| `path=`   | Required repository-relative HTML path                      |
+| `path=`   | Required HTML path relative to the documentation root       |
 | `title=`  | Toolbar title; otherwise `<title>` from HTML, then the path |
 | `height=` | Initial iframe height, 200–800 px; default 600 px           |
 
@@ -57,7 +61,9 @@ To list HTML outputs without embedding them, use a relative Markdown link such a
 
 ## Runtime and shared assets
 
-- Prototype iframes use `sandbox="allow-scripts"`. The sandbox blocks popups and top-level navigation, but HTML anchors can navigate within the iframe. A Markdown link to `index.html` opens the entry page outside the iframe. See [Navigation and relative static files](#navigation-and-relative-static-files) for page-link behavior.
+Prefer `type="button"` with a click handler. Forms work natively. Use `@submit.prevent` for form handlers because form submission never leaves the page.
+
+- Prototype iframes use `sandbox="allow-scripts allow-forms"`. The sandbox blocks popups and top-level navigation, but HTML anchors can navigate within the iframe. A Markdown link to `index.html` opens the entry page outside the iframe. See [Navigation and relative static files](#navigation-and-relative-static-files) for page-link behavior.
 - Prototype code cannot directly access host storage, cookies, or DOM.
 - Andocs injects Alpine.js, Tailwind CSS v4, and light-theme design tokens. Use classic scripts or local module scripts loaded through the prototype asset URLs. Bare package imports still need a browser-compatible URL or a build step.
 - `shared.css` files cascade from the outermost `prototype.json` root to the nearest nested root. A nested root can add or override parent styles.
