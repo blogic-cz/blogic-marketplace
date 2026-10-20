@@ -18,6 +18,8 @@ The CLI's anonymous local catalog is separate from the hosted account catalog. I
 
 ## Keep local preview data reachable
 
+Without `--path` or `ANDOCS_PATH`, Andocs selects `docs/` when all discovered Markdown is inside it, unless the selected local data directory contains a saved project-root preview origin or dataset catalog, including a legacy catalog. Saved root state keeps the project root even with no Markdown files. A stored prototype receipt keeps its documents root, and `agent` follows the same selection rule.
+
 Use the preview URL printed by the CLI. Andocs saves one loopback preview address per canonical documents root. Without `--port`, later starts keep that address. An explicit `--port N` selects N and saves it only after the listener starts or an existing preview at N is verified. A failed start preserves the saved address and adds no port reservation. A port owned by another project in the same data directory is rejected. Earlier browser data stays at its old origin; use `--local-data-origin <old-origin>` to open it. Only one preview can write a project's dataset catalog. If the project is already open at another verified address, `--port N` exits 1 without changing saved state. Stop that preview before starting at N, or open its printed URL. A `--host` request alone keeps the saved address. If the same project is already open, reuse its printed URL. A second start opens that preview unless `--no-open` is set, then exits successfully.
 
 Keep the same `--local-data-directory <folder-outside-documents>` on `serve`, bare preview, `hello`, `design`, and `edit-prototype` commands. Omitting a custom folder selects the default catalog. Choosing another folder does not move the old catalog or recover its named datasets.
