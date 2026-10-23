@@ -45,6 +45,6 @@ npx skills update
 | Testing and debugging | `debugging-with-opensrc`, `scan-effect-solutions`, `testing-patterns`                                                  |
 | Operations            | `kubernetes-helm`, `performance-optimization`, `process-db-report`, `production-troubleshooting`, `sentry-integration` |
 | Maintenance           | `reflect`, `sync-template`, `update-packages`                                                                          |
-| Product work          | `grill-me`, `marketing-expert`                                                                                         |
+| Product work          | `analyst-prototypes`, `grill-me`, `marketing-expert`                                                                   |
 
 Skills encode Blogic conventions. Read a skill and its linked references before applying it outside `blogic-template-ts`.
