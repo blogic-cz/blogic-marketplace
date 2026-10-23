@@ -8,6 +8,10 @@ Before `agent`, run `git --version` and `bun --version`. If Git is missing, foll
 
 Read [the Andocs skill](../SKILL.md) for the first CLI step. The CLI's JSON instructions own the questions, folder choice, commands, and their order.
 
+## Ask what to create
+
+After the user answers the folder question, ask what they want to create, unless they already gave a concrete idea. Give three short examples in the user's language, such as a client visit log, a meeting room booking, or an investment tracker. A request to introduce, present, demo, show, or try Andocs in any language is not an idea for `--prompt`. Do not use that request as the idea.
+
 ## Create files for the user's idea
 
 Wait until the user describes what they want to build. An introduction alone does not authorize sample documents or a prototype.
