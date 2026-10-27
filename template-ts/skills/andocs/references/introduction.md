@@ -10,7 +10,7 @@ Read [the Andocs skill](../SKILL.md) for the first CLI step. The CLI's JSON inst
 
 ## Ask what to create
 
-After the user answers the folder question, ask what they want to create, unless they already gave a concrete idea. Give three short examples in the user's language, such as a client visit log, a meeting room booking, or an investment tracker. A request to introduce, present, demo, show, or try Andocs in any language is not an idea for `--prompt`. Do not use that request as the idea.
+After the user answers the folder question, ask what they want to create, unless they already gave a concrete idea. Give three short examples in the user's language that fit this user. Base them on what you know about the user's work, projects, and earlier tasks with you. Do not name private or sensitive details. If you know nothing about the user, suggest a client visit log, a meeting room booking, and an investment tracker. A request to introduce, present, demo, show, or try Andocs in any language is not an idea for `--prompt`. Do not use that request as the idea.
 
 ## Create files for the user's idea
 
