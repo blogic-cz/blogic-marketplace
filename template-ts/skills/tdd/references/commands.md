@@ -14,9 +14,8 @@ bun run test:watch
 # Coverage
 bun run test:coverage
 
-# Run specific test file (from project root, full path)
-bun run vitest run packages/common/src/__tests__/pagination.test.ts
-bun run vitest run apps/web-app/src/__tests__/formatters.test.ts
+# Run a specific test file (from project root, use a path that exists in the project)
+bun run vitest run <path-to-test-file>
 
 # Run by test name pattern
 bun run vitest run -t "calculateDiscount"
@@ -24,8 +23,11 @@ bun run vitest run -t "calculateDiscount"
 
 ## E2E
 
+Run these commands from the project root:
+
 ```bash
 # First-time Playwright browser install
+cd apps/web-app
 bun run test:e2e:install
 
 # Run all E2E tests

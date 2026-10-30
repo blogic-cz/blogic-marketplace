@@ -38,7 +38,7 @@ Begin gathering requirements for: $ARGUMENTS
    - Use mcp**RepoPrompt**set_selection and read_selected_files (if available) to batch read relevant code
    - Deep dive into similar features and patterns
    - Analyze specific implementation details
-   - Use WebSearch and or context7 for best practices or library documentation
+   - Use available web search or configured documentation tools for best practices or library documentation
    - Document findings in 03-context-findings.md including:
      - Specific files that need modification
      - Exact patterns to follow

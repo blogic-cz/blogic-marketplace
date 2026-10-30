@@ -20,12 +20,12 @@ Treat OpenSrc mirrors as the source of truth for installed versions.
 ## OpenSrc Commands
 
 ```bash
-# Sync all repos (run after git clone)
-bun run opensrc:sync
+# Sync configured repos when the OpenSrc config exists
+test ! -f opensrc/sources.json || \
+bun run scripts/opensrc-sync.ts
 
-# Fetch new package
-bun run opensrc:use <package>        # npm package
-bun run opensrc:use owner/repo       # GitHub repo
+# Fetch a package or GitHub repo
+bunx opensrc --modify false <package-or-owner/repo>
 ```
 
 ## Available Repos (opensrc/repos/github.com/)
