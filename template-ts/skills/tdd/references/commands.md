@@ -23,18 +23,17 @@ bun run vitest run -t "calculateDiscount"
 
 ## E2E
 
-Run these commands from the project root:
+The E2E scripts live in `apps/web-app`. Run these from the project root:
 
 ```bash
 # First-time Playwright browser install
-cd apps/web-app
-bun run test:e2e:install
+(cd apps/web-app && bun run test:e2e:install)
 
 # Run all E2E tests
-bun run test:e2e
+(cd apps/web-app && bun run test:e2e)
 
 # Run E2E with interactive UI
-bun run test:e2e:ui
+(cd apps/web-app && bun run test:e2e:ui)
 ```
 
 ## Incorrect patterns (avoid)

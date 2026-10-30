@@ -88,12 +88,11 @@ bun run test              # Run all unit + TRPC integration tests
 bun run test:watch        # Watch mode
 bun run test:coverage     # With coverage
 
-# Run these from the project root
-cd apps/web-app
-bun run test:e2e          # Run E2E tests
-bun run test:e2e:ui       # E2E with UI
+# E2E scripts live in apps/web-app
+(cd apps/web-app && bun run test:e2e)     # Run E2E tests
+(cd apps/web-app && bun run test:e2e:ui)  # E2E with UI
 
-# Run a specific test file from the project root (use a path that exists in the project)
+# Run a specific test file (use a path that exists in the project)
 bun run vitest run <path-to-test-file>
 ```
 
