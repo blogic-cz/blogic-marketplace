@@ -16,12 +16,9 @@ Use this skill when the request is to build or style a frontend component, page,
 
 ## Project Design Foundation
 
-Read project design sources before making visual decisions.
+Before making visual decisions, read the project's design or brand guidance if it has any. Use the project's source for tokens, typography, spacing, radii, shadows, themes, component patterns, audience, and messaging.
 
-- **`docs/design.md`** — Source of truth for tokens, typography, spacing, radii, shadows, dark mode, and component patterns.
-- **`docs/sales.md`** — Source of truth for audience, positioning, and messaging tone.
-
-Apply these constraints:
+When the project has no design guidance, use these defaults:
 
 - Primary color: Trust Bold Blue `#2563eb` (more saturated than Confluence)
 - Font: Inter as the default UI/body typeface (intentional brand choice)

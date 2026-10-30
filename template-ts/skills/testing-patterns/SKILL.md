@@ -87,12 +87,13 @@ Warn about maintenance cost only when E2E was not explicitly requested.
 bun run test              # Run all unit + TRPC integration tests
 bun run test:watch        # Watch mode
 bun run test:coverage     # With coverage
-bun run test:e2e          # Run E2E tests
-bun run test:e2e:ui       # E2E with UI
 
-# Run specific test file (FROM PROJECT ROOT, full path required)
-bun run vitest run packages/common/src/__tests__/pagination.test.ts
-bun run vitest run apps/web-app/src/__tests__/formatters.test.ts
+# E2E scripts live in apps/web-app
+(cd apps/web-app && bun run test:e2e)     # Run E2E tests
+(cd apps/web-app && bun run test:e2e:ui)  # E2E with UI
+
+# Run a specific test file (use a path that exists in the project)
+bun run vitest run <path-to-test-file>
 ```
 
 Avoid these command patterns:

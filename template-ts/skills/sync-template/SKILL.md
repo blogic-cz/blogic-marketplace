@@ -29,7 +29,7 @@ Reference that path as `$TPL` in commands.
 Materialize the template repo before diffing:
 
 ```bash
-bun run opensrc:use blogic-cz/blogic-template-ts
+bunx opensrc --modify false blogic-cz/blogic-template-ts
 ls opensrc/repos/github.com/blogic-cz/blogic-template-ts/
 ```
 
@@ -260,7 +260,7 @@ Apply substitution policy from `references/substitution-rules.md`.
 
 - **NEVER** overwrite project-specific business logic (routes, services, schema beyond defaults)
 - **NEVER** leave `@blogic-template/` or `blogic-template-ts` strings in synced project files, except approved exceptions in `references/substitution-rules.md`
-- **ALWAYS** clone the template via `bun run opensrc:use blogic-cz/blogic-template-ts` first
+- **ALWAYS** fetch the template with `bunx opensrc --modify false blogic-cz/blogic-template-ts` first
 - **ALWAYS** apply the name substitution matrix to every file copied from the template
 - **ALWAYS** update packages FIRST before applying infrastructure changes
 - **ALWAYS** run `bun run check && bun run test` after each wave

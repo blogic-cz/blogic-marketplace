@@ -74,12 +74,11 @@ Categorization of `blogic-template-ts` files for sync decisions. Files marked **
 
 ## Scripts (Infrastructure — adopt fully)
 
-| Path                            | Purpose                             |
-| ------------------------------- | ----------------------------------- |
-| `scripts/clean-branches.ts`     | Branch cleanup utility              |
-| `scripts/effect-diagnostics.ts` | Effect language service diagnostics |
-| `scripts/opensrc-sync.ts`       | Open source repo sync               |
-| `scripts/warmup-ck.ts`          | CK warmup                           |
+| Path                        | Purpose                |
+| --------------------------- | ---------------------- |
+| `scripts/clean-branches.ts` | Branch cleanup utility |
+| `scripts/opensrc-sync.ts`   | Open source repo sync  |
+| `scripts/warmup-ck.ts`      | CK warmup              |
 
 ## Agent Tools (Infrastructure — adopt structure, customize tools)
 

@@ -42,5 +42,5 @@ Apply all steps when bumping Playwright:
 
 1. Keep Docker image version equal to npm package version.
 2. Update every `mcr.microsoft.com/playwright:vX.Y.Z-noble` reference across Dockerfiles, CI, and Helm values.
-3. Run `bun run test:e2e`.
+3. Run `cd apps/web-app && bun run test:e2e`.
 4. Commit with `chore: update playwright to vX.Y.Z`.
