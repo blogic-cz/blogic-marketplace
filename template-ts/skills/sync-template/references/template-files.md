@@ -25,22 +25,18 @@ Categorization of `blogic-template-ts` files for sync decisions. Files marked **
 | `bun.lock`            | Dependency lockfile                                     |
 | `skills-lock.json`    | Marketplace skills manifest                             |
 | `agent-tools.json5`   | Agent tools configuration                               |
-| `opencode.jsonc`      | OpenCode permissions and config                         |
 | `.mcp.json`           | MCP server config                                       |
 
 ## Agent & AI Config (Infrastructure — adopt fully)
 
-| Path                            | Purpose                        |
-| ------------------------------- | ------------------------------ |
-| `AGENTS.md`                     | Development guidelines         |
-| `CLAUDE.md`                     | Symlink → AGENTS.md            |
-| `.claude/settings.json`         | Claude Code hooks and config   |
-| `.opencode/oh-my-opencode.json` | OpenCode config                |
-| `.opencode/package.json`        | OpenCode package               |
-| `.opencode/.gitignore`          | OpenCode ignore                |
-| `.agents/skills/*/`             | Installed marketplace skills   |
-| `opensrc/settings.json`         | Open source debug repos config |
-| `opensrc/sources.json`          | Open source repo sources       |
+| Path                    | Purpose                        |
+| ----------------------- | ------------------------------ |
+| `AGENTS.md`             | Development guidelines         |
+| `CLAUDE.md`             | Symlink → AGENTS.md            |
+| `.claude/settings.json` | Claude Code hooks and config   |
+| `.agents/skills/*/`     | Installed marketplace skills   |
+| `opensrc/settings.json` | Open source debug repos config |
+| `opensrc/sources.json`  | Open source repo sources       |
 
 ## CI/CD Workflows (Infrastructure — adopt with parameterization)
 
@@ -49,7 +45,6 @@ Categorization of `blogic-template-ts` files for sync decisions. Files marked **
 | `.github/workflows/cicd.yml`               | Main CI/CD pipeline    |
 | `.github/workflows/claude.yml`             | Claude Code automation |
 | `.github/workflows/claude-code-review.yml` | Claude PR review       |
-| `.github/workflows/opencode.yml`           | OpenCode automation    |
 | `.github/prompts/code-review.md`           | Code review prompt     |
 
 **Note**: CI workflows contain project-specific secrets, image names, namespaces. Apply name substitution but preserve project-specific secret names.
