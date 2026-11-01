@@ -15,7 +15,7 @@ Accept optional `max-turns=<positive integer>`; default to `10`. Reject missing,
 
 Review current intended change, not only `HEAD`:
 
-1. identify base from explicit target, PR metadata, or repository default; ask if ambiguous;
+1. identify base from explicit target, PR metadata, or repository default; if the target or effective scope is ambiguous, stop and ask one precise question;
 2. compute committed range `base...HEAD`;
 3. union staged (`git diff --cached`), unstaged (`git diff`), and intended untracked files;
 4. recompute union before every pass and after every fix.
