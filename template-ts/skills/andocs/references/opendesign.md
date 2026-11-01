@@ -72,6 +72,17 @@ On Windows, invoke OpenDesign's `od.mjs` client through `bun <path-to-od.mjs>` o
 
 If a step fails, name the failed step, state the likely cause, and give one next action. Keep the user's requested prototype work in view. If `pnpm install` reports a native-module build failure, install the missing platform build tools, then run `pnpm install` again. If the managed folder contains a different source revision, stop and ask before replacing it.
 
+### OpenDesign stops during its first start
+
+The first start after an install or update is cold: OpenDesign builds and starts its daemon and web app. On Windows this can take 15 minutes or more. Andocs patches the startup limits of OpenDesign's `tools-dev` to 600 000 ms for the daemon and 300 000 ms for the web app, rebuilds `tools-dev` once for each patch, and waits up to 1 050 000 ms for the start. The patch is Andocs' own change to `tools/dev/src/sidecar-client.ts` in the managed source folder; do not revert it.
+
+If OpenDesign stops before its editor opens:
+
+1. Run `andocs --version`. Before 2.6.10, Andocs used OpenDesign's own limits (120 s for the daemon, 35 s for the web app) and stopped a cold Windows start too early. Tell the user to run the current CLI, for example `bunx andocs@latest`, then try once more.
+2. Read the error. `daemon did not expose status after <ms> ms` or `web did not expose status after <ms> ms` names the part that was too slow and the time it waited. `OpenDesign tools-dev start failed after <ms> ms` is Andocs' own limit. `andocs opendesign status` prints the stored state as JSON; after a failure its `message` holds the error.
+3. Start OpenDesign once more through Andocs. The second start is warm and usually much faster. Do not start the daemon or web app by hand, and do not raise the limits by editing the managed source folder: Andocs checks that folder and rebuilds it from its own patch.
+4. If the warm start also times out, report the component and the time to the user. Name likely causes, such as antivirus scanning of the managed folder, a slow disk, or low memory, and ask before you change system settings.
+
 Before you tell the user that OpenDesign works, open a data-backed prototype in an available browser, choose **OpenDesign**, and confirm that the editor opens. If no browser tool is available, say that this check was not verified.
 
 ## Handoff
