@@ -78,7 +78,7 @@ Check logic, style, and regressions. Post feedback: `gh-tool pr comment --pr {nu
 
 ## Fallback command mapping when `agent-tools` skill is unavailable
 
-- `gh-tool issue triage-summary --state open --limit 100` → `gh issue list --state open --limit 100`
+- `gh-tool issue list --state open --limit 100` → `gh issue list --state open --limit 100`
 - `gh-tool issue comment --issue <n> --body "..."` → `gh issue comment <n> --body "..."`
 - `gh-tool pr review-triage --pr <n> --format json` → `gh pr view <n> --json number,title,body,author,mergeable,reviewDecision,commits,statusCheckRollup,reviews`
 - `gh-tool pr comment --pr <n> --body "..."` → `gh pr comment <n> --body "..."`

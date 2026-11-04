@@ -20,7 +20,7 @@ For detailed per-item execution prompts, use [references/subagent-templates.md](
 ### 1. Fetch
 
 ```bash
-gh-tool issue triage-summary --state open --limit 100
+gh-tool issue list --state open --limit 100
 ```
 
 Load skill `agent-tools` for full `gh-tool` command reference.
